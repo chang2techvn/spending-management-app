@@ -3,19 +3,20 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/container"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:paddingTop="?attr/actionBarSize">
+    android:layout_height="match_parent">
 
     <LinearLayout
         android:id="@+id/home_header"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginHorizontal="16dp"
         android:background="@drawable/header_bg"
         android:orientation="horizontal"
-        android:paddingHorizontal="24dp"
-        android:paddingVertical="16dp"
+        android:paddingHorizontal="32dp"
+        android:paddingVertical="20dp"
         android:gravity="center_vertical"
         android:visibility="gone"
+        android:fitsSystemWindows="true"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent">
@@ -49,7 +50,7 @@
             android:layout_marginStart="16dp"
             android:background="@drawable/gradient_blue_purple"
             android:src="@drawable/ic_user"
-            android:tint="#FFFFFF"
+            app:tint="#FFFFFF"
             android:scaleType="centerInside"
             android:contentDescription="User avatar" />
 
