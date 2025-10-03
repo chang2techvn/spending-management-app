@@ -44,12 +44,8 @@ public class MainActivity extends AppCompatActivity {
         // Listen to destination changes to update UI
         navController.addOnDestinationChangedListener((controller, destination, arguments) -> {
             updateNavigationUI(destination.getId());
-            // Show header only on home
-            if (destination.getId() == R.id.navigation_home) {
-                homeHeader.setVisibility(View.VISIBLE);
-            } else {
-                homeHeader.setVisibility(View.GONE);
-            }
+            // Header always visible on all tabs
+            homeHeader.setVisibility(View.VISIBLE);
         });
     }
 

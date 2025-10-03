@@ -9,4 +9,15 @@
     <color name="white">#FFFFFFFF</color>
     <color name="nav_item_color">#FF666666</color>
     <color name="blue_600">#FF1976D2</color>
+
+    <!-- Transaction colors -->
+    <color name="income_color">#FF4CAF50</color>
+    <color name="expense_color">#FFF44336</color>
+
+    <!-- Category colors -->
+    <color name="category_food">#FFFFF3E0</color>
+    <color name="category_transport">#FFE3F2FD</color>
+    <color name="category_shopping">#FFF3E5F5</color>
+    <color name="category_income">#FFE8F5E8</color>
+    <color name="category_default">#FFF5F5F5</color>
 </resources>
