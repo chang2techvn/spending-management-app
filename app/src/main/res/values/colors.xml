@@ -19,5 +19,7 @@
     <color name="category_transport">#FFE3F2FD</color>
     <color name="category_shopping">#FFF3E5F5</color>
     <color name="category_income">#FFE8F5E8</color>
+    <color name="category_utility">#FFE8EAF6</color>
+    <color name="category_education">#FFFCE4EC</color>
     <color name="category_default">#FFF5F5F5</color>
 </resources>

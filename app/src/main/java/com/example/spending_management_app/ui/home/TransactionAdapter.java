@@ -81,6 +81,10 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
                 return context.getColor(R.color.category_shopping);
             case "Thu nhập":
                 return context.getColor(R.color.category_income);
+            case "Tiện ích":
+                return context.getColor(R.color.category_utility);
+            case "Giáo dục":
+                return context.getColor(R.color.category_education);
             default:
                 return context.getColor(R.color.category_default);
         }

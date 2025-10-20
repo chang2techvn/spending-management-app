@@ -9,17 +9,16 @@
         android:id="@+id/home_header"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginHorizontal="16dp"
         android:background="@drawable/header_bg"
+        android:fitsSystemWindows="true"
+        android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingHorizontal="32dp"
         android:paddingVertical="20dp"
-        android:gravity="center_vertical"
         android:visibility="visible"
-        android:fitsSystemWindows="true"
-        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent">
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
 
         <LinearLayout
             android:layout_width="0dp"
@@ -31,16 +30,16 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Chào buổi sáng"
+                android:textColor="#FF424242"
                 android:textSize="20sp"
-                android:textStyle="bold"
-                android:textColor="#FF424242" />
+                android:textStyle="bold" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Hôm nay là ngày tốt để tiết kiệm"
-                android:textSize="14sp"
-                android:textColor="#FF757575" />
+                android:textColor="#FF757575"
+                android:textSize="14sp" />
 
         </LinearLayout>
 
@@ -49,10 +48,10 @@
             android:layout_height="40dp"
             android:layout_marginStart="16dp"
             android:background="@drawable/gradient_blue_purple"
-            android:src="@drawable/ic_user"
-            app:tint="#FFFFFF"
+            android:contentDescription="User avatar"
             android:scaleType="centerInside"
-            android:contentDescription="User avatar" />
+            android:src="@drawable/ic_user"
+            app:tint="#FFFFFF" />
 
     </LinearLayout>
 
