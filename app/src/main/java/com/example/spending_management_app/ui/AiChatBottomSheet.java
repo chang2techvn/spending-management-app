@@ -3,7 +3,10 @@ package com.example.spending_management_app.ui;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.Gravity;
+import android.view.Gravity;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.Toast;
@@ -14,12 +17,17 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.spending_management_app.R;
-import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
+import androidx.fragment.app.DialogFragment;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class AiChatBottomSheet extends BottomSheetDialogFragment {
+public class AiChatBottomSheet extends DialogFragment {
+
+    @Override
+    public int getTheme() {
+        return R.style.RoundedDialog;
+    }
 
     private RecyclerView messagesRecycler;
     private EditText messageInput;
@@ -32,6 +40,10 @@ public class AiChatBottomSheet extends BottomSheetDialogFragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        if (getDialog() != null && getDialog().getWindow() != null) {
+            getDialog().getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
+        }
+
         View view = inflater.inflate(R.layout.bottom_sheet_ai_chat, container, false);
 
         messagesRecycler = view.findViewById(R.id.messages_recycler);
@@ -43,6 +55,15 @@ public class AiChatBottomSheet extends BottomSheetDialogFragment {
         setupListeners();
 
         return view;
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        if (getDialog() != null && getDialog().getWindow() != null) {
+            getDialog().getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            getDialog().getWindow().setGravity(android.view.Gravity.BOTTOM);
+        }
     }
 
     private void setupMessages() {
@@ -60,13 +81,13 @@ public class AiChatBottomSheet extends BottomSheetDialogFragment {
             if (!message.isEmpty()) {
                 messages.add(new ChatMessage(message, true, "Bây giờ"));
                 chatAdapter.notifyItemInserted(messages.size() - 1);
-                messagesRecycler.scrollToPosition(messages.size() - 1);
+                messagesRecycler.smoothScrollToPosition(messages.size() - 1);
                 messageInput.setText("");
 
                 // Simulate AI response
                 messages.add(new ChatMessage("Cảm ơn bạn đã chia sẻ! Tôi đã ghi nhận chi tiêu của bạn.", false, "Bây giờ"));
                 chatAdapter.notifyItemInserted(messages.size() - 1);
-                messagesRecycler.scrollToPosition(messages.size() - 1);
+                messagesRecycler.smoothScrollToPosition(messages.size() - 1);
             }
         });
 
