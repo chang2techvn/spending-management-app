@@ -14,6 +14,35 @@
         android:orientation="vertical"
         android:paddingBottom="80dp">
 
+        <!-- Header -->
+        <LinearLayout
+            android:id="@+id/statistics_header"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:background="@android:color/white"
+            android:elevation="2dp"
+            android:layout_marginBottom="16dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Thống kê"
+                android:textColor="#212121"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Tổng quan tài chính của bạn"
+                android:textColor="#757575"
+                android:textSize="14sp"
+                android:layout_marginTop="4dp" />
+
+        </LinearLayout>
+
         <!-- Monthly Spending Chart -->
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"

@@ -85,8 +85,8 @@
             android:layout_width="64dp"
             android:layout_height="64dp"
             android:src="@drawable/ic_history"
-            android:tint="#BDBDBD"
-            android:alpha="0.5" />
+            android:alpha="0.5"
+            app:tint="#BDBDBD" />
 
         <TextView
             android:layout_width="wrap_content"

@@ -13,6 +13,7 @@ import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
 import com.example.spending_management_app.databinding.ActivityMainBinding;
+import com.example.spending_management_app.ui.AiChatBottomSheet;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -65,7 +66,8 @@ public class MainActivity extends AppCompatActivity {
         navHistory.setOnClickListener(v -> navController.navigate(R.id.navigation_history));
         navAccount.setOnClickListener(v -> navController.navigate(R.id.navigation_account));
         navAiAssistant.setOnClickListener(v -> {
-            // Handle AI assistant action, perhaps show a dialog or navigate to a special fragment
+            AiChatBottomSheet aiChatBottomSheet = new AiChatBottomSheet();
+            aiChatBottomSheet.show(getSupportFragmentManager(), aiChatBottomSheet.getTag());
         });
     }
 

@@ -9,9 +9,11 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.spending_management_app.R;
 import com.example.spending_management_app.databinding.FragmentHomeBinding;
 
 import java.util.ArrayList;
@@ -76,7 +78,7 @@ public class HomeFragment extends Fragment {
 
         // Setup view all transactions click
         binding.viewAllTransactions.setOnClickListener(v -> {
-            // TODO: Navigate to all transactions screen
+            Navigation.findNavController(v).navigate(R.id.navigation_history);
         });
     }
 
