@@ -53,7 +53,7 @@ public class AccountFragment extends Fragment {
     }
 
     private void showEditProfileDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(getContext(), R.style.RoundedDialog);
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext(), R.style.RoundedDialog4Corners);
         builder.setTitle("Chỉnh sửa hồ sơ");
 
         // Create input fields
@@ -91,7 +91,7 @@ public class AccountFragment extends Fragment {
     }
 
     private void showChangePasswordDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(getContext(), R.style.RoundedDialog);
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext(), R.style.RoundedDialog4Corners);
         builder.setTitle("Đổi mật khẩu");
 
         LinearLayout layout = new LinearLayout(getContext());
@@ -135,7 +135,7 @@ public class AccountFragment extends Fragment {
     }
 
     private void showSettingsDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(getContext(), R.style.RoundedDialog);
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext(), R.style.RoundedDialog4Corners);
         builder.setTitle("Cài đặt");
 
         String[] settings = {"Thông báo", "Ngôn ngữ", "Chủ đề", "Bảo mật"};
@@ -154,7 +154,7 @@ public class AccountFragment extends Fragment {
     }
 
     private void showHelpSupportDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(getContext(), R.style.RoundedDialog);
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext(), R.style.RoundedDialog4Corners);
         builder.setTitle("Trợ giúp & Hỗ trợ");
         builder.setMessage("Liên hệ với chúng tôi:\n\nEmail: support@spendingapp.com\nĐiện thoại: 1900-xxxx\n\nPhiên bản: 1.0.0");
 
@@ -163,7 +163,7 @@ public class AccountFragment extends Fragment {
     }
 
     private void showLogoutConfirmationDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(getContext(), R.style.RoundedDialog);
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext(), R.style.RoundedDialog4Corners);
         builder.setTitle("Xác nhận đăng xuất");
         builder.setMessage("Bạn có chắc chắn muốn đăng xuất?");
 

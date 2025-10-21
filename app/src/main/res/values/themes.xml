@@ -20,6 +20,12 @@
         <item name="android:windowMinWidthMinor">90%</item>
     </style>
 
+    <style name="RoundedDialog4Corners" parent="Theme.MaterialComponents.DayNight.Dialog.Alert">
+        <item name="android:windowBackground">@drawable/dialog_background_rounded</item>
+        <item name="android:windowMinWidthMajor">90%</item>
+        <item name="android:windowMinWidthMinor">90%</item>
+    </style>
+
     <style name="CustomBottomSheetDialog" parent="Theme.MaterialComponents.DayNight.BottomSheetDialog">
         <item name="bottomSheetStyle">@style/CustomBottomSheet</item>
     </style>
