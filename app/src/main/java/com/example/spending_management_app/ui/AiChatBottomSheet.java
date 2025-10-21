@@ -169,7 +169,7 @@ public class AiChatBottomSheet extends DialogFragment {
             JSONObject systemInstruction = new JSONObject();
             JSONArray systemParts = new JSONArray();
             JSONObject systemPart = new JSONObject();
-            systemPart.put("text", "Bạn là trợ lý ghi chi tiêu. Trả lời ngắn gọn, hữu ích, bằng tiếng Việt. Không dùng dấu ** hoặc markdown. Nếu user muốn thêm thu nhập hoặc chi tiêu, hãy xác nhận ngắn gọn và đề xuất thêm vào hệ thống. Không tự ý thêm nếu không được yêu cầu.");
+            systemPart.put("text", "Bạn là trợ lý ghi chi tiêu. Khi user muốn thêm thu nhập hoặc chi tiêu, hãy trả về JSON với cấu trúc: {\"type\": \"expense\" hoặc \"income\", \"name\": \"tên giao dịch\", \"amount\": số tiền, \"currency\": \"VND\" hoặc \"USD\" v.v., \"category\": \"Ăn uống\" v.v.} và một câu trả lời tự nhiên hài hước để yêu cầu xác nhận, không hiển thị JSON. Ví dụ: {\"type\":\"expense\",\"name\":\"Ăn sáng\",\"amount\":50000,\"currency\":\"VND\",\"category\":\"Ăn uống\"} Bạn đã thêm chi tiêu 50k VND cho việc ăn sáng, ngon miệng nhé! Nếu không phải thêm giao dịch, trả lời bình thường.");
             systemParts.put(systemPart);
             systemInstruction.put("parts", systemParts);
             json.put("system_instruction", systemInstruction);
@@ -214,17 +214,20 @@ public class AiChatBottomSheet extends DialogFragment {
                             JSONArray parts = content.getJSONArray("parts");
                             String aiText = parts.getJSONObject(0).getString("text").trim();
 
+                            // Check if response contains JSON
+                            String jsonPart = extractJsonFromText(aiText);
+                            String displayText = extractDisplayText(aiText);
+
                             getActivity().runOnUiThread(() -> {
-                                // Replace analyzing message with AI response
-                                messages.set(analyzingIndex, new ChatMessage(aiText, false, "Bây giờ"));
+                                // Replace analyzing message with display text
+                                messages.set(analyzingIndex, new ChatMessage(displayText, false, "Bây giờ"));
                                 chatAdapter.notifyItemChanged(analyzingIndex);
                                 messagesRecycler.smoothScrollToPosition(messages.size() - 1);
-                                textToSpeech.speak(aiText, TextToSpeech.QUEUE_FLUSH, null, null);
+                                textToSpeech.speak(displayText, TextToSpeech.QUEUE_FLUSH, null, null);
 
-                                // Check if AI response suggests adding income/expense
-                                if (aiText.toLowerCase().contains("thêm") && (aiText.toLowerCase().contains("thu nhập") || aiText.toLowerCase().contains("chi tiêu"))) {
-                                    textToSpeech.speak("Vui lòng bấm xác nhận trên màn hình để thêm", TextToSpeech.QUEUE_ADD, null, null);
-                                    showConfirmationDialog(aiText);
+                                // If JSON found, show confirmation dialog
+                                if (jsonPart != null) {
+                                    showExpenseConfirmationDialog(jsonPart);
                                 }
                             });
                         } catch (Exception e) {
@@ -275,6 +278,108 @@ public class AiChatBottomSheet extends DialogFragment {
         });
 
         dialog.show();
+    }
+
+    private String extractJsonFromText(String text) {
+        // Find JSON object in text
+        int start = text.indexOf('{');
+        int end = text.lastIndexOf('}');
+        if (start != -1 && end != -1 && end > start) {
+            return text.substring(start, end + 1);
+        }
+        return null;
+    }
+
+    private String extractDisplayText(String text) {
+        // Remove JSON part and return the rest
+        String jsonPart = extractJsonFromText(text);
+        if (jsonPart != null) {
+            return text.replace(jsonPart, "").trim();
+        }
+        return text;
+    }
+
+    private void showExpenseConfirmationDialog(String jsonString) {
+        try {
+            JSONObject json = new JSONObject(jsonString);
+
+            // Create dialog
+            Dialog dialog = new Dialog(getContext());
+            dialog.setContentView(R.layout.dialog_expense_confirmation);
+            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            dialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+
+            // Get views
+            android.widget.Spinner spinnerType = dialog.findViewById(R.id.spinner_type);
+            android.widget.TextView badgeType = dialog.findViewById(R.id.badge_type);
+            android.widget.EditText editName = dialog.findViewById(R.id.edit_name);
+            android.widget.EditText editAmount = dialog.findViewById(R.id.edit_amount);
+            android.widget.Spinner spinnerCurrency = dialog.findViewById(R.id.spinner_currency);
+            android.widget.Spinner spinnerCategory = dialog.findViewById(R.id.spinner_category);
+            android.widget.Button btnCancel = dialog.findViewById(R.id.btn_cancel);
+            android.widget.Button btnConfirm = dialog.findViewById(R.id.btn_confirm);
+
+            // Fill data from JSON
+            String type = json.optString("type", "expense");
+            if ("income".equals(type)) {
+                spinnerType.setSelection(1); // Thu nhập
+                badgeType.setText("Thu nhập");
+                badgeType.setBackgroundResource(R.color.income_color); // Green for income
+            } else {
+                spinnerType.setSelection(0); // Chi tiêu
+                badgeType.setText("Chi tiêu");
+                badgeType.setBackgroundResource(R.color.expense_color); // Red for expense
+            }
+
+            // Listener to change badge color
+            spinnerType.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener() {
+                @Override
+                public void onItemSelected(android.widget.AdapterView<?> parent, View view, int position, long id) {
+                    if (position == 0) { // Chi tiêu
+                        badgeType.setText("Chi tiêu");
+                        badgeType.setBackgroundResource(R.color.expense_color);
+                    } else { // Thu nhập
+                        badgeType.setText("Thu nhập");
+                        badgeType.setBackgroundResource(R.color.income_color);
+                    }
+                }
+
+                @Override
+                public void onNothingSelected(android.widget.AdapterView<?> parent) {}
+            });
+
+            editName.setText(json.optString("name", ""));
+            editAmount.setText(String.valueOf(json.optDouble("amount", 0)));
+            String currency = json.optString("currency", "VND");
+            String[] currencies = getResources().getStringArray(R.array.currencies);
+            for (int i = 0; i < currencies.length; i++) {
+                if (currencies[i].equals(currency)) {
+                    spinnerCurrency.setSelection(i);
+                    break;
+                }
+            }
+            String category = json.optString("category", "");
+            String[] categories = getResources().getStringArray(R.array.categories);
+            for (int i = 0; i < categories.length; i++) {
+                if (categories[i].equals(category)) {
+                    spinnerCategory.setSelection(i);
+                    break;
+                }
+            }
+
+            btnCancel.setOnClickListener(v -> dialog.dismiss());
+            btnConfirm.setOnClickListener(v -> {
+                // TODO: Save to database
+                Toast.makeText(getContext(), "Đã xác nhận giao dịch", Toast.LENGTH_SHORT).show();
+                dialog.dismiss();
+            });
+
+            dialog.show();
+
+        } catch (Exception e) {
+            Log.e("AiChatBottomSheet", "Error parsing JSON: " + jsonString, e);
+            Toast.makeText(getContext(), "Lỗi xử lý dữ liệu", Toast.LENGTH_SHORT).show();
+        }
     }
 
     public static class ChatMessage {

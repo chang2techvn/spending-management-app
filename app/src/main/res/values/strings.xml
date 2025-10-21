@@ -3,4 +3,25 @@
     <string name="title_home">Home</string>
     <string name="title_dashboard">Dashboard</string>
     <string name="title_notifications">Notifications</string>
+
+    <string-array name="transaction_types">
+        <item>Chi tiêu</item>
+        <item>Thu nhập</item>
+    </string-array>
+
+    <string-array name="currencies">
+        <item>VND</item>
+        <item>USD</item>
+        <item>EUR</item>
+        <item>JPY</item>
+    </string-array>
+
+    <string-array name="categories">
+        <item>Ăn uống</item>
+        <item>Di chuyển</item>
+        <item>Mua sắm</item>
+        <item>Giải trí</item>
+        <item>Hóa đơn</item>
+        <item>Khác</item>
+    </string-array>
 </resources>
