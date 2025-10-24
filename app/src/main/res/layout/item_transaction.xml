@@ -49,14 +49,22 @@
                 android:textSize="14sp"
                 android:textStyle="bold" />
 
-            <TextView
-                android:id="@+id/transaction_category"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Ăn uống"
-                android:textColor="#757575"
-                android:textSize="12sp"
-                android:layout_marginTop="2dp" />
+                            <TextView
+                    android:id="@+id/transaction_category"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Category"
+                    android:textColor="#757575"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:id="@+id/transaction_date"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Date"
+                    android:textColor="#757575"
+                    android:textSize="12sp"
+                    android:layout_marginTop="2dp" />
 
         </LinearLayout>
 

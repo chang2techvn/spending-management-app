@@ -35,8 +35,9 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
     public void onBindViewHolder(@NonNull TransactionViewHolder holder, int position) {
         Transaction transaction = transactions.get(position);
 
-        holder.titleTextView.setText(transaction.getTitle());
+        holder.titleTextView.setText(transaction.getDescription());
         holder.categoryTextView.setText(transaction.getCategory());
+        holder.dateTextView.setText(transaction.getFormattedDate());
         holder.amountTextView.setText(transaction.getFormattedAmount());
 
         // Set amount color based on type
@@ -79,7 +80,7 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
                 return context.getColor(R.color.category_transport);
             case "Mua sắm":
                 return context.getColor(R.color.category_shopping);
-            case "Thu nhập":
+            case "Ngân sách":
                 return context.getColor(R.color.category_income);
             case "Tiện ích":
                 return context.getColor(R.color.category_utility);
@@ -90,10 +91,11 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
         }
     }
 
-    static class TransactionViewHolder extends RecyclerView.ViewHolder {
+    public static class TransactionViewHolder extends RecyclerView.ViewHolder {
         ImageView iconImageView;
         TextView titleTextView;
         TextView categoryTextView;
+        TextView dateTextView;
         TextView amountTextView;
 
         public TransactionViewHolder(@NonNull View itemView) {
@@ -101,6 +103,7 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
             iconImageView = itemView.findViewById(R.id.transaction_icon);
             titleTextView = itemView.findViewById(R.id.transaction_title);
             categoryTextView = itemView.findViewById(R.id.transaction_category);
+            dateTextView = itemView.findViewById(R.id.transaction_date);
             amountTextView = itemView.findViewById(R.id.transaction_amount);
         }
     }

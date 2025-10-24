@@ -1,20 +1,28 @@
 package com.example.spending_management_app.ui.home;
 
+import java.util.Date;
+import java.text.SimpleDateFormat;
+import java.util.Locale;
+
 public class Transaction {
-    private String title;
+    private String description;
     private String category;
     private long amount;
     private String iconResName;
+    private Date date;
+    private String type; // "expense" or "income"
 
-    public Transaction(String title, String category, long amount, String iconResName) {
-        this.title = title;
+    public Transaction(String description, String category, long amount, String iconResName, Date date, String type) {
+        this.description = description;
         this.category = category;
         this.amount = amount;
         this.iconResName = iconResName;
+        this.date = date;
+        this.type = type;
     }
 
-    public String getTitle() {
-        return title;
+    public String getDescription() {
+        return description;
     }
 
     public String getCategory() {
@@ -29,11 +37,24 @@ public class Transaction {
         return iconResName;
     }
 
+    public Date getDate() {
+        return date;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public String getFormattedDate() {
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+        return sdf.format(date);
+    }
+
     public String getFormattedAmount() {
         if (amount >= 0) {
             return "+" + formatCurrency(amount);
         } else {
-            return formatCurrency(amount);
+            return "-" + formatCurrency(amount);
         }
     }
 

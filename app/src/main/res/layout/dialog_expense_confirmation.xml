@@ -28,7 +28,7 @@
         android:layout_gravity="center"
         android:layout_marginBottom="16dp" />
 
-    <!-- Badge: Chi tiêu hoặc Thu nhập -->
+    <!-- Badge: Chi tiêu hoặc Ngân sách -->
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -43,7 +43,7 @@
         android:layout_marginBottom="16dp"
         android:entries="@array/transaction_types" />
 
-    <!-- Tên chi tiêu/thu nhập -->
+    <!-- Tên chi tiêu/ngân sách -->
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

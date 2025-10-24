@@ -6,7 +6,7 @@
 
     <string-array name="transaction_types">
         <item>Chi tiêu</item>
-        <item>Thu nhập</item>
+        <item>Ngân sách</item>
     </string-array>
 
     <string-array name="currencies">

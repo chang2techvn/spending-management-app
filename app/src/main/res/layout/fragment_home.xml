@@ -63,7 +63,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Thu nhập tháng này"
+                            android:text="Ngân sách tháng này"
                             android:textColor="#FFFFFF"
                             android:textSize="12sp"
                             android:alpha="0.8" />
@@ -147,7 +147,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
-                        android:text="Thêm thu nhập"
+                        android:text="Quản lý ngân sách"
                         android:textColor="#212121"
                         android:textSize="14sp"
                         android:textStyle="bold" />

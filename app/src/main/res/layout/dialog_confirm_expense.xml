@@ -20,7 +20,7 @@
         android:id="@+id/dialog_message"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Hãy kiểm tra thông tin chi tiêu/thu nhập:"
+        android:text="Hãy kiểm tra thông tin chi tiêu/ngân sách:"
         android:textColor="#757575"
         android:textSize="16sp"
         android:layout_marginBottom="16dp" />
@@ -28,7 +28,7 @@
     <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Mô tả chi tiêu/thu nhập"
+        android:hint="Mô tả chi tiêu/ngân sách"
         app:boxStrokeColor="#2196F3"
         app:hintTextColor="#2196F3"
         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">

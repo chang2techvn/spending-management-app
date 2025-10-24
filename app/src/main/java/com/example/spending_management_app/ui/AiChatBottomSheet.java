@@ -1,10 +1,15 @@
 package com.example.spending_management_app.ui;
 
+import static android.app.Activity.RESULT_OK;
+
 import android.app.Dialog;
+import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import java.util.Locale;
+
+import android.speech.RecognizerIntent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.Gravity;
@@ -42,6 +47,8 @@ import java.util.List;
 
 public class AiChatBottomSheet extends DialogFragment {
 
+    private static final int VOICE_REQUEST_CODE = 1001;
+
     @Override
     public int getTheme() {
         return R.style.RoundedDialog;
@@ -51,6 +58,7 @@ public class AiChatBottomSheet extends DialogFragment {
     private EditText messageInput;
     private ImageButton sendButton;
     private ImageButton closeButton;
+    private ImageButton microBtn;
 
     private List<ChatMessage> messages;
     private ChatAdapter chatAdapter;
@@ -75,6 +83,8 @@ public class AiChatBottomSheet extends DialogFragment {
         messageInput = view.findViewById(R.id.message_input);
         sendButton = view.findViewById(R.id.send_button);
         closeButton = view.findViewById(R.id.close_button);
+        microBtn = view.findViewById(R.id.microBtn);
+
 
         // Initialize TTS and HTTP client
         textToSpeech = new TextToSpeech(getContext(), status -> {
@@ -90,6 +100,9 @@ public class AiChatBottomSheet extends DialogFragment {
         // If spoken text, send to AI
         if (!spokenText.isEmpty()) {
             android.util.Log.d("AiChatBottomSheet", "Sending spoken text to AI: " + spokenText);
+            messages.add(new ChatMessage(spokenText, true, "Bây giờ"));
+            chatAdapter.notifyItemInserted(messages.size() - 1);
+            messagesRecycler.smoothScrollToPosition(messages.size() - 1);
             sendToAI(spokenText);
             spokenText = ""; // Reset
         }
@@ -107,10 +120,23 @@ public class AiChatBottomSheet extends DialogFragment {
                 // Process AI response
                 sendToAI(voiceText);
             }
+        } else if (args != null && args.containsKey("initial_prompt")) {
+            String prompt = args.getString("initial_prompt");
+            if (prompt != null && !prompt.isEmpty()) {
+                android.util.Log.d("AiChatBottomSheet", "Initial prompt from args: " + prompt);
+                // Add user message to chat
+                messages.add(new ChatMessage(prompt, true, "Bây giờ"));
+                chatAdapter.notifyItemInserted(messages.size() - 1);
+                messagesRecycler.smoothScrollToPosition(messages.size() - 1);
+                // Process AI response
+                sendToAI(prompt);
+            }
         }
 
         return view;
     }
+    
+
 
     @Override
     public void onStart() {
@@ -118,6 +144,22 @@ public class AiChatBottomSheet extends DialogFragment {
         if (getDialog() != null && getDialog().getWindow() != null) {
             getDialog().getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
             getDialog().getWindow().setGravity(android.view.Gravity.BOTTOM);
+        }
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == VOICE_REQUEST_CODE && resultCode == RESULT_OK && data != null) {
+            ArrayList<String> results = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+            if (results != null && !results.isEmpty()) {
+                String spokenText = results.get(0);
+                // Add to messages and send to AI, tái sử dụng logic từ MainActivity
+                messages.add(new ChatMessage(spokenText, true, "Bây giờ"));
+                chatAdapter.notifyItemInserted(messages.size() - 1);
+                messagesRecycler.smoothScrollToPosition(messages.size() - 1);
+                sendToAI(spokenText);
+            }
         }
     }
 
@@ -134,12 +176,30 @@ public class AiChatBottomSheet extends DialogFragment {
         sendButton.setOnClickListener(v -> {
             String message = messageInput.getText().toString().trim();
             if (!message.isEmpty()) {
+                messages.add(new ChatMessage(message, true, "Bây giờ"));
+                chatAdapter.notifyItemInserted(messages.size() - 1);
+                messagesRecycler.smoothScrollToPosition(messages.size() - 1);
                 sendToAI(message);
                 messageInput.setText("");
             }
         });
 
+        microBtn.setOnClickListener(v -> startVoiceRecognition());
+
         closeButton.setOnClickListener(v -> dismiss());
+    }
+
+    private void startVoiceRecognition() {
+        Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "vi-VN");
+        intent.putExtra(RecognizerIntent.EXTRA_SUPPORTED_LANGUAGES, new String[]{"en-US", "vi-VN"});
+        intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "Nói gì đó...");
+        try {
+            startActivityForResult(intent, VOICE_REQUEST_CODE);
+        } catch (Exception e) {
+            Toast.makeText(getContext(), "Thiết bị không hỗ trợ nhận diện giọng nói", Toast.LENGTH_SHORT).show();
+        }
     }
 
     @Override
@@ -151,10 +211,6 @@ public class AiChatBottomSheet extends DialogFragment {
     }
 
     private void sendToAI(String text) {
-        messages.add(new ChatMessage(text, true, "Bây giờ"));
-        chatAdapter.notifyItemInserted(messages.size() - 1);
-        messagesRecycler.smoothScrollToPosition(messages.size() - 1);
-
         // Add temporary "Đang phân tích..." message
         int analyzingIndex = messages.size();
         messages.add(new ChatMessage("Đang phân tích...", false, "Bây giờ"));
@@ -169,7 +225,7 @@ public class AiChatBottomSheet extends DialogFragment {
             JSONObject systemInstruction = new JSONObject();
             JSONArray systemParts = new JSONArray();
             JSONObject systemPart = new JSONObject();
-            systemPart.put("text", "Bạn là trợ lý ghi chi tiêu. Khi user muốn thêm thu nhập hoặc chi tiêu, hãy trả về JSON với cấu trúc: {\"type\": \"expense\" hoặc \"income\", \"name\": \"tên giao dịch\", \"amount\": số tiền, \"currency\": \"VND\" hoặc \"USD\" v.v., \"category\": \"Ăn uống\" v.v.} và một câu trả lời tự nhiên hài hước để yêu cầu xác nhận, không hiển thị JSON. Ví dụ: {\"type\":\"expense\",\"name\":\"Ăn sáng\",\"amount\":50000,\"currency\":\"VND\",\"category\":\"Ăn uống\"} Bạn đã thêm chi tiêu 50k VND cho việc ăn sáng, ngon miệng nhé! Nếu không phải thêm giao dịch, trả lời bình thường.");
+            systemPart.put("text", "Bạn là trợ lý ghi chi tiêu. Khi user muốn thêm ngân sách hoặc chi tiêu, hãy trả về JSON với cấu trúc: {\"type\": \"expense\" hoặc \"income\", \"name\": \"tên giao dịch\", \"amount\": số tiền, \"currency\": \"VND\" hoặc \"USD\" v.v., \"category\": \"Ăn uống\" v.v.} và một câu trả lời tự nhiên hài hước để yêu cầu xác nhận, không hiển thị JSON. Ví dụ: {\"type\":\"expense\",\"name\":\"Ăn sáng\",\"amount\":50000,\"currency\":\"VND\",\"category\":\"Ăn uống\"} Bạn đã thêm chi tiêu 50k VND cho việc ăn sáng, ngon miệng nhé! Nếu không phải thêm giao dịch, trả lời bình thường.");
             systemParts.put(systemPart);
             systemInstruction.put("parts", systemParts);
             json.put("system_instruction", systemInstruction);
@@ -222,6 +278,8 @@ public class AiChatBottomSheet extends DialogFragment {
                                 // Replace analyzing message with display text
                                 messages.set(analyzingIndex, new ChatMessage(displayText, false, "Bây giờ"));
                                 chatAdapter.notifyItemChanged(analyzingIndex);
+                                Log.d("AiChatBottomSheet", "AI response: " + displayText);
+
                                 messagesRecycler.smoothScrollToPosition(messages.size() - 1);
                                 textToSpeech.speak(displayText, TextToSpeech.QUEUE_FLUSH, null, null);
 
@@ -322,8 +380,8 @@ public class AiChatBottomSheet extends DialogFragment {
             // Fill data from JSON
             String type = json.optString("type", "expense");
             if ("income".equals(type)) {
-                spinnerType.setSelection(1); // Thu nhập
-                badgeType.setText("Thu nhập");
+                spinnerType.setSelection(1); // Ngân sách
+                badgeType.setText("Ngân sách");
                 badgeType.setBackgroundResource(R.color.income_color); // Green for income
             } else {
                 spinnerType.setSelection(0); // Chi tiêu
@@ -338,8 +396,8 @@ public class AiChatBottomSheet extends DialogFragment {
                     if (position == 0) { // Chi tiêu
                         badgeType.setText("Chi tiêu");
                         badgeType.setBackgroundResource(R.color.expense_color);
-                    } else { // Thu nhập
-                        badgeType.setText("Thu nhập");
+                    } else { // Ngân sách
+                        badgeType.setText("Ngân sách");
                         badgeType.setBackgroundResource(R.color.income_color);
                     }
                 }
@@ -442,10 +500,12 @@ public class AiChatBottomSheet extends DialogFragment {
                 // User message - align right
                 messageBubble.setBackgroundResource(R.drawable.user_message_background);
                 ((android.widget.LinearLayout.LayoutParams) messageBubble.getLayoutParams()).gravity = android.view.Gravity.END;
+                ((android.widget.LinearLayout.LayoutParams) timeText.getLayoutParams()).gravity = android.view.Gravity.END;
             } else {
                 // AI message - align left
                 messageBubble.setBackgroundResource(R.drawable.ai_message_background);
                 ((android.widget.LinearLayout.LayoutParams) messageBubble.getLayoutParams()).gravity = android.view.Gravity.START;
+                ((android.widget.LinearLayout.LayoutParams) timeText.getLayoutParams()).gravity = android.view.Gravity.START;
             }
         }
     }

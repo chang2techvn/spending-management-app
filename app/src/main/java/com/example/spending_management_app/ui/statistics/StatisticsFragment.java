@@ -30,14 +30,36 @@ public class StatisticsFragment extends Fragment {
     }
 
     private void setupStatisticsData() {
-        // Set total expense and income
-        binding.totalExpense.setText("5,500,000 VND");
-        binding.totalIncome.setText("8,000,000 VND");
+        // Sample data - in real app, get from database
+        long totalIncome = 8000000;
+        long totalExpense = 5500000;
+        long balance = totalIncome - Math.abs(totalExpense);
 
-        // Chart placeholder click listener (for future chart implementation)
+        binding.totalIncome.setText(formatCurrency(totalIncome));
+        binding.totalExpense.setText(formatCurrency(Math.abs(totalExpense)));
+
+        // Budget remaining - sample
+        long budgetRemaining = 3000000;
+        // Add budget remaining text if layout has it
+
+        // Chart placeholder click listener
         binding.chartPlaceholder.setOnClickListener(v -> {
-            // TODO: Open detailed chart view or implement chart library
+            // TODO: Open detailed chart view
         });
+    }
+
+    private String formatCurrency(long amount) {
+        String amountStr = String.valueOf(Math.abs(amount));
+        StringBuilder formatted = new StringBuilder();
+        int count = 0;
+        for (int i = amountStr.length() - 1; i >= 0; i--) {
+            formatted.insert(0, amountStr.charAt(i));
+            count++;
+            if (count % 3 == 0 && i > 0) {
+                formatted.insert(0, ",");
+            }
+        }
+        return formatted.toString() + " VND";
     }
 
     @Override

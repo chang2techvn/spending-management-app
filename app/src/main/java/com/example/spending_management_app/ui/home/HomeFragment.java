@@ -4,7 +4,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
@@ -13,16 +13,19 @@ import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.spending_management_app.MainActivity;
 import com.example.spending_management_app.R;
 import com.example.spending_management_app.databinding.FragmentHomeBinding;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class HomeFragment extends Fragment {
 
     private FragmentHomeBinding binding;
     private TransactionAdapter transactionAdapter;
+    private List<Transaction> transactions;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
@@ -54,22 +57,43 @@ public class HomeFragment extends Fragment {
     }
 
     private void setupQuickActions() {
-        binding.addIncomeBtn.setOnClickListener(v -> {
-            // TODO: Navigate to add income screen
-        });
+        binding.addIncomeBtn.setOnClickListener(v -> showBudgetManagementDialog());
+        binding.addExpenseBtn.setOnClickListener(v -> showAddTransactionDialog());
+    }
 
-        binding.addExpenseBtn.setOnClickListener(v -> {
-            // TODO: Navigate to add expense screen
+    private void showBudgetManagementDialog() {
+        BudgetManagementDialog dialog = new BudgetManagementDialog();
+        dialog.setOnActionSelectedListener(new BudgetManagementDialog.OnActionSelectedListener() {
+            @Override
+            public void onAddIncomeSelected() {
+                ((MainActivity) getActivity()).openAiChat("Tôi muốn thêm thu nhập");
+            }
+
+            @Override
+            public void onSetBudgetSelected() {
+                ((MainActivity) getActivity()).openAiChat("Tôi muốn thiết lập ngân sách");
+            }
         });
+        dialog.show(getParentFragmentManager(), "BudgetManagementDialog");
+    }
+
+    private void showAddTransactionDialog() {
+        ((MainActivity) getActivity()).openAiChat("Tôi muốn thêm chi tiêu");
+    }
+
+    private void openAiChat(String prompt) {
+        if (getActivity() instanceof MainActivity) {
+            ((MainActivity) getActivity()).openAiChat(prompt);
+        }
     }
 
     private void setupRecentTransactions() {
         // Create sample transaction data
-        List<Transaction> transactions = new ArrayList<>();
-        transactions.add(new Transaction("Ăn trưa tại quán cơm", "Ăn uống", -45000, "ic_bar_chart"));
-        transactions.add(new Transaction("Tiền xăng", "Di chuyển", -120000, "ic_bar_chart"));
-        transactions.add(new Transaction("Mua áo mới", "Mua sắm", -350000, "ic_bar_chart"));
-        transactions.add(new Transaction("Lương tháng 10", "Thu nhập", 8000000, "ic_home_black_24dp"));
+        transactions = new ArrayList<>();
+        transactions.add(new Transaction("Ăn trưa tại quán cơm", "Ăn uống", -45000, "ic_bar_chart", new Date(), "expense"));
+        transactions.add(new Transaction("Tiền xăng", "Di chuyển", -120000, "ic_bar_chart", new Date(), "expense"));
+        transactions.add(new Transaction("Mua áo mới", "Mua sắm", -350000, "ic_bar_chart", new Date(), "expense"));
+        transactions.add(new Transaction("Lương tháng 10", "Ngân sách", 8000000, "ic_home_black_24dp", new Date(), "income"));
 
         // Setup RecyclerView
         transactionAdapter = new TransactionAdapter(transactions);

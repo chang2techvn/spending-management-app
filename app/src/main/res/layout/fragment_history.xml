@@ -38,13 +38,63 @@
 
     </LinearLayout>
 
+    <!-- Search Bar -->
+    <androidx.cardview.widget.CardView
+        android:id="@+id/search_card"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        app:cardCornerRadius="8dp"
+        app:cardElevation="2dp"
+        app:layout_constraintTop_toBottomOf="@id/history_header"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="12dp"
+            android:gravity="center_vertical">
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@drawable/ic_dashboard_black_24dp"
+                android:tint="#757575"
+                android:layout_marginEnd="8dp" />
+
+            <EditText
+                android:id="@+id/search_input"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:hint="Tìm kiếm giao dịch..."
+                android:inputType="text"
+                android:background="@null"
+                android:textSize="14sp" />
+
+            <ImageButton
+                android:id="@+id/date_filter_button"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:layout_marginStart="8dp"
+                android:src="@drawable/ic_date_range"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:tint="#757575"
+                android:contentDescription="Lọc theo ngày" />
+
+        </LinearLayout>
+
+    </androidx.cardview.widget.CardView>
+
     <!-- Filter Tabs -->
     <com.google.android.material.tabs.TabLayout
         android:id="@+id/transaction_filter_tabs"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@android:color/white"
-        app:layout_constraintTop_toBottomOf="@id/history_header"
+        app:layout_constraintTop_toBottomOf="@id/search_card"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:tabIndicatorColor="@color/blue_600"
@@ -58,8 +108,9 @@
         android:layout_height="0dp"
         android:layout_marginTop="8dp"
         android:paddingHorizontal="16dp"
-        android:paddingBottom="80dp"
+        android:paddingBottom="120dp"
         android:nestedScrollingEnabled="false"
+        android:clipToPadding="false"
         app:layout_constraintTop_toBottomOf="@id/transaction_filter_tabs"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
