@@ -18,6 +18,6 @@ public interface BudgetDao {
     @Query("SELECT * FROM budgets")
     List<BudgetEntity> getAllBudgets();
 
-    @Query("SELECT * FROM budgets WHERE category = :category LIMIT 1")
-    BudgetEntity getBudgetByCategory(String category);
+    @Query("SELECT * FROM budgets WHERE date BETWEEN :startDate AND :endDate")
+    List<BudgetEntity> getBudgetsByDateRange(java.util.Date startDate, java.util.Date endDate);
 }

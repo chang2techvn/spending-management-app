@@ -47,6 +47,7 @@ dependencies {
     implementation(libs.androidx.navigation.ui)
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation(libs.room.runtime)
+    implementation(libs.androidx.room.common.jvm)
     annotationProcessor(libs.room.compiler)
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)

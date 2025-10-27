@@ -14,8 +14,10 @@ navigationFragmentVersion = "2.4.2"
 navigationUiVersion = "2.9.5"
 generativeai = "0.9.0"
 firebaseCrashlyticsBuildtools = "3.0.6"
-roomRuntime = "2.6.1"
-roomCompiler = "2.6.1"
+roomRuntime = "2.7.1"
+roomCompiler = "2.7.1"
+roomCommonJvm = "2.8.2"
+kotlinxMetadataJvm = "0.12.0"
 
 [libraries]
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -34,6 +36,8 @@ generativeai = { group = "com.google.ai.client.generativeai", name = "generative
 firebase-crashlytics-buildtools = { group = "com.google.firebase", name = "firebase-crashlytics-buildtools", version.ref = "firebaseCrashlyticsBuildtools" }
 room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "roomRuntime" }
 room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "roomRuntime" }
+androidx-room-common-jvm = { group = "androidx.room", name = "room-common-jvm", version.ref = "roomCommonJvm" }
+kotlinx-metadata-jvm = { group = "org.jetbrains.kotlinx", name = "kotlinx-metadata-jvm", version.ref = "kotlinxMetadataJvm" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

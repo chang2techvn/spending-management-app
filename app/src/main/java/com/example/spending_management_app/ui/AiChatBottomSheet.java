@@ -42,8 +42,12 @@ import okhttp3.Response;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import java.io.IOException;
+import com.example.spending_management_app.database.AppDatabase;
+import com.example.spending_management_app.database.BudgetEntity;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Date;
+import java.util.concurrent.Executors;
 
 public class AiChatBottomSheet extends DialogFragment {
 
@@ -283,9 +287,19 @@ public class AiChatBottomSheet extends DialogFragment {
                                 messagesRecycler.smoothScrollToPosition(messages.size() - 1);
                                 textToSpeech.speak(displayText, TextToSpeech.QUEUE_FLUSH, null, null);
 
-                                // If JSON found, show confirmation dialog
+                                // If JSON found, route to appropriate confirmation dialog
                                 if (jsonPart != null) {
-                                    showExpenseConfirmationDialog(jsonPart);
+                                    try {
+                                        JSONObject parsed = new JSONObject(jsonPart);
+                                        String action = parsed.optString("action", "");
+                                        if ("set_budget".equals(action) || "update_budget".equals(action)) {
+                                            showBudgetConfirmationDialog(jsonPart);
+                                        } else {
+                                            showExpenseConfirmationDialog(jsonPart);
+                                        }
+                                    } catch (Exception e) {
+                                        showExpenseConfirmationDialog(jsonPart);
+                                    }
                                 }
                             });
                         } catch (Exception e) {
@@ -437,6 +451,55 @@ public class AiChatBottomSheet extends DialogFragment {
         } catch (Exception e) {
             Log.e("AiChatBottomSheet", "Error parsing JSON: " + jsonString, e);
             Toast.makeText(getContext(), "Lỗi xử lý dữ liệu", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void showBudgetConfirmationDialog(String jsonString) {
+        try {
+            JSONObject json = new JSONObject(jsonString);
+            double amount = json.optDouble("amount", 0);
+            String currency = json.optString("currency", "VND");
+
+            // Confirm with user using a simple dialog
+            Dialog dialog = new Dialog(getContext());
+            dialog.setContentView(R.layout.dialog_confirm_budget);
+            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            dialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+
+            TextView message = dialog.findViewById(R.id.dialog_message);
+            EditText inputAmount = dialog.findViewById(R.id.input_amount);
+            Button btnCancel = dialog.findViewById(R.id.btn_cancel);
+            Button btnConfirm = dialog.findViewById(R.id.btn_confirm);
+
+            message.setText("Xác nhận ngân sách được đề xuất bởi AI:");
+            inputAmount.setText(String.valueOf((long) amount));
+
+            btnCancel.setOnClickListener(v -> dialog.dismiss());
+            btnConfirm.setOnClickListener(v -> {
+                String amtStr = inputAmount.getText().toString().trim();
+                if (!amtStr.isEmpty()) {
+                    try {
+                        long amt = Long.parseLong(amtStr.replaceAll("[^0-9]", ""));
+                        // Save budget to DB (monthly budget)
+                        Executors.newSingleThreadExecutor().execute(() -> {
+                            BudgetEntity budget = new BudgetEntity("Ngân sách tháng", amt, 0L, new Date());
+                            AppDatabase.getInstance(getContext()).budgetDao().insert(budget);
+                            getActivity().runOnUiThread(() -> {
+                                Toast.makeText(getContext(), "Ngân sách đã được cập nhật: " + String.format(Locale.getDefault(), "%,d", amt) + " " + currency, Toast.LENGTH_SHORT).show();
+                                dialog.dismiss();
+                            });
+                        });
+                    } catch (NumberFormatException ex) {
+                        Toast.makeText(getContext(), "Số tiền không hợp lệ", Toast.LENGTH_SHORT).show();
+                    }
+                }
+            });
+
+            dialog.show();
+
+        } catch (Exception e) {
+            Log.e("AiChatBottomSheet", "Error parsing budget JSON: " + jsonString, e);
+            Toast.makeText(getContext(), "Lỗi xử lý dữ liệu ngân sách", Toast.LENGTH_SHORT).show();
         }
     }
 

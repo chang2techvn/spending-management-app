@@ -21,13 +21,13 @@
             app:cardCornerRadius="20dp"
             app:cardElevation="0dp">
 
-            <ImageView
+            <TextView
                 android:id="@+id/transaction_icon"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:padding="8dp"
-                android:src="@drawable/ic_bar_chart"
-                android:tint="#F44336"
+                android:gravity="center"
+                android:text="🍽️"
+                android:textSize="18sp"
                 android:background="#FFF3E0" />
 
         </androidx.cardview.widget.CardView>

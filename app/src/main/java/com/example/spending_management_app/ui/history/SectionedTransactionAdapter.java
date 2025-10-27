@@ -142,7 +142,7 @@ public class SectionedTransactionAdapter extends RecyclerView.Adapter<RecyclerVi
     }
 
     static class TransactionViewHolder extends RecyclerView.ViewHolder {
-        ImageView iconImageView;
+        TextView iconTextView;
         TextView titleTextView;
         TextView categoryTextView;
         TextView dateTextView;
@@ -150,7 +150,7 @@ public class SectionedTransactionAdapter extends RecyclerView.Adapter<RecyclerVi
 
         public TransactionViewHolder(@NonNull View itemView) {
             super(itemView);
-            iconImageView = itemView.findViewById(R.id.transaction_icon);
+            iconTextView = itemView.findViewById(R.id.transaction_icon);
             titleTextView = itemView.findViewById(R.id.transaction_title);
             categoryTextView = itemView.findViewById(R.id.transaction_category);
             dateTextView = itemView.findViewById(R.id.transaction_date);
@@ -170,23 +170,31 @@ public class SectionedTransactionAdapter extends RecyclerView.Adapter<RecyclerVi
                 amountTextView.setTextColor(itemView.getContext().getColor(R.color.expense_color));
             }
 
-            // Set icon based on category
-            int iconResId = getIconResourceId(transaction.getIconResName());
-            iconImageView.setImageResource(iconResId);
+            // Set icon emoji based on category
+            String iconEmoji = getIconEmoji(transaction.getCategory());
+            iconTextView.setText(iconEmoji);
 
             // Set icon background color based on category
             int backgroundColor = getCategoryColor(transaction.getCategory());
-            iconImageView.setBackgroundColor(backgroundColor);
+            iconTextView.setBackgroundColor(backgroundColor);
         }
 
-        private int getIconResourceId(String iconName) {
-            switch (iconName) {
-                case "ic_home_black_24dp":
-                    return R.drawable.ic_home_black_24dp;
-                case "ic_bar_chart":
-                    return R.drawable.ic_bar_chart;
+        private String getIconEmoji(String category) {
+            switch (category) {
+                case "Ăn uống":
+                    return "🍽️";
+                case "Di chuyển":
+                    return "🚗";
+                case "Mua sắm":
+                    return "🛍️";
+                case "Ngân sách":
+                    return "💰";
+                case "Tiện ích":
+                    return "⚡";
+                case "Giáo dục":
+                    return "📚";
                 default:
-                    return R.drawable.ic_bar_chart;
+                    return "💳";
             }
         }
 
