@@ -7,6 +7,9 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
+
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Locale;
 
 import android.speech.RecognizerIntent;
@@ -48,6 +51,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Date;
 import java.util.concurrent.Executors;
+import java.text.NumberFormat;
 
 public class AiChatBottomSheet extends DialogFragment {
 
@@ -128,11 +132,11 @@ public class AiChatBottomSheet extends DialogFragment {
             String prompt = args.getString("initial_prompt");
             if (prompt != null && !prompt.isEmpty()) {
                 android.util.Log.d("AiChatBottomSheet", "Initial prompt from args: " + prompt);
-                // Add user message to chat
-                messages.add(new ChatMessage(prompt, true, "Bây giờ"));
+                // Add a fixed user message to chat instead of the full prompt
+                messages.add(new ChatMessage("Thiết lập ngân sách tháng này", true, "Bây giờ"));
                 chatAdapter.notifyItemInserted(messages.size() - 1);
                 messagesRecycler.smoothScrollToPosition(messages.size() - 1);
-                // Process AI response
+                // Process AI response with the actual prompt
                 sendToAI(prompt);
             }
         }
@@ -215,6 +219,44 @@ public class AiChatBottomSheet extends DialogFragment {
     }
 
     private void sendToAI(String text) {
+        // Check if user is requesting budget management like the button
+        if (text.toLowerCase().contains("ngân sách") && (text.toLowerCase().contains("tháng") || text.toLowerCase().contains("thiết lập") || text.toLowerCase().contains("hiện tại") || text.toLowerCase().contains("bao nhiêu"))) {
+            // Handle like the button: query DB and create prompt
+            Executors.newSingleThreadExecutor().execute(() -> {
+                Calendar cal = Calendar.getInstance();
+                cal.set(Calendar.DAY_OF_MONTH, 1);
+                Date startOfMonth = cal.getTime();
+                cal.set(Calendar.DAY_OF_MONTH, cal.getActualMaximum(Calendar.DAY_OF_MONTH));
+                Date endOfMonth = cal.getTime();
+
+                List<BudgetEntity> monthlyBudgets = AppDatabase.getInstance(getContext()).budgetDao().getBudgetsByDateRange(startOfMonth, endOfMonth);
+
+                getActivity().runOnUiThread(() -> {
+                    String prompt;
+                    if (monthlyBudgets == null || monthlyBudgets.isEmpty()) {
+                        // No budget set: ask AI to prompt user naturally and request an amount
+                        prompt = "Người dùng chưa thiết lập ngân sách cho tháng này. Hãy hỏi họ bằng một câu tự nhiên, đa dạng (không quá cứng nhắc) để yêu cầu họ nhập số ngân sách cho tháng này. Sau câu hỏi, khi người dùng trả lời, hãy trả về JSON dạng {\"action\":\"set_budget\", \"amount\": số, \"currency\": \"VND\"} để app có thể lưu." 
+                                + " Hãy đưa ra một câu hỏi kèm theo gợi ý ngắn nếu cần.";
+                    } else {
+                        BudgetEntity budget = monthlyBudgets.get(0);
+                        SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy", new Locale("vi", "VN"));
+                        String dateStr = budget.getDate() != null ? dateFormat.format(budget.getDate()) : "(không xác định)";
+                        prompt = "Người dùng đã thiết lập ngân sách tháng này vào ngày " + dateStr + ". Số tiền hiện tại là "
+                                + String.format(Locale.getDefault(), "%,d", budget.getMonthlyLimit()) + " VND. Hãy trả lời người dùng bằng ngôn ngữ tự nhiên (có thể hài hước), thông báo số ngân sách hiện tại và hỏi xem họ có muốn thay đổi không. Nếu user muốn thay đổi và cung cấp số mới, trả về JSON {\"action\":\"update_budget\", \"amount\": số, \"currency\": \"VND\"}.";
+                    }
+
+                    // Send the crafted prompt to AI
+                    sendPromptToAI(prompt);
+                });
+            });
+            return;
+        }
+
+        // Normal send to AI
+        sendPromptToAI(text);
+    }
+
+    private void sendPromptToAI(String text) {
         // Add temporary "Đang phân tích..." message
         int analyzingIndex = messages.size();
         messages.add(new ChatMessage("Đang phân tích...", false, "Bây giờ"));
@@ -229,7 +271,7 @@ public class AiChatBottomSheet extends DialogFragment {
             JSONObject systemInstruction = new JSONObject();
             JSONArray systemParts = new JSONArray();
             JSONObject systemPart = new JSONObject();
-            systemPart.put("text", "Bạn là trợ lý ghi chi tiêu. Khi user muốn thêm ngân sách hoặc chi tiêu, hãy trả về JSON với cấu trúc: {\"type\": \"expense\" hoặc \"income\", \"name\": \"tên giao dịch\", \"amount\": số tiền, \"currency\": \"VND\" hoặc \"USD\" v.v., \"category\": \"Ăn uống\" v.v.} và một câu trả lời tự nhiên hài hước để yêu cầu xác nhận, không hiển thị JSON. Ví dụ: {\"type\":\"expense\",\"name\":\"Ăn sáng\",\"amount\":50000,\"currency\":\"VND\",\"category\":\"Ăn uống\"} Bạn đã thêm chi tiêu 50k VND cho việc ăn sáng, ngon miệng nhé! Nếu không phải thêm giao dịch, trả lời bình thường.");
+            systemPart.put("text", "Bạn là trợ lý ghi chi tiêu. Khi user muốn thêm ngân sách hoặc chi tiêu, hãy trả về JSON với cấu trúc: {\"type\": \"expense\" hoặc \"income\", \"name\": \"tên giao dịch\", \"amount\": số tiền, \"currency\": \"VND\" hoặc \"USD\" v.v., \"category\": \"Ăn uống\" v.v.} và một câu trả lời tự nhiên hài hước để yêu cầu xác nhận, không hiển thị JSON. Ví dụ: {\"type\":\"expense\",\"name\":\"Ăn sáng\",\"amount\":50000,\"currency\":\"VND\",\"category\":\"Ăn uống\"} Bạn đã thêm chi tiêu 50k VND cho việc ăn sáng, ngon miệng nhé! Khi user muốn thay đổi ngân sách tháng, trả về JSON {\"action\":\"update_budget\", \"amount\": số tiền mới, \"currency\": \"VND\"} và một câu trả lời tự nhiên để xác nhận. Nếu không phải thêm giao dịch hoặc thay đổi ngân sách, trả lời bình thường.");
             systemParts.put(systemPart);
             systemInstruction.put("parts", systemParts);
             json.put("system_instruction", systemInstruction);
@@ -460,6 +502,13 @@ public class AiChatBottomSheet extends DialogFragment {
             double amount = json.optDouble("amount", 0);
             String currency = json.optString("currency", "VND");
 
+            // Calculate date range
+            Calendar cal = Calendar.getInstance();
+            cal.set(Calendar.DAY_OF_MONTH, 1);
+            Date startOfMonth = cal.getTime();
+            cal.set(Calendar.DAY_OF_MONTH, cal.getActualMaximum(Calendar.DAY_OF_MONTH));
+            Date endOfMonth = cal.getTime();
+
             // Confirm with user using a simple dialog
             Dialog dialog = new Dialog(getContext());
             dialog.setContentView(R.layout.dialog_confirm_budget);
@@ -467,12 +516,32 @@ public class AiChatBottomSheet extends DialogFragment {
             dialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
 
             TextView message = dialog.findViewById(R.id.dialog_message);
+            TextView currentBudgetText = dialog.findViewById(R.id.current_budget_text);
             EditText inputAmount = dialog.findViewById(R.id.input_amount);
+            TextView newBudgetDate = dialog.findViewById(R.id.new_budget_date);
             Button btnCancel = dialog.findViewById(R.id.btn_cancel);
             Button btnConfirm = dialog.findViewById(R.id.btn_confirm);
 
-            message.setText("Xác nhận ngân sách được đề xuất bởi AI:");
-            inputAmount.setText(String.valueOf((long) amount));
+            message.setText("Xác nhận thay đổi ngân sách tháng");
+            inputAmount.setText(NumberFormat.getInstance(Locale.getDefault()).format((long) amount));
+
+            // Set new budget date
+            SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy", new Locale("vi", "VN"));
+            newBudgetDate.setText("Ngày thêm: " + dateFormat.format(new Date()));
+
+            // Load current budget
+            Executors.newSingleThreadExecutor().execute(() -> {
+                List<BudgetEntity> monthlyBudgets = AppDatabase.getInstance(getContext()).budgetDao().getBudgetsByDateRange(startOfMonth, endOfMonth);
+                getActivity().runOnUiThread(() -> {
+                    if (monthlyBudgets != null && !monthlyBudgets.isEmpty()) {
+                        BudgetEntity budget = monthlyBudgets.get(0);
+                        String dateStr = budget.getDate() != null ? dateFormat.format(budget.getDate()) : "(không xác định)";
+                        currentBudgetText.setText("Ngân sách cũ: " + String.format(Locale.getDefault(), "%,d", budget.getMonthlyLimit()) + " VND (thêm ngày " + dateStr + ")");
+                    } else {
+                        currentBudgetText.setText("Ngân sách cũ: Chưa có (thêm ngày -)");
+                    }
+                });
+            });
 
             btnCancel.setOnClickListener(v -> dialog.dismiss());
             btnConfirm.setOnClickListener(v -> {
@@ -480,10 +549,20 @@ public class AiChatBottomSheet extends DialogFragment {
                 if (!amtStr.isEmpty()) {
                     try {
                         long amt = Long.parseLong(amtStr.replaceAll("[^0-9]", ""));
-                        // Save budget to DB (monthly budget)
+                        // Save budget to DB (update if exists, else insert)
                         Executors.newSingleThreadExecutor().execute(() -> {
-                            BudgetEntity budget = new BudgetEntity("Ngân sách tháng", amt, 0L, new Date());
-                            AppDatabase.getInstance(getContext()).budgetDao().insert(budget);
+                            List<BudgetEntity> existingBudgets = AppDatabase.getInstance(getContext()).budgetDao().getBudgetsByDateRange(startOfMonth, endOfMonth);
+                            if (existingBudgets != null && !existingBudgets.isEmpty()) {
+                                // Update existing
+                                BudgetEntity existing = existingBudgets.get(0);
+                                existing.setMonthlyLimit(amt);
+                                existing.setDate(new Date());
+                                AppDatabase.getInstance(getContext()).budgetDao().update(existing);
+                            } else {
+                                // Insert new
+                                BudgetEntity budget = new BudgetEntity("Ngân sách tháng", amt, 0L, new Date());
+                                AppDatabase.getInstance(getContext()).budgetDao().insert(budget);
+                            }
                             getActivity().runOnUiThread(() -> {
                                 Toast.makeText(getContext(), "Ngân sách đã được cập nhật: " + String.format(Locale.getDefault(), "%,d", amt) + " " + currency, Toast.LENGTH_SHORT).show();
                                 dialog.dismiss();

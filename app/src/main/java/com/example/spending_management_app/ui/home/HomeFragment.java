@@ -17,9 +17,15 @@ import com.example.spending_management_app.MainActivity;
 import com.example.spending_management_app.R;
 import com.example.spending_management_app.databinding.FragmentHomeBinding;
 
+import com.example.spending_management_app.database.AppDatabase;
+import com.example.spending_management_app.database.BudgetEntity;
+
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
+import java.util.concurrent.Executors;
 
 public class HomeFragment extends Fragment {
 
@@ -48,11 +54,31 @@ public class HomeFragment extends Fragment {
     }
 
     private void setupBalanceData() {
-        // Set current balance
-        binding.currentBalance.setText("12,500,000 VND");
+        // Load monthly budget from DB
+        Executors.newSingleThreadExecutor().execute(() -> {
+            Calendar cal = Calendar.getInstance();
+            cal.set(Calendar.DAY_OF_MONTH, 1);
+            Date startOfMonth = cal.getTime();
+            cal.set(Calendar.DAY_OF_MONTH, cal.getActualMaximum(Calendar.DAY_OF_MONTH));
+            Date endOfMonth = cal.getTime();
 
-        // Set monthly income and expense
-        binding.monthlyIncome.setText("+8,000,000");
+            List<BudgetEntity> monthlyBudgets = AppDatabase.getInstance(getContext()).budgetDao().getBudgetsByDateRange(startOfMonth, endOfMonth);
+            getActivity().runOnUiThread(() -> {
+                long monthlyExpenseValue = 5500000; // Hardcoded for now, should be calculated from DB
+                if (monthlyBudgets != null && !monthlyBudgets.isEmpty()) {
+                    BudgetEntity budget = monthlyBudgets.get(0);
+                    long budgetValue = budget.getMonthlyLimit();
+                    binding.monthlyIncome.setText(String.format(Locale.getDefault(), "%,d", budgetValue) + " VND");
+                    long currentBalance = budgetValue - monthlyExpenseValue;
+                    binding.currentBalance.setText(String.format(Locale.getDefault(), "%,d", currentBalance) + " VND");
+                } else {
+                    binding.monthlyIncome.setText("Chưa thiết lập");
+                    binding.currentBalance.setText("Chưa thiết lập");
+                }
+            });
+        });
+
+        // Set monthly expense
         binding.monthlyExpense.setText("-5,500,000");
     }
 
