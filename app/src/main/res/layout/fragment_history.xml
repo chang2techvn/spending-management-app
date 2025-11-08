@@ -61,8 +61,8 @@
                 android:layout_width="20dp"
                 android:layout_height="20dp"
                 android:src="@drawable/ic_search"
-                android:tint="#757575"
-                android:layout_marginEnd="8dp" />
+                android:layout_marginEnd="8dp"
+                app:tint="#757575" />
 
             <EditText
                 android:id="@+id/search_input"
@@ -81,8 +81,8 @@
                 android:layout_marginStart="8dp"
                 android:src="@drawable/ic_filter"
                 android:background="?android:attr/selectableItemBackgroundBorderless"
-                android:tint="#757575"
-                android:contentDescription="Lọc theo ngày" />
+                android:contentDescription="Lọc theo ngày"
+                app:tint="#757575" />
 
         </LinearLayout>
 

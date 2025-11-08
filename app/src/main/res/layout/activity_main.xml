@@ -13,7 +13,7 @@
         android:fitsSystemWindows="true"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:paddingHorizontal="32dp"
+        android:paddingHorizontal="16dp"
         android:paddingVertical="20dp"
         android:visibility="visible"
         app:layout_constraintLeft_toLeftOf="parent"
@@ -44,6 +44,7 @@
         </LinearLayout>
 
         <ImageView
+            android:id="@+id/user_avatar"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:layout_marginStart="16dp"

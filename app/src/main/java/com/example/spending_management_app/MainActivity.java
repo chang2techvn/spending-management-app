@@ -58,6 +58,10 @@ public class MainActivity extends AppCompatActivity {
         // Setup custom bottom navigation
         setupBottomNavigation();
 
+        // Setup user avatar click listener
+        ImageView userAvatar = findViewById(R.id.user_avatar);
+        userAvatar.setOnClickListener(v -> navController.navigate(R.id.navigation_account));
+
         // Listen to destination changes to update UI
         navController.addOnDestinationChangedListener((controller, destination, arguments) -> {
             updateNavigationUI(destination.getId());
