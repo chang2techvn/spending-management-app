@@ -47,6 +47,7 @@ import org.json.JSONObject;
 import java.io.IOException;
 import com.example.spending_management_app.database.AppDatabase;
 import com.example.spending_management_app.database.BudgetEntity;
+import com.example.spending_management_app.database.TransactionEntity;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Date;
@@ -132,8 +133,22 @@ public class AiChatBottomSheet extends DialogFragment {
             String prompt = args.getString("initial_prompt");
             if (prompt != null && !prompt.isEmpty()) {
                 android.util.Log.d("AiChatBottomSheet", "Initial prompt from args: " + prompt);
-                // Add a fixed user message to chat instead of the full prompt
-                messages.add(new ChatMessage("Thiết lập ngân sách tháng này", true, "Bây giờ"));
+                // Decide what user-visible message to show in the chat based on the prompt
+                // If the user requested adding an expense, show "Thiết lập chi tiêu tháng này"
+                // If the user requested budget management, keep "Thiết lập ngân sách tháng này"
+                String lower = prompt.toLowerCase();
+                String userVisibleMessage;
+                if (lower.contains("chi tiêu") || lower.contains("thêm chi tiêu") || lower.contains("chi tieu")) {
+                    userVisibleMessage = "Thêm chi tiêu mới";
+                } else if (lower.contains("ngân sách") || lower.contains("thiet lap ngan sach") || lower.contains("thiết lập ngân sách")) {
+                    userVisibleMessage = "Thiết lập ngân sách tháng này";
+                } else {
+                    // Fallback: show the prompt itself (trimmed) so it's clear what the user requested
+                    userVisibleMessage = prompt.trim();
+                }
+
+                // Add the determined message to the chat and process the original prompt
+                messages.add(new ChatMessage(userVisibleMessage, true, "Bây giờ"));
                 chatAdapter.notifyItemInserted(messages.size() - 1);
                 messagesRecycler.smoothScrollToPosition(messages.size() - 1);
                 // Process AI response with the actual prompt
@@ -267,11 +282,26 @@ public class AiChatBottomSheet extends DialogFragment {
         try {
             JSONObject json = new JSONObject();
 
+            // Get current date for AI context
+            java.util.Calendar currentCalendar = java.util.Calendar.getInstance();
+            int currentDay = currentCalendar.get(java.util.Calendar.DAY_OF_MONTH);
+            int currentMonth = currentCalendar.get(java.util.Calendar.MONTH) + 1; // Calendar.MONTH is 0-based
+            int currentYear = currentCalendar.get(java.util.Calendar.YEAR);
+            
+            // Calculate yesterday's date
+            java.util.Calendar yesterdayCalendar = java.util.Calendar.getInstance();
+            yesterdayCalendar.add(java.util.Calendar.DAY_OF_MONTH, -1);
+            int yesterdayDay = yesterdayCalendar.get(java.util.Calendar.DAY_OF_MONTH);
+            int yesterdayMonth = yesterdayCalendar.get(java.util.Calendar.MONTH) + 1;
+            int yesterdayYear = yesterdayCalendar.get(java.util.Calendar.YEAR);
+            
+            String currentDateInfo = String.format("Hôm nay là ngày %d/%d/%d", currentDay, currentMonth, currentYear);
+
             // System instruction
             JSONObject systemInstruction = new JSONObject();
             JSONArray systemParts = new JSONArray();
             JSONObject systemPart = new JSONObject();
-            systemPart.put("text", "Bạn là trợ lý ghi chi tiêu. Khi user muốn thêm ngân sách hoặc chi tiêu, hãy trả về JSON với cấu trúc: {\"type\": \"expense\" hoặc \"income\", \"name\": \"tên giao dịch\", \"amount\": số tiền, \"currency\": \"VND\" hoặc \"USD\" v.v., \"category\": \"Ăn uống\" v.v.} và một câu trả lời tự nhiên hài hước để yêu cầu xác nhận, không hiển thị JSON. Ví dụ: {\"type\":\"expense\",\"name\":\"Ăn sáng\",\"amount\":50000,\"currency\":\"VND\",\"category\":\"Ăn uống\"} Bạn đã thêm chi tiêu 50k VND cho việc ăn sáng, ngon miệng nhé! Khi user muốn thay đổi ngân sách tháng, trả về JSON {\"action\":\"update_budget\", \"amount\": số tiền mới, \"currency\": \"VND\"} và một câu trả lời tự nhiên để xác nhận. Nếu không phải thêm giao dịch hoặc thay đổi ngân sách, trả lời bình thường.");
+            systemPart.put("text", "Bạn là trợ lý ghi chi tiêu. " + currentDateInfo + ". Khi user nói 'Tôi muốn thêm chi tiêu', hãy trả lời một cách thân thiện và đưa ra VÍ DỤ cụ thể như: 'Chào bạn! Tôi sẽ giúp bạn ghi lại chi tiêu. Hãy cho tôi biết chi tiêu cụ thể nhé, ví dụ: \"Hôm qua ăn bún đậu hết 50k\" hoặc \"Ngày 5/11 mua cafe 25k\" hoặc \"Hôm nay ăn sáng 30k\". Sau đó tôi sẽ giúp bạn lưu lại!' Khi user cung cấp thông tin chi tiêu cụ thể, hãy trích xuất ngày tháng CHÍNH XÁC và trả về JSON với cấu trúc: {\"type\": \"expense\", \"name\": \"tên giao dịch\", \"amount\": số tiền, \"currency\": \"VND\", \"category\": \"Ăn uống\", \"day\": ngày (1-31), \"month\": tháng (1-12), \"year\": năm} kèm câu trả lời tự nhiên để xác nhận, KHÔNG hiển thị JSON. QUY TẮC NGÀY: 'hôm nay'=" + currentDay + "/" + currentMonth + "/" + currentYear + ", 'hôm qua'=" + yesterdayDay + "/" + yesterdayMonth + "/" + yesterdayYear + ", 'ngày X/Y'=ngày X tháng Y năm " + currentYear + ". Nếu user không nói rõ ngày, hãy dùng ngày hiện tại (" + currentDay + "/" + currentMonth + "/" + currentYear + "). Khi user muốn thay đổi ngân sách tháng, trả về JSON {\"action\":\"update_budget\", \"amount\": số tiền mới, \"currency\": \"VND\"} và câu trả lời tự nhiên để xác nhận. Nếu không phải thêm giao dịch hoặc thay đổi ngân sách, trả lời bình thường.");
             systemParts.put(systemPart);
             systemInstruction.put("parts", systemParts);
             json.put("system_instruction", systemInstruction);
@@ -290,7 +320,7 @@ public class AiChatBottomSheet extends DialogFragment {
 
             RequestBody body = RequestBody.create(json.toString(), MediaType.parse("application/json"));
             Request request = new Request.Builder()
-                    .url("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=AIzaSyB7cKKNvETdnd379olrAJpXzEfmfIGyx-M")
+                    .url("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=AIzaSyD-qdRLT3vJRpLZTmzFANqSIobhFIfBBq0")
                     .post(body)
                     .build();
 
@@ -430,6 +460,9 @@ public class AiChatBottomSheet extends DialogFragment {
             android.widget.EditText editAmount = dialog.findViewById(R.id.edit_amount);
             android.widget.Spinner spinnerCurrency = dialog.findViewById(R.id.spinner_currency);
             android.widget.Spinner spinnerCategory = dialog.findViewById(R.id.spinner_category);
+            android.widget.EditText editDay = dialog.findViewById(R.id.edit_day);
+            android.widget.EditText editMonth = dialog.findViewById(R.id.edit_month);
+            android.widget.EditText editYear = dialog.findViewById(R.id.edit_year);
             android.widget.Button btnCancel = dialog.findViewById(R.id.btn_cancel);
             android.widget.Button btnConfirm = dialog.findViewById(R.id.btn_confirm);
 
@@ -481,11 +514,81 @@ public class AiChatBottomSheet extends DialogFragment {
                 }
             }
 
+            // Fill date information from JSON or use current date
+            int day = json.optInt("day", 0);
+            int month = json.optInt("month", 0);
+            int year = json.optInt("year", 0);
+            
+            // If no date provided in JSON, use current date
+            if (day == 0 || month == 0 || year == 0) {
+                java.util.Calendar today = java.util.Calendar.getInstance();
+                day = (day == 0) ? today.get(java.util.Calendar.DAY_OF_MONTH) : day;
+                month = (month == 0) ? today.get(java.util.Calendar.MONTH) + 1 : month; // Calendar.MONTH is 0-based
+                year = (year == 0) ? today.get(java.util.Calendar.YEAR) : year;
+            }
+            
+            editDay.setText(String.valueOf(day));
+            editMonth.setText(String.valueOf(month));
+            editYear.setText(String.valueOf(year));
+
             btnCancel.setOnClickListener(v -> dialog.dismiss());
             btnConfirm.setOnClickListener(v -> {
-                // TODO: Save to database
-                Toast.makeText(getContext(), "Đã xác nhận giao dịch", Toast.LENGTH_SHORT).show();
-                dialog.dismiss();
+                // Get values from dialog
+                String selectedType = spinnerType.getSelectedItem().toString();
+                String transactionType = selectedType.equals("Chi tiêu") ? "expense" : "income";
+                String name = editName.getText().toString().trim();
+                String amountStr = editAmount.getText().toString().trim();
+                String selectedCurrency = spinnerCurrency.getSelectedItem().toString();
+                String selectedCategory = spinnerCategory.getSelectedItem().toString();
+                String dayStr = editDay.getText().toString().trim();
+                String monthStr = editMonth.getText().toString().trim();
+                String yearStr = editYear.getText().toString().trim();
+
+                // Validate input
+                if (name.isEmpty() || amountStr.isEmpty() || dayStr.isEmpty() || monthStr.isEmpty() || yearStr.isEmpty()) {
+                    Toast.makeText(getContext(), "Vui lòng nhập đầy đủ thông tin", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                try {
+                    long amount = Long.parseLong(amountStr);
+                    int inputDay = Integer.parseInt(dayStr);
+                    int inputMonth = Integer.parseInt(monthStr);
+                    int inputYear = Integer.parseInt(yearStr);
+
+                    // Validate date
+                    if (inputDay < 1 || inputDay > 31 || inputMonth < 1 || inputMonth > 12 || inputYear < 1900 || inputYear > 2100) {
+                        Toast.makeText(getContext(), "Ngày tháng không hợp lệ", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    // Make expense amounts negative
+                    if (transactionType.equals("expense")) {
+                        amount = -Math.abs(amount);
+                    }
+
+                    // Create date from user input
+                    java.util.Calendar cal = java.util.Calendar.getInstance();
+                    cal.set(inputYear, inputMonth - 1, inputDay, 0, 0, 0); // month is 0-based in Calendar
+                    cal.set(java.util.Calendar.MILLISECOND, 0);
+                    java.util.Date transactionDate = cal.getTime();
+
+                    // Save to database
+                    TransactionEntity transaction = 
+                        new TransactionEntity(
+                            name, selectedCategory, amount, transactionDate, transactionType);
+
+                    java.util.concurrent.Executors.newSingleThreadExecutor().execute(() -> {
+                        AppDatabase.getInstance(getContext()).transactionDao().insert(transaction);
+                        getActivity().runOnUiThread(() -> {
+                            Toast.makeText(getContext(), "Đã lưu " + selectedType.toLowerCase() + ": " + name, Toast.LENGTH_SHORT).show();
+                        });
+                    });
+
+                    dialog.dismiss();
+                } catch (NumberFormatException e) {
+                    Toast.makeText(getContext(), "Số tiền hoặc ngày tháng không hợp lệ", Toast.LENGTH_SHORT).show();
+                }
             });
 
             dialog.show();
