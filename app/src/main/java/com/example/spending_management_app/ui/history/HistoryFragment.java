@@ -14,12 +14,15 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.example.spending_management_app.databinding.FragmentHistoryBinding;
 import com.example.spending_management_app.ui.home.Transaction;
+import com.example.spending_management_app.database.AppDatabase;
+import com.example.spending_management_app.database.TransactionEntity;
 import com.google.android.material.tabs.TabLayout;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.concurrent.Executors;
 
 public class HistoryFragment extends Fragment implements DateRangePickerDialog.DateRangeListener {
 
@@ -39,8 +42,8 @@ public class HistoryFragment extends Fragment implements DateRangePickerDialog.D
         binding = FragmentHistoryBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
 
-        // Setup transaction data
-        setupTransactionData();
+        // Setup transaction data from database
+        loadTransactionsFromDatabase();
 
         // Setup filter tabs
         setupFilterTabs();
@@ -57,7 +60,70 @@ public class HistoryFragment extends Fragment implements DateRangePickerDialog.D
         return root;
     }
 
-    private void setupTransactionData() {
+    private void loadTransactionsFromDatabase() {
+        // Initialize empty lists first
+        allTransactions = new ArrayList<>();
+        filteredTransactions = new ArrayList<>();
+        
+        // Load data from database in background thread
+        Executors.newSingleThreadExecutor().execute(() -> {
+            try {
+                // Get all transactions from database
+                List<TransactionEntity> transactionEntities = AppDatabase.getInstance(getContext())
+                        .transactionDao()
+                        .getAllTransactions();
+                
+                // Convert TransactionEntity to Transaction objects
+                List<Transaction> transactions = new ArrayList<>();
+                for (TransactionEntity entity : transactionEntities) {
+                    // Choose appropriate icon based on category and type
+                    String iconName = getIconForCategory(entity.category, entity.type);
+                    
+                    Transaction transaction = new Transaction(
+                            entity.description,
+                            entity.category,
+                            entity.amount,
+                            iconName,
+                            entity.date,
+                            entity.type
+                    );
+                    transactions.add(transaction);
+                }
+                
+                // Update UI on main thread
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(() -> {
+                        allTransactions.clear();
+                        allTransactions.addAll(transactions);
+                        
+                        filteredTransactions.clear();
+                        filteredTransactions.addAll(allTransactions);
+                        
+                        // Refresh adapter
+                        if (transactionAdapter != null) {
+                            transactionAdapter.updateTransactions(filteredTransactions);
+                        }
+                        updateEmptyState();
+                        
+                        android.util.Log.d("HistoryFragment", "Loaded " + transactions.size() + " transactions from database");
+                    });
+                }
+                
+            } catch (Exception e) {
+                android.util.Log.e("HistoryFragment", "Error loading transactions from database", e);
+                
+                // Fallback to sample data on error
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(() -> {
+                        setupSampleTransactionData();
+                    });
+                }
+            }
+        });
+    }
+
+    private void setupSampleTransactionData() {
+        // Fallback sample data (keep original method name for compatibility)
         // Create sample transaction data with various dates
         allTransactions = new ArrayList<>();
 
@@ -84,6 +150,8 @@ public class HistoryFragment extends Fragment implements DateRangePickerDialog.D
         allTransactions.add(new Transaction("Ăn tối gia đình", "Ăn uống", -180000, "ic_bar_chart", threeDaysAgo, "expense"));
 
         filteredTransactions = new ArrayList<>(allTransactions);
+        
+        android.util.Log.d("HistoryFragment", "Sample data loaded with " + allTransactions.size() + " transactions");
     }
 
     private void setupFilterTabs() {
@@ -222,5 +290,48 @@ public class HistoryFragment extends Fragment implements DateRangePickerDialog.D
     public void onDestroyView() {
         super.onDestroyView();
         binding = null;
+    }
+    
+    // Method to refresh transactions when new ones are added
+    public void refreshTransactions() {
+        if (isAdded() && getContext() != null) {
+            loadTransactionsFromDatabase();
+        }
+    }
+    
+    // Method to be called when the fragment becomes visible
+    @Override
+    public void onResume() {
+        super.onResume();
+        // Refresh data when fragment becomes visible
+        loadTransactionsFromDatabase();
+    }
+    
+    // Helper method to get appropriate icon for category
+    private String getIconForCategory(String category, String type) {
+        if ("income".equals(type)) {
+            return "ic_home_black_24dp";
+        }
+        
+        switch (category) {
+            case "Ăn uống":
+                return "ic_restaurant";
+            case "Di chuyển":
+                return "ic_directions_car";
+            case "Mua sắm":
+                return "ic_shopping_cart";
+            case "Ngân sách":
+                return "ic_account_balance_wallet";
+            case "Tiện ích":
+                return "ic_electrical_services";
+            case "Giáo dục":
+                return "ic_school";
+            case "Giải trí":
+                return "ic_local_movies";
+            case "Y tế":
+                return "ic_local_hospital";
+            default:
+                return "ic_bar_chart";
+        }
     }
 }
