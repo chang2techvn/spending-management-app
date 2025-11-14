@@ -3,6 +3,25 @@
     <string name="title_home">Home</string>
     <string name="title_dashboard">Dashboard</string>
     <string name="title_notifications">Notifications</string>
+    <string name="title_welcome">Welcome</string>
+    <string name="subtitle_welcome">Managing expenses has never been easier</string>
+    <string name="startup_text">Continue</string>
+    <string name="signupSuggest_text">Don\'t have an Account?</string>
+    <string name="email_hind">Enter your email address</string>
+    <string name="password_hind">Enter your password</string>
+    <string name="title_signin">Sign in</string>
+    <string name="title_email">Email</string>
+    <string name="title_signout">Sign out</string>
+    <string name="title_password">Password</string>
+    <string name="title_remember">Remember me</string>
+    <string name="forgotPassword_text">Forgot Password</string>
+    <string name="title_signup">Sign up</string>
+    <string name="signinSuggest_text">Already have an Account?</string>
+    <string name="title_firstname">First name</string>
+    <string name="firstname_hint">Enter your firstname</string>
+    <string name="title_lastname">Last name</string>
+    <string name="lastname_hint">and your lastname</string>
+    <string name="confirmPassword_hint">Re-enter your password to confirm</string>
 
     <string-array name="transaction_types">
         <item>Chi tiêu</item>

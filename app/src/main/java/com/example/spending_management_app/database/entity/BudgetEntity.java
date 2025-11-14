@@ -1,4 +1,4 @@
-package com.example.spending_management_app.database;
+package com.example.spending_management_app.database.entity;
 
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;

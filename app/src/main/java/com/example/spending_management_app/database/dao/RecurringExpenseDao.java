@@ -1,8 +1,10 @@
-package com.example.spending_management_app.database;
+package com.example.spending_management_app.database.dao;
 
 import androidx.room.Dao;
 import androidx.room.Insert;
 import androidx.room.Query;
+
+import com.example.spending_management_app.database.entity.RecurringExpenseEntity;
 
 import java.util.List;
 

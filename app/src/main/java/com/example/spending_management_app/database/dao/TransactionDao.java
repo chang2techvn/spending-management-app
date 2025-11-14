@@ -1,9 +1,10 @@
-package com.example.spending_management_app.database;
+package com.example.spending_management_app.database.dao;
 
 import androidx.room.Dao;
 import androidx.room.Insert;
 import androidx.room.Query;
-import androidx.room.Update;
+
+import com.example.spending_management_app.database.entity.TransactionEntity;
 
 import java.util.List;
 

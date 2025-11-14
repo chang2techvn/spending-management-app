@@ -10,6 +10,14 @@
     <color name="nav_item_color">#FF666666</color>
     <color name="blue_600">#FF1976D2</color>
 
+    <!-- Startup screen -->
+    <color name="primaryBlue">#326FF2</color>
+    <color name="textPrimary">#212121</color>
+    <color name="textSecondary">#616161</color>
+
+    <!-- Error color -->
+    <color name="errorRed">#F44336</color>
+
     <!-- Transaction colors -->
     <color name="income_color">#FF4CAF50</color>
     <color name="expense_color">#FFF44336</color>

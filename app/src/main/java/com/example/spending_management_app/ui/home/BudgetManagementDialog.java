@@ -1,23 +1,18 @@
 package com.example.spending_management_app.ui.home;
 
-import android.app.AlertDialog;
 import android.app.Dialog;
 import android.os.Bundle;
-import android.text.InputType;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
-import android.widget.EditText;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
-import androidx.lifecycle.ViewModelProvider;
 
 import com.example.spending_management_app.R;
 import com.example.spending_management_app.database.AppDatabase;
-import com.example.spending_management_app.database.BudgetEntity;
+import com.example.spending_management_app.database.entity.BudgetEntity;
 import com.example.spending_management_app.ui.AiChatBottomSheet;
 
 import java.text.SimpleDateFormat;
@@ -25,23 +20,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
-import java.io.IOException;
-import java.io.IOException;
 import java.util.concurrent.Executors;
-
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
-
-import org.json.JSONArray;
-import org.json.JSONObject;
-
-import org.json.JSONArray;
-import org.json.JSONObject;
 
 public class BudgetManagementDialog extends DialogFragment {
 
