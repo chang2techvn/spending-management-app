@@ -26,7 +26,11 @@
         android:id="@+id/navigation_account"
         android:name="com.example.spending_management_app.ui.account.AccountFragment"
         android:label="Tài khoản"
-        tools:layout="@layout/fragment_account" />
+        tools:layout="@layout/fragment_account">
+        <action
+            android:id="@+id/action_navigation_account_to_helpCenterFragment"
+            app:destination="@id/helpCenterFragment" />
+    </fragment>
 
     <fragment
         android:id="@+id/navigation_dashboard"
@@ -39,4 +43,11 @@
         android:name="com.example.spending_management_app.ui.notifications.NotificationsFragment"
         android:label="@string/title_notifications"
         tools:layout="@layout/fragment_notifications" />
+
+    <fragment
+        android:id="@+id/helpCenterFragment"
+        android:name="com.example.spending_management_app.ui.helpcenter.HelpCenterFragment"
+        android:label="Hỗ trợ"
+        tools:layout="@layout/fragment_help_center" />
+
 </navigation>

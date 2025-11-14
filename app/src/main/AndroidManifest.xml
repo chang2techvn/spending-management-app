@@ -36,7 +36,13 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:label="@string/app_name" />
+            android:label="@string/app_name"
+            android:configChanges="locale|layoutDirection|screenLayout|uiMode"
+            android:enableOnBackInvokedCallback="true" />
+
+        <activity
+            android:name=".ui.account.ProfileActivity"
+            android:exported="false" />
 
     </application>
 

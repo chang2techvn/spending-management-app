@@ -1,0 +1,51 @@
+<resources>
+    <string name="app_name">Quản Lý Chi Tiêu</string>
+    <string name="settings_language">Ngôn ngữ</string>
+    <string name="choose_language">Chọn ngôn ngữ</string>
+    <string name="english">Tiếng Anh</string>
+    <string name="vietnamese">Tiếng Việt</string>
+
+    <string name="title_home">Trang chủ</string>
+    <string name="title_dashboard">Thống kê</string>
+    <string name="title_notifications">Thông báo</string>
+    <string name="title_welcome">Chào mừng</string>
+    <string name="subtitle_welcome">Quản lý chi tiêu chưa bao giờ dễ dàng hơn</string>
+    <string name="startup_text">Tiếp tục</string>
+    <string name="signupSuggest_text">Chưa có tài khoản?</string>
+    <string name="email_hind">Nhập địa chỉ email của bạn</string>
+    <string name="password_hind">Nhập mật khẩu của bạn</string>
+    <string name="title_signin">Đăng nhập</string>
+    <string name="title_email">Email</string>
+    <string name="title_signout">Đăng xuất</string>
+    <string name="title_password">Mật khẩu</string>
+    <string name="title_remember">Ghi nhớ tôi</string>
+    <string name="forgotPassword_text">Quên mật khẩu</string>
+    <string name="title_signup">Đăng ký</string>
+    <string name="signinSuggest_text">Đã có tài khoản?</string>
+    <string name="title_firstname">Tên</string>
+    <string name="firstname_hint">Nhập tên của bạn</string>
+    <string name="title_lastname">Họ</string>
+    <string name="lastname_hint">và họ của bạn</string>
+    <string name="confirmPassword_hint">Nhập lại mật khẩu để xác nhận</string>
+
+    <string-array name="transaction_types">
+        <item>Chi tiêu</item>
+        <item>Thu nhập</item>
+    </string-array>
+
+    <string-array name="currencies">
+        <item>VND</item>
+        <item>USD</item>
+        <item>EUR</item>
+        <item>JPY</item>
+    </string-array>
+
+    <string-array name="categories">
+        <item>Ăn uống</item>
+        <item>Di chuyển</item>
+        <item>Mua sắm</item>
+        <item>Giải trí</item>
+        <item>Hóa đơn</item>
+        <item>Khác</item>
+    </string-array>
+</resources>

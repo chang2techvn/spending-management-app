@@ -1,56 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:padding="24dp"
-    android:background="@drawable/dialog_background_rounded">
+    android:padding="24dp">
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Quản lý ngân sách"
-        android:textColor="#212121"
-        android:textSize="20sp"
-        android:textStyle="bold"
+        android:textAppearance="?attr/textAppearanceHeadline6"
         android:layout_marginBottom="16dp" />
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Chọn hành động:"
-        android:textColor="#757575"
-        android:textSize="16sp"
-        android:layout_marginBottom="16dp" />
-
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_add_income"
+        style="@style/Widget.MaterialComponents.Button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Ngân sách tháng"
-        android:textColor="#FFFFFF"
-        android:backgroundTint="#4CAF50"
-        android:layout_marginBottom="8dp"
-        style="?android:attr/buttonStyle" />
+        android:layout_marginBottom="8dp" />
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_set_budget"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Ngân sách theo danh mục"
-        android:textColor="#FFFFFF"
-        android:backgroundTint="#2196F3"
-        android:layout_marginBottom="16dp"
-        style="?android:attr/buttonStyle" />
+        android:layout_marginBottom="16dp" />
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_cancel"
-        android:layout_width="match_parent"
+        style="@style/Widget.MaterialComponents.Button.TextButton"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Hủy"
-        android:textColor="#757575"
-        android:background="?android:attr/selectableItemBackground"
-        style="?android:attr/buttonStyle" />
+        android:layout_gravity="end"
+        android:text="Hủy" />
 
 </LinearLayout>

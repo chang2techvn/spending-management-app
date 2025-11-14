@@ -1,13 +1,12 @@
 package com.example.spending_management_app;
 
 import android.Manifest;
-import android.app.AlertDialog;
-import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.speech.RecognizerIntent;
-import android.util.Log;
-import android.view.MotionEvent;
+import android.content.Intent;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -21,8 +20,6 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
-import androidx.navigation.ui.AppBarConfiguration;
-import androidx.navigation.ui.NavigationUI;
 
 import com.example.spending_management_app.databinding.ActivityMainBinding;
 import com.example.spending_management_app.ui.AiChatBottomSheet;
@@ -41,6 +38,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        loadLocale();
         super.onCreate(savedInstanceState);
 
         binding = ActivityMainBinding.inflate(getLayoutInflater());
@@ -49,25 +47,40 @@ public class MainActivity extends AppCompatActivity {
         homeHeader = findViewById(R.id.home_header);
 
         navController = Navigation.findNavController(this, R.id.nav_host_fragment_activity_main);
-        // Passing each menu ID as a set of Ids because each
-        // menu should be considered as top level destinations.
-    // We don't want NavigationUI to automatically set the ActionBar title
-    // because the app uses a custom activity-level header for Home.
-    // So we skip setupActionBarWithNavController and manage our header manually.
 
-        // Setup custom bottom navigation
         setupBottomNavigation();
 
-        // Listen to destination changes to update UI
         navController.addOnDestinationChangedListener((controller, destination, arguments) -> {
             updateNavigationUI(destination.getId());
-            // Sau: Header chỉ hiển thị trên tab Home
             if (destination.getId() == R.id.navigation_home) {
                 homeHeader.setVisibility(View.VISIBLE);
             } else {
                 homeHeader.setVisibility(View.GONE);
             }
         });
+    }
+
+    private void loadLocale() {
+        SharedPreferences prefs = getSharedPreferences("settings", MODE_PRIVATE);
+        String lang = prefs.getString("lang", "en");
+
+        Locale locale = new Locale(lang);
+        Locale.setDefault(locale);
+
+        Configuration config = new Configuration();
+        config.setLocale(locale);
+
+        getResources().updateConfiguration(config, getResources().getDisplayMetrics());
+    }
+
+    public void setLocale(String lang) {
+        SharedPreferences prefs = getSharedPreferences("settings", MODE_PRIVATE);
+        prefs.edit().putString("lang", lang).apply();
+    }
+    
+    public void reloadActivity() {
+        finish();
+        startActivity(getIntent());
     }
 
     private void setupBottomNavigation() {
@@ -83,13 +96,11 @@ public class MainActivity extends AppCompatActivity {
         navAccount.setOnClickListener(v -> navController.navigate(R.id.navigation_account));
 
         navAiAssistant.setOnClickListener(v -> {
-            // Mở dialog chat AI
             AiChatBottomSheet aiChatBottomSheet = new AiChatBottomSheet();
             aiChatBottomSheet.show(getSupportFragmentManager(), aiChatBottomSheet.getTag());
         });
 
         navAiAssistant.setOnLongClickListener(v -> {
-            // Kích hoạt voice chat
             if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
                 ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.RECORD_AUDIO}, 1);
                 return true;
@@ -135,20 +146,12 @@ public class MainActivity extends AppCompatActivity {
         text.setTextColor(color);
     }
 
-
     private void processVoiceInput(String text) {
-        // Gửi text đến Gemini API
-        // Hiện tại, chỉ mở chat với text
         AiChatBottomSheet aiChatBottomSheet = new AiChatBottomSheet();
         Bundle args = new Bundle();
         args.putString("voice_input", text);
         aiChatBottomSheet.setArguments(args);
         aiChatBottomSheet.show(getSupportFragmentManager(), aiChatBottomSheet.getTag());
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
     }
 
     @Override

@@ -1,10 +1,13 @@
 package com.example.spending_management_app.ui.account;
 
-import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.provider.MediaStore;
 import android.text.InputType;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,23 +17,41 @@ import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.fragment.NavHostFragment;
 
+import com.example.spending_management_app.MainActivity;
 import com.example.spending_management_app.R;
 import com.example.spending_management_app.database.AppDatabase;
 import com.example.spending_management_app.database.entity.UserEntity;
 import com.example.spending_management_app.databinding.FragmentAccountBinding;
 import com.example.spending_management_app.ui.login.LoginActivity;
 import com.example.spending_management_app.utils.PasswordHasher;
+import com.google.android.material.imageview.ShapeableImageView;
+import com.google.android.material.shape.ShapeAppearanceModel;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.util.concurrent.Executors;
 
+import static android.app.Activity.RESULT_OK;
+
 public class AccountFragment extends Fragment {
+
+    private static final int PICK_IMAGE_REQUEST = 1;
+    public static final String KEY_NOTIFICATIONS_ENABLED = "notifications_enabled";
+    public static final String KEY_THEME_ENABLED = "theme_enabled";
+    public static final String KEY_SECURITY_ENABLED = "security_enabled";
 
     private FragmentAccountBinding binding;
     private AppDatabase appDatabase;
     private SharedPreferences sharedPreferences;
-    private UserEntity currentUser; // Store the current user object
+    private UserEntity currentUser;
+    private ShapeableImageView dialogAvatarImageView;
+    private String newAvatarPath; // To temporarily store the new avatar file path
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
@@ -55,46 +76,105 @@ public class AccountFragment extends Fragment {
 
         Executors.newSingleThreadExecutor().execute(() -> {
             currentUser = appDatabase.userDao().findUserById(userId);
-            if (currentUser != null && getActivity() != null) {
-                getActivity().runOnUiThread(() -> {
-                    binding.userName.setText(currentUser.firstName + " " + currentUser.lastName);
-                    binding.userEmail.setText(currentUser.email);
-                });
+            if (getActivity() != null) {
+                getActivity().runOnUiThread(this::updateUI);
             }
         });
     }
 
     private void setupClickListeners() {
+        binding.userAvatar.setOnClickListener(v -> showEditProfileDialog());
         binding.editProfileOption.setOnClickListener(v -> showEditProfileDialog());
         binding.changePasswordOption.setOnClickListener(v -> showChangePasswordDialog());
         binding.settingsOption.setOnClickListener(v -> showSettingsDialog());
-        binding.helpSupportOption.setOnClickListener(v -> showHelpSupportDialog());
+        binding.helpSupportOption.setOnClickListener(v -> {
+            NavHostFragment.findNavController(this).navigate(R.id.action_navigation_account_to_helpCenterFragment);
+        });
         binding.signoutButton.setOnClickListener(v -> showLogoutConfirmationDialog());
     }
 
-    private void showEditProfileDialog() {
-        if (currentUser == null) return;
+    private void updateUI() {
+        if (currentUser == null || getContext() == null || binding == null) {
+            return;
+        }
+        String firstName = currentUser.firstName != null ? currentUser.firstName : "";
+        String lastName = currentUser.lastName != null ? currentUser.lastName : "";
+        String email = currentUser.email != null ? currentUser.email : "";
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(getContext(), R.style.RoundedDialog4Corners);
+        binding.userName.setText(String.format("%s %s", firstName, lastName).trim());
+        binding.userEmail.setText(email);
+
+        if (currentUser.avatarUri != null && !currentUser.avatarUri.isEmpty()) {
+            File avatarFile = new File(currentUser.avatarUri);
+            if (avatarFile.exists()) {
+                Bitmap bitmap = BitmapFactory.decodeFile(avatarFile.getAbsolutePath());
+                binding.userAvatar.setImageBitmap(bitmap);
+            } else {
+                binding.userAvatar.setImageResource(R.drawable.ic_launcher_foreground);
+            }
+        } else {
+            binding.userAvatar.setImageResource(R.drawable.ic_launcher_foreground);
+        }
+    }
+
+    private void showEditProfileDialog() {
+        if (currentUser == null || getContext() == null) return;
+
+        newAvatarPath = null; // Reset temp path each time dialog is opened
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
         builder.setTitle("Chỉnh sửa hồ sơ");
 
         LinearLayout layout = new LinearLayout(getContext());
         layout.setOrientation(LinearLayout.VERTICAL);
-        layout.setPadding(32, 16, 32, 16);
+        layout.setPadding(48, 24, 48, 24);
+        layout.setGravity(android.view.Gravity.CENTER_HORIZONTAL);
+
+        dialogAvatarImageView = new ShapeableImageView(getContext());
+        LinearLayout.LayoutParams avatarParams = new LinearLayout.LayoutParams(128, 128);
+        avatarParams.setMargins(0, 0, 0, 16);
+        dialogAvatarImageView.setLayoutParams(avatarParams);
+        dialogAvatarImageView.setScaleType(ShapeableImageView.ScaleType.CENTER_CROP);
+
+        dialogAvatarImageView.setShapeAppearanceModel(ShapeAppearanceModel.builder()
+                .setAllCornerSizes(ShapeAppearanceModel.PILL)
+                .build());
+
+        dialogAvatarImageView.setStrokeWidth(6.0f);
+        dialogAvatarImageView.setStrokeColorResource(R.color.primaryBlue);
+
+        if (currentUser.avatarUri != null && !currentUser.avatarUri.isEmpty()) {
+            File avatarFile = new File(currentUser.avatarUri);
+            if (avatarFile.exists()) {
+                Bitmap bitmap = BitmapFactory.decodeFile(avatarFile.getAbsolutePath());
+                dialogAvatarImageView.setImageBitmap(bitmap);
+            } else {
+                dialogAvatarImageView.setImageResource(R.drawable.ic_launcher_foreground);
+            }
+        } else {
+            dialogAvatarImageView.setImageResource(R.drawable.ic_launcher_foreground);
+        }
+
+        dialogAvatarImageView.setOnClickListener(v -> {
+            Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+            startActivityForResult(intent, PICK_IMAGE_REQUEST);
+        });
+
+        layout.addView(dialogAvatarImageView);
 
         final EditText firstNameInput = new EditText(getContext());
         firstNameInput.setHint("Tên");
-        firstNameInput.setText(currentUser.firstName);
+        firstNameInput.setText(currentUser.firstName != null ? currentUser.firstName : "");
         layout.addView(firstNameInput);
 
         final EditText lastNameInput = new EditText(getContext());
         lastNameInput.setHint("Họ");
-        lastNameInput.setText(currentUser.lastName);
+        lastNameInput.setText(currentUser.lastName != null ? currentUser.lastName : "");
         layout.addView(lastNameInput);
 
         final EditText emailInput = new EditText(getContext());
         emailInput.setHint("Email");
-        emailInput.setText(currentUser.email);
+        emailInput.setText(currentUser.email != null ? currentUser.email : "");
         layout.addView(emailInput);
 
         builder.setView(layout);
@@ -105,18 +185,19 @@ public class AccountFragment extends Fragment {
             String newEmail = emailInput.getText().toString().trim();
 
             if (!newFirstName.isEmpty() && !newLastName.isEmpty() && !newEmail.isEmpty()) {
-                // Update user object
                 currentUser.firstName = newFirstName;
                 currentUser.lastName = newLastName;
                 currentUser.email = newEmail;
 
-                // Save to database
+                if (newAvatarPath != null) {
+                    currentUser.avatarUri = newAvatarPath;
+                }
+
                 Executors.newSingleThreadExecutor().execute(() -> {
                     appDatabase.userDao().update(currentUser);
                     if (getActivity() != null) {
                         getActivity().runOnUiThread(() -> {
-                            binding.userName.setText(currentUser.firstName + " " + currentUser.lastName);
-                            binding.userEmail.setText(currentUser.email);
+                            updateUI();
                             Toast.makeText(getContext(), "Hồ sơ đã được cập nhật", Toast.LENGTH_SHORT).show();
                         });
                     }
@@ -130,10 +211,36 @@ public class AccountFragment extends Fragment {
         builder.show();
     }
 
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == PICK_IMAGE_REQUEST && resultCode == RESULT_OK && data != null && data.getData() != null) {
+            Uri imageUri = data.getData();
+            try {
+                InputStream inputStream = requireContext().getContentResolver().openInputStream(imageUri);
+                Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
+
+                File file = new File(requireContext().getFilesDir(), "avatar_" + currentUser.userId + ".png");
+                FileOutputStream outputStream = new FileOutputStream(file);
+                bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream);
+                outputStream.close();
+                if(inputStream != null) {
+                    inputStream.close();
+                }
+
+                newAvatarPath = file.getAbsolutePath();
+                dialogAvatarImageView.setImageBitmap(bitmap);
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                Toast.makeText(getContext(), "Lỗi khi tải ảnh", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
     private void showChangePasswordDialog() {
         if (currentUser == null) return;
-
-        AlertDialog.Builder builder = new AlertDialog.Builder(getContext(), R.style.RoundedDialog4Corners);
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
         builder.setTitle("Đổi mật khẩu");
 
         LinearLayout layout = new LinearLayout(getContext());
@@ -174,7 +281,6 @@ public class AccountFragment extends Fragment {
             Executors.newSingleThreadExecutor().execute(() -> {
                 String hashedCurrentPassword = PasswordHasher.hashPassword(currentPassword);
 
-                // Verify current password
                 if (!hashedCurrentPassword.equals(currentUser.password)) {
                     if (getActivity() != null) {
                         getActivity().runOnUiThread(() -> Toast.makeText(getContext(), "Mật khẩu hiện tại không đúng", Toast.LENGTH_SHORT).show());
@@ -182,7 +288,6 @@ public class AccountFragment extends Fragment {
                     return;
                 }
 
-                // Update to new password
                 currentUser.password = PasswordHasher.hashPassword(newPassword);
                 appDatabase.userDao().update(currentUser);
 
@@ -195,9 +300,9 @@ public class AccountFragment extends Fragment {
         builder.setNegativeButton("Hủy", null);
         builder.show();
     }
-    
+
     private void showLogoutConfirmationDialog() {
-        new AlertDialog.Builder(getContext(), R.style.RoundedDialog4Corners)
+        new AlertDialog.Builder(requireContext())
                 .setTitle("Xác nhận đăng xuất")
                 .setMessage("Bạn có chắc chắn muốn đăng xuất?")
                 .setPositiveButton("Đăng xuất", (dialog, which) -> {
@@ -213,28 +318,64 @@ public class AccountFragment extends Fragment {
                 .setNegativeButton("Hủy", null)
                 .show();
     }
-    
-    // --- Other dialog methods ---
 
     private void showSettingsDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(getContext(), R.style.RoundedDialog4Corners);
+        final String[] items = {
+                getString(R.string.notifications_item),
+                getString(R.string.settings_language),
+                getString(R.string.settings_theme),
+                getString(R.string.settings_security)
+        };
+        boolean notificationsEnabled = sharedPreferences.getBoolean(KEY_NOTIFICATIONS_ENABLED, true);
+        boolean themeEnabled = sharedPreferences.getBoolean(KEY_THEME_ENABLED, false);
+        boolean securityEnabled = sharedPreferences.getBoolean(KEY_SECURITY_ENABLED, false);
+
+        boolean[] checkedItems = {notificationsEnabled, false, themeEnabled, securityEnabled};
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
         builder.setTitle("Cài đặt");
-        String[] settings = {"Thông báo", "Ngôn ngữ", "Chủ đề", "Bảo mật"};
-        boolean[] checkedItems = {true, false, false, true};
-        builder.setMultiChoiceItems(settings, checkedItems, (dialog, which, isChecked) -> {});
-        builder.setPositiveButton("Lưu", (dialog, which) -> Toast.makeText(getContext(), "Cài đặt đã được lưu", Toast.LENGTH_SHORT).show());
-        builder.setNegativeButton("Hủy", null);
+        builder.setMultiChoiceItems(items, checkedItems, (dialog, which, isChecked) -> {
+            switch (which) {
+                case 0: // Notifications
+                    sharedPreferences.edit().putBoolean(KEY_NOTIFICATIONS_ENABLED, isChecked).apply();
+                    Toast.makeText(getContext(), isChecked ? "Thông báo được bật" : "Thông báo được tắt", Toast.LENGTH_SHORT).show();
+                    break;
+                case 1: // Language
+                    ((AlertDialog) dialog).getListView().setItemChecked(which, false);
+                    dialog.dismiss();
+                    showLanguageDialog();
+                    break;
+                case 2: // Theme
+                    sharedPreferences.edit().putBoolean(KEY_THEME_ENABLED, isChecked).apply();
+                    Toast.makeText(getContext(), "Chủ đề " + (isChecked ? "đã bật" : "đã tắt"), Toast.LENGTH_SHORT).show();
+                    break;
+                case 3: // Security
+                    sharedPreferences.edit().putBoolean(KEY_SECURITY_ENABLED, isChecked).apply();
+                    Toast.makeText(getContext(), "Bảo mật " + (isChecked ? "đã bật" : "đã tắt"), Toast.LENGTH_SHORT).show();
+                    break;
+            }
+        });
+
+        builder.setPositiveButton("OK", null);
         builder.show();
     }
 
-    private void showHelpSupportDialog() {
-        new AlertDialog.Builder(getContext(), R.style.RoundedDialog4Corners)
-                .setTitle("Trợ giúp & Hỗ trợ")
-                .setMessage("Liên hệ với chúng tôi:\n\nEmail: support@spendingapp.com\nĐiện thoại: 1900-xxxx\n\nPhiên bản: 1.0.0")
-                .setPositiveButton("OK", null)
-                .show();
+    private void showLanguageDialog() {
+        final String[] languages = {getString(R.string.english), getString(R.string.vietnamese)};
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+        builder.setTitle(getString(R.string.choose_language));
+        builder.setSingleChoiceItems(languages, -1, (dialog, which) -> {
+            if (getActivity() instanceof MainActivity) {
+                String lang = (which == 0) ? "en" : "vi";
+                ((MainActivity) getActivity()).setLocale(lang);
+                requireActivity().finish();
+                requireActivity().startActivity(requireActivity().getIntent());
+            }
+            dialog.dismiss();
+        });
+        builder.show();
     }
-    
+
     @Override
     public void onDestroyView() {
         super.onDestroyView();

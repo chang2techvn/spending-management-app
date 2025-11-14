@@ -26,4 +26,7 @@ public class UserEntity {
 
     @ColumnInfo(name = "JoinDate")
     public String joinDate;
+
+    @ColumnInfo(name = "AvatarUri")
+    public String avatarUri;
 }
