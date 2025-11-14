@@ -38,6 +38,8 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.spending_management_app.MainActivity;
 import com.example.spending_management_app.R;
+import com.example.spending_management_app.utils.CategoryHelper;
+import com.example.spending_management_app.utils.AiSystemInstructions;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.snackbar.Snackbar;
 
@@ -229,7 +231,7 @@ public class AiChatBottomSheet extends DialogFragment {
                     welcomeMessage.append("📋 Chi tiêu gần đây:\n\n");
                     
                     for (TransactionEntity transaction : recentTransactions) {
-                        String emoji = getEmojiForCategory(transaction.category);
+                        String emoji = CategoryHelper.getEmojiForCategory(transaction.category);
                         String formattedAmount = String.format("%,d", Math.abs(transaction.amount));
                         welcomeMessage.append(emoji).append(" ")
                                 .append(transaction.description).append(": ")
@@ -276,39 +278,6 @@ public class AiChatBottomSheet extends DialogFragment {
         });
     }
     
-    private String getEmojiForCategory(String category) {
-        switch (category) {
-            case "Ăn uống": return "🍽️";
-            case "Di chuyển": return "🚗";
-            case "Tiện ích": return "⚡";
-            case "Y tế": return "🏥";
-            case "Nhà ở": return "🏠";
-            case "Mua sắm": return "🛍️";
-            case "Giáo dục": return "📚";
-            case "Sách & Học tập": return "📖";
-            case "Thể thao": return "⚽";
-            case "Sức khỏe & Làm đẹp": return "💆";
-            case "Giải trí": return "🎬";
-            case "Du lịch": return "✈️";
-            case "Ăn ngoài & Cafe": return "☕";
-            case "Quà tặng & Từ thiện": return "🎁";
-            case "Hội họp & Tiệc tụng": return "🎉";
-            case "Điện thoại & Internet": return "📱";
-            case "Đăng ký & Dịch vụ": return "💳";
-            case "Phần mềm & Apps": return "💻";
-            case "Ngân hàng & Phí": return "🏦";
-            case "Con cái": return "👶";
-            case "Thú cưng": return "🐕";
-            case "Gia đình": return "👨‍👩‍👧‍👦";
-            case "Lương": return "💰";
-            case "Đầu tư": return "📈";
-            case "Thu nhập phụ": return "💵";
-            case "Tiết kiệm": return "🏦";
-            case "Khác": return "📝";
-            default: return "💳";
-        }
-    }
-
     private void setupListeners() {
         sendButton.setOnClickListener(v -> {
             String message = messageInput.getText().toString().trim();
@@ -434,58 +403,13 @@ public class AiChatBottomSheet extends DialogFragment {
             JSONObject systemInstruction = new JSONObject();
             JSONArray systemParts = new JSONArray();
             JSONObject systemPart = new JSONObject();
-            systemPart.put("text", "Bạn là trợ lý ghi chi tiêu thông minh. " + currentDateInfo + ".\n\n" +
-                    "DANH MỤC CHI TIÊU CÓ SẴN (chỉ chọn 1 trong các danh mục sau):\n" +
-                    "• NHU CẦU THIẾT YẾU: Ăn uống, Di chuyển, Tiện ích, Y tế, Nhà ở\n" +
-                    "• MUA SẮM & PHÁT TRIỂN: Mua sắm, Giáo dục, Sách & Học tập, Thể thao, Sức khỏe & Làm đẹp\n" +
-                    "• GIẢI TRÍ & XÃ HỘI: Giải trí, Du lịch, Ăn ngoài & Cafe, Quà tặng & Từ thiện, Hội họp & Tiệc tụng\n" +
-                    "• CÔNG NGHỆ & DỊCH VỤ: Điện thoại & Internet, Đăng ký & Dịch vụ, Phần mềm & Apps, Ngân hàng & Phí\n" +
-                    "• GIA ĐÌNH: Con cái, Thú cưng, Gia đình\n" +
-                    "• THU NHẬP: Lương, Đầu tư, Thu nhập phụ, Tiết kiệm\n" +
-                    "• KHÁC: Khác (chỉ dùng khi không thuộc danh mục nào)\n\n" +
-                    "QUY TẮC PHÂN LOẠI:\n" +
-                    "- Cà phê/trà sữa/đồ uống → Ăn ngoài & Cafe\n" +
-                    "- Mua đồ ăn nấu → Ăn uống\n" +
-                    "- Ăn nhà hàng/quán → Ăn ngoài & Cafe\n" +
-                    "- Xe/xăng/grab/taxi → Di chuyển\n" +
-                    "- Điện/nước/rác → Tiện ích\n" +
-                    "- Thuốc/khám bệnh → Y tế\n" +
-                    "- Thuê nhà/vật liệu xây → Nhà ở\n" +
-                    "- Quần áo/mỹ phẩm → Mua sắm\n" +
-                    "- Học phí/khóa học → Giáo dục\n" +
-                    "- Sách/tài liệu → Sách & Học tập\n" +
-                    "- Gym/thể dục/sport → Thể thao\n" +
-                    "- Spa/massage/làm tóc → Sức khỏe & Làm đẹp\n" +
-                    "- Phim/game/concert → Giải trí\n" +
-                    "- Vé máy bay/khách sạn → Du lịch\n" +
-                    "- Điện thoại/internet/data → Điện thoại & Internet\n" +
-                    "- Netflix/Spotify/dịch vụ online → Đăng ký & Dịch vụ\n" +
-                    "- App/phần mềm → Phần mềm & Apps\n" +
-                    "- Phí chuyển khoản/ATM → Ngân hàng & Phí\n" +
-                    "- Đồ cho con → Con cái\n" +
-                    "- Thức ăn/phụ kiện thú cưng → Thú cưng\n\n" +
-                    "KHI THÊM CHI TIÊU:\n" +
-                    "- Nếu user nói 'Tôi muốn thêm chi tiêu', trả lời thân thiện với VÍ DỤ cụ thể\n" +
-                    "- Khi user cung cấp thông tin chi tiêu, trích xuất CHÍNH XÁC và trả về JSON: {\"type\": \"expense\", \"name\": \"tên\", \"amount\": số, \"currency\": \"VND\", \"category\": \"danh mục\", \"day\": ngày, \"month\": tháng, \"year\": năm}\n" +
-                    "- Chọn ĐÚNG danh mục từ danh sách trên, KHÔNG tự tạo danh mục mới\n" +
-                    "- Kèm theo câu trả lời ngắn gọn, hài hước\n\n" +
-                    "KHI PHÂN TÍCH/BÁO CÁO CHI TIÊU:\n" +
-                    "- Luôn FORMAT rõ ràng, dễ đọc với XUỐNG DÒNG\n" +
-                    "- Dùng emoji để làm nổi bật (💰 🍽️ 🚗 🛍️ 💸 ⚡ 📚 🎉)\n" +
-                    "- Mỗi mục CHI TIÊU trên MỘT DÒNG riêng\n" +
-                    "- Format: [Emoji] [Tên]: [Số tiền] VND ([Ghi chú nếu có])\n" +
-                    "- Nhóm theo danh mục nếu có nhiều giao dịch\n" +
-                    "- Kết thúc bằng câu tư vấn ngắn gọn\n\n" +
-                    "QUY TẮC NGÀY: 'hôm nay'=" + currentDay + "/" + currentMonth + "/" + currentYear + 
-                    ", 'hôm qua'=" + yesterdayDay + "/" + yesterdayMonth + "/" + yesterdayYear + 
-                    ", 'ngày X/Y'=ngày X tháng Y năm " + currentYear + 
-                    ". Mặc định dùng ngày hiện tại.\n\n" +
-                    "QUAN TRỌNG:\n" +
-                    "- KHÔNG dùng markdown (*, **, ###)\n" +
-                    "- Dùng XUỐNG DÒNG (\\n) để tách các mục\n" +
-                    "- Dùng emoji thay vì bullet points\n" +
-                    "- Căn chỉnh số tiền dễ đọc với dấu phẩy\n" +
-                    "- Câu trả lời ngắn gọn, súc tích, dễ hiểu");
+            
+            // Use helper class for system instruction
+            String instruction = AiSystemInstructions.getExpenseTrackingInstruction(
+                currentDateInfo, currentDay, currentMonth, currentYear,
+                yesterdayDay, yesterdayMonth, yesterdayYear
+            );
+            systemPart.put("text", instruction);
             systemParts.put(systemPart);
             systemInstruction.put("parts", systemParts);
             json.put("system_instruction", systemInstruction);
@@ -1266,44 +1190,10 @@ public class AiChatBottomSheet extends DialogFragment {
             JSONArray systemParts = new JSONArray();
             JSONObject systemPart = new JSONObject();
             
-            String enhancedInstruction = "Bạn là trợ lý tài chính thông minh. " + currentDateInfo + ".\n\n" +
-                "DANH MỤC CHI TIÊU CHUẨN:\n" +
-                "• NHU CẦU THIẾT YẾU: Ăn uống, Di chuyển, Tiện ích, Y tế, Nhà ở\n" +
-                "• MUA SẮM & PHÁT TRIỂN: Mua sắm, Giáo dục, Sách & Học tập, Thể thao, Sức khỏe & Làm đẹp\n" +
-                "• GIẢI TRÍ & XÃ HỘI: Giải trí, Du lịch, Ăn ngoài & Cafe, Quà tặng & Từ thiện, Hội họp & Tiệc tụng\n" +
-                "• CÔNG NGHỆ & DỊCH VỤ: Điện thoại & Internet, Đăng ký & Dịch vụ, Phần mềm & Apps, Ngân hàng & Phí\n" +
-                "• GIA ĐÌNH: Con cái, Thú cưng, Gia đình\n" +
-                "• THU NHẬP: Lương, Đầu tư, Thu nhập phụ, Tiết kiệm\n\n" +
-                "QUYỀN TRUY CẬP: Bạn có TOÀN BỘ dữ liệu tài chính của người dùng.\n\n" +
-                "KHẢ NĂNG PHÂN TÍCH:\n" +
-                "- Chi tiêu theo ngày/tuần/tháng cụ thể\n" +
-                "- So sánh chi tiêu giữa các thời kỳ\n" +
-                "- Phân tích chi tiêu theo danh mục\n" +
-                "- Tư vấn tiết kiệm và quản lý ngân sách\n" +
-                "- Dự báo và cảnh báo chi tiêu\n\n" +
-                "DỮ LIỆU TÀI CHÍNH:\n" + financialContext + "\n\n" +
-                "QUY TẮC TRẢ LỜI:\n" +
-                "1. FORMAT RÕ RÀNG:\n" +
-                "   - Mỗi mục chi tiêu trên MỘT DÒNG riêng\n" +
-                "   - Dùng emoji để phân loại (💰 💸 🍽️ 🚗 🛍️ ⚡ 🏥 🏠 � 🎬 ✈️ ☕ 🎁 📱 👶 🐕)\n" +
-                "   - Format: [Emoji] [Tên]: [Số tiền] VND ([Danh mục])\n" +
-                "   - Xuống dòng giữa các phần\n\n" +
-                "2. CẤU TRÚC:\n" +
-                "   - Mở đầu: Câu chào/tóm tắt ngắn\n" +
-                "   - Chi tiết: Nhóm theo danh mục, liệt kê từng mục rõ ràng\n" +
-                "   - Tổng kết: Tổng chi tiêu từng danh mục\n" +
-                "   - Kết thúc: Tư vấn/nhận xét ngắn gọn, thực tế\n\n" +
-                "3. KHÔNG DÙNG:\n" +
-                "   - Markdown (*, **, ###)\n" +
-                "   - Text dài dòng không xuống dòng\n" +
-                "   - Số thứ tự (1., 2., 3.)\n\n" +
-                "4. SỬ DỤNG:\n" +
-                "   - Emoji thay bullet points\n" +
-                "   - Xuống dòng (\\n) để tách mục\n" +
-                "   - Dấu phẩy ngăn cách số tiền\n" +
-                "   - Ngôn ngữ thân thiện, có thể hài hước\n" +
-                "   - Nhóm chi tiêu theo danh mục để dễ theo dõi\n\n" +
-                "Hãy phân tích chính xác và trả lời rõ ràng, dễ đọc!";
+            // Use helper class for financial analysis instruction
+            String enhancedInstruction = AiSystemInstructions.getFinancialAnalysisInstruction(
+                currentDateInfo, financialContext
+            );
             
             systemPart.put("text", enhancedInstruction);
             systemParts.put(systemPart);
