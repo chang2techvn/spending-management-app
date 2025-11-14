@@ -19,6 +19,7 @@ import com.example.spending_management_app.databinding.FragmentHomeBinding;
 
 import com.example.spending_management_app.database.AppDatabase;
 import com.example.spending_management_app.database.BudgetEntity;
+import com.example.spending_management_app.database.TransactionEntity;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -47,39 +48,73 @@ public class HomeFragment extends Fragment {
         // Setup quick actions
         setupQuickActions();
 
-        // Setup recent transactions
-        setupRecentTransactions();
+        // Setup recent transactions from database
+        loadRecentTransactionsFromDatabase();
 
         return root;
     }
 
     private void setupBalanceData() {
-        // Load monthly budget from DB
+        // Load balance data from database
+        loadBalanceDataFromDatabase();
+    }
+    
+    private void loadBalanceDataFromDatabase() {
         Executors.newSingleThreadExecutor().execute(() -> {
-            Calendar cal = Calendar.getInstance();
-            cal.set(Calendar.DAY_OF_MONTH, 1);
-            Date startOfMonth = cal.getTime();
-            cal.set(Calendar.DAY_OF_MONTH, cal.getActualMaximum(Calendar.DAY_OF_MONTH));
-            Date endOfMonth = cal.getTime();
+            try {
+                // Calculate month range
+                Calendar cal = Calendar.getInstance();
+                cal.set(Calendar.DAY_OF_MONTH, 1);
+                Date startOfMonth = cal.getTime();
+                cal.set(Calendar.DAY_OF_MONTH, cal.getActualMaximum(Calendar.DAY_OF_MONTH));
+                Date endOfMonth = cal.getTime();
 
-            List<BudgetEntity> monthlyBudgets = AppDatabase.getInstance(getContext()).budgetDao().getBudgetsByDateRange(startOfMonth, endOfMonth);
-            getActivity().runOnUiThread(() -> {
-                long monthlyExpenseValue = 5500000; // Hardcoded for now, should be calculated from DB
-                if (monthlyBudgets != null && !monthlyBudgets.isEmpty()) {
-                    BudgetEntity budget = monthlyBudgets.get(0);
-                    long budgetValue = budget.getMonthlyLimit();
-                    binding.monthlyIncome.setText(String.format(Locale.getDefault(), "%,d", budgetValue) + " VND");
-                    long currentBalance = budgetValue - monthlyExpenseValue;
-                    binding.currentBalance.setText(String.format(Locale.getDefault(), "%,d", currentBalance) + " VND");
-                } else {
-                    binding.monthlyIncome.setText("Chưa thiết lập");
-                    binding.currentBalance.setText("Chưa thiết lập");
+                // Get monthly budget
+                List<BudgetEntity> monthlyBudgets = AppDatabase.getInstance(getContext())
+                        .budgetDao().getBudgetsByDateRange(startOfMonth, endOfMonth);
+                
+                // Get total income and expenses from database
+                Long totalIncome = AppDatabase.getInstance(getContext()).transactionDao().getTotalIncome();
+                Long totalExpense = AppDatabase.getInstance(getContext()).transactionDao().getTotalExpense();
+                
+                // Update UI on main thread
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(() -> {
+                        // Set monthly budget (income)
+                        if (monthlyBudgets != null && !monthlyBudgets.isEmpty()) {
+                            BudgetEntity budget = monthlyBudgets.get(0);
+                            long budgetValue = budget.getMonthlyLimit();
+                            binding.monthlyIncome.setText(String.format(Locale.getDefault(), "%,d", budgetValue) + " VND");
+                        } else {
+                            binding.monthlyIncome.setText("Chưa thiết lập");
+                        }
+                        
+                        // Set total expense (absolute value, should be negative)
+                        long expenseValue = totalExpense != null ? Math.abs(totalExpense) : 0;
+                        binding.monthlyExpense.setText(String.format(Locale.getDefault(), "-%,d", expenseValue) + " VND");
+                        
+                        // Calculate and set current balance
+                        long incomeValue = totalIncome != null ? totalIncome : 0;
+                        long currentBalance = incomeValue + (totalExpense != null ? totalExpense : 0); // totalExpense is negative
+                        binding.currentBalance.setText(String.format(Locale.getDefault(), "%,d", currentBalance) + " VND");
+                        
+                        android.util.Log.d("HomeFragment", "Balance updated - Income: " + incomeValue + 
+                                ", Expense: " + expenseValue + ", Balance: " + currentBalance);
+                    });
                 }
-            });
+            } catch (Exception e) {
+                android.util.Log.e("HomeFragment", "Error loading balance data", e);
+                
+                // Fallback to sample data
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(() -> {
+                        binding.monthlyIncome.setText("12,500,000 VND");
+                        binding.monthlyExpense.setText("-5,500,000 VND");
+                        binding.currentBalance.setText("7,000,000 VND");
+                    });
+                }
+            }
         });
-
-        // Set monthly expense
-        binding.monthlyExpense.setText("-5,500,000");
     }
 
     private void setupQuickActions() {
@@ -113,7 +148,75 @@ public class HomeFragment extends Fragment {
         }
     }
 
-    private void setupRecentTransactions() {
+    private void loadRecentTransactionsFromDatabase() {
+        // Initialize empty list first
+        transactions = new ArrayList<>();
+        
+        // Load data from database in background thread
+        Executors.newSingleThreadExecutor().execute(() -> {
+            try {
+                // Get recent transactions from database (limit to 5)
+                List<TransactionEntity> transactionEntities = AppDatabase.getInstance(getContext())
+                        .transactionDao()
+                        .getRecentTransactions(5);
+                
+                // Convert TransactionEntity to Transaction objects
+                List<Transaction> recentTransactions = new ArrayList<>();
+                for (TransactionEntity entity : transactionEntities) {
+                    // Choose appropriate icon based on category and type
+                    String iconName = getIconForCategory(entity.category, entity.type);
+                    
+                    Transaction transaction = new Transaction(
+                            entity.description,
+                            entity.category,
+                            entity.amount,
+                            iconName,
+                            entity.date,
+                            entity.type
+                    );
+                    recentTransactions.add(transaction);
+                }
+                
+                // Update UI on main thread
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(() -> {
+                        transactions.clear();
+                        transactions.addAll(recentTransactions);
+                        
+                        // Setup RecyclerView if not done yet
+                        if (transactionAdapter == null) {
+                            transactionAdapter = new TransactionAdapter(transactions);
+                            binding.recentTransactionsRecycler.setLayoutManager(new LinearLayoutManager(getContext()));
+                            binding.recentTransactionsRecycler.setAdapter(transactionAdapter);
+                            
+                            // Setup view all transactions click
+                            binding.viewAllTransactions.setOnClickListener(v -> {
+                                Navigation.findNavController(v).navigate(R.id.navigation_history);
+                            });
+                        } else {
+                            // Just notify adapter of data change
+                            transactionAdapter.notifyDataSetChanged();
+                        }
+                        
+                        android.util.Log.d("HomeFragment", "Loaded " + recentTransactions.size() + " recent transactions from database");
+                    });
+                }
+                
+            } catch (Exception e) {
+                android.util.Log.e("HomeFragment", "Error loading recent transactions from database", e);
+                
+                // Fallback to sample data on error
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(() -> {
+                        setupSampleRecentTransactions();
+                    });
+                }
+            }
+        });
+    }
+
+    private void setupSampleRecentTransactions() {
+        // Fallback sample data (keep original method name for compatibility)
         // Create sample transaction data
         transactions = new ArrayList<>();
         transactions.add(new Transaction("Ăn trưa tại quán cơm", "Ăn uống", -45000, "ic_bar_chart", new Date(), "expense"));
@@ -130,11 +233,58 @@ public class HomeFragment extends Fragment {
         binding.viewAllTransactions.setOnClickListener(v -> {
             Navigation.findNavController(v).navigate(R.id.navigation_history);
         });
+        
+        android.util.Log.d("HomeFragment", "Sample recent transactions loaded with " + transactions.size() + " items");
     }
 
     @Override
     public void onDestroyView() {
         super.onDestroyView();
         binding = null;
+    }
+    
+    // Method to refresh recent transactions when new ones are added
+    public void refreshRecentTransactions() {
+        if (isAdded() && getContext() != null) {
+            loadRecentTransactionsFromDatabase();
+            loadBalanceDataFromDatabase(); // Also refresh balance
+        }
+    }
+    
+    // Method to be called when the fragment becomes visible
+    @Override
+    public void onResume() {
+        super.onResume();
+        // Refresh data when fragment becomes visible
+        loadRecentTransactionsFromDatabase();
+        loadBalanceDataFromDatabase();
+    }
+    
+    // Helper method to get appropriate icon for category
+    private String getIconForCategory(String category, String type) {
+        if ("income".equals(type)) {
+            return "ic_home_black_24dp";
+        }
+        
+        switch (category) {
+            case "Ăn uống":
+                return "ic_restaurant";
+            case "Di chuyển":
+                return "ic_directions_car";
+            case "Mua sắm":
+                return "ic_shopping_cart";
+            case "Ngân sách":
+                return "ic_account_balance_wallet";
+            case "Tiện ích":
+                return "ic_electrical_services";
+            case "Giáo dục":
+                return "ic_school";
+            case "Giải trí":
+                return "ic_local_movies";
+            case "Y tế":
+                return "ic_local_hospital";
+            default:
+                return "ic_bar_chart";
+        }
     }
 }

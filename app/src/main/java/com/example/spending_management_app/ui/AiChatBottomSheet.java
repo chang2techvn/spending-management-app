@@ -36,6 +36,7 @@ import androidx.fragment.app.DialogFragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.spending_management_app.MainActivity;
 import com.example.spending_management_app.R;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.snackbar.Snackbar;
@@ -58,6 +59,10 @@ import java.util.List;
 import java.util.Date;
 import java.util.concurrent.Executors;
 import java.text.NumberFormat;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
+import java.util.Locale;
+import java.util.stream.Collectors;
 
 public class AiChatBottomSheet extends DialogFragment {
 
@@ -138,26 +143,29 @@ public class AiChatBottomSheet extends DialogFragment {
             String prompt = args.getString("initial_prompt");
             if (prompt != null && !prompt.isEmpty()) {
                 android.util.Log.d("AiChatBottomSheet", "Initial prompt from args: " + prompt);
-                // Decide what user-visible message to show in the chat based on the prompt
-                // If the user requested adding an expense, show "Thiết lập chi tiêu tháng này"
-                // If the user requested budget management, keep "Thiết lập ngân sách tháng này"
+                
                 String lower = prompt.toLowerCase();
-                String userVisibleMessage;
+                
+                // Check if this is "Add expense" request
                 if (lower.contains("chi tiêu") || lower.contains("thêm chi tiêu") || lower.contains("chi tieu")) {
-                    userVisibleMessage = "Thêm chi tiêu mới";
+                    // For "Add expense", don't send to AI, just show the welcome message
+                    // The welcome message with recent transactions is already loaded in setupMessages()
+                    android.util.Log.d("AiChatBottomSheet", "Add expense request - showing welcome message only");
                 } else if (lower.contains("ngân sách") || lower.contains("thiet lap ngan sach") || lower.contains("thiết lập ngân sách")) {
-                    userVisibleMessage = "Thiết lập ngân sách tháng này";
+                    // For budget management, send to AI
+                    String userVisibleMessage = "Thiết lập ngân sách tháng này";
+                    messages.add(new ChatMessage(userVisibleMessage, true, "Bây giờ"));
+                    chatAdapter.notifyItemInserted(messages.size() - 1);
+                    messagesRecycler.smoothScrollToPosition(messages.size() - 1);
+                    sendToAI(prompt);
                 } else {
-                    // Fallback: show the prompt itself (trimmed) so it's clear what the user requested
-                    userVisibleMessage = prompt.trim();
+                    // For other prompts, send to AI
+                    String userVisibleMessage = prompt.trim();
+                    messages.add(new ChatMessage(userVisibleMessage, true, "Bây giờ"));
+                    chatAdapter.notifyItemInserted(messages.size() - 1);
+                    messagesRecycler.smoothScrollToPosition(messages.size() - 1);
+                    sendToAI(prompt);
                 }
-
-                // Add the determined message to the chat and process the original prompt
-                messages.add(new ChatMessage(userVisibleMessage, true, "Bây giờ"));
-                chatAdapter.notifyItemInserted(messages.size() - 1);
-                messagesRecycler.smoothScrollToPosition(messages.size() - 1);
-                // Process AI response with the actual prompt
-                sendToAI(prompt);
             }
         }
 
@@ -193,11 +201,112 @@ public class AiChatBottomSheet extends DialogFragment {
 
     private void setupMessages() {
         messages = new ArrayList<>();
-        messages.add(new ChatMessage("Chào bạn! Tôi có thể giúp bạn ghi lại chi tiêu. Hãy nói cho tôi biết hôm nay bạn đã chi tiêu gì nhé!", false, "9:00"));
+        
+        // Load initial message with recent transactions
+        loadRecentTransactionsForWelcome();
 
         chatAdapter = new ChatAdapter(messages);
         messagesRecycler.setLayoutManager(new LinearLayoutManager(getContext()));
         messagesRecycler.setAdapter(chatAdapter);
+    }
+    
+    private void loadRecentTransactionsForWelcome() {
+        // Add a temporary loading message
+        messages.add(new ChatMessage("Đang tải...", false, "Bây giờ"));
+        
+        // Load recent transactions from database in background
+        Executors.newSingleThreadExecutor().execute(() -> {
+            try {
+                List<TransactionEntity> recentTransactions = AppDatabase.getInstance(getContext())
+                        .transactionDao()
+                        .getRecentTransactions(3);
+                
+                // Build welcome message with recent transactions
+                StringBuilder welcomeMessage = new StringBuilder();
+                welcomeMessage.append("Chào bạn! 👋\n\n");
+                
+                if (!recentTransactions.isEmpty()) {
+                    welcomeMessage.append("📋 Chi tiêu gần đây:\n\n");
+                    
+                    for (TransactionEntity transaction : recentTransactions) {
+                        String emoji = getEmojiForCategory(transaction.category);
+                        String formattedAmount = String.format("%,d", Math.abs(transaction.amount));
+                        welcomeMessage.append(emoji).append(" ")
+                                .append(transaction.description).append(": ")
+                                .append(formattedAmount).append(" VND")
+                                .append(" (").append(transaction.category).append(")")
+                                .append("\n");
+                    }
+                    welcomeMessage.append("\n");
+                }
+                
+                welcomeMessage.append("💡 Để thêm chi tiêu mới, hãy cho tôi biết:\n");
+                welcomeMessage.append("Ví dụ: \"Hôm qua tôi đổ xăng 50k\" hoặc \"Ngày 10/11 mua cafe 25k\"");
+                
+                String finalMessage = welcomeMessage.toString();
+                
+                // Update UI on main thread
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(() -> {
+                        // Replace loading message with actual welcome message
+                        if (!messages.isEmpty()) {
+                            messages.set(0, new ChatMessage(finalMessage, false, "Bây giờ"));
+                            chatAdapter.notifyItemChanged(0);
+                        }
+                    });
+                }
+                
+            } catch (Exception e) {
+                android.util.Log.e("AiChatBottomSheet", "Error loading recent transactions", e);
+                
+                // Fallback to simple welcome message
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(() -> {
+                        String fallbackMessage = "Chào bạn! 👋\n\n" +
+                                "💡 Để thêm chi tiêu mới, hãy cho tôi biết:\n" +
+                                "Ví dụ: \"Hôm qua tôi đổ xăng 50k\" hoặc \"Ngày 10/11 mua cafe 25k\"";
+                        
+                        if (!messages.isEmpty()) {
+                            messages.set(0, new ChatMessage(fallbackMessage, false, "Bây giờ"));
+                            chatAdapter.notifyItemChanged(0);
+                        }
+                    });
+                }
+            }
+        });
+    }
+    
+    private String getEmojiForCategory(String category) {
+        switch (category) {
+            case "Ăn uống": return "🍽️";
+            case "Di chuyển": return "🚗";
+            case "Tiện ích": return "⚡";
+            case "Y tế": return "🏥";
+            case "Nhà ở": return "🏠";
+            case "Mua sắm": return "🛍️";
+            case "Giáo dục": return "📚";
+            case "Sách & Học tập": return "📖";
+            case "Thể thao": return "⚽";
+            case "Sức khỏe & Làm đẹp": return "💆";
+            case "Giải trí": return "🎬";
+            case "Du lịch": return "✈️";
+            case "Ăn ngoài & Cafe": return "☕";
+            case "Quà tặng & Từ thiện": return "🎁";
+            case "Hội họp & Tiệc tụng": return "🎉";
+            case "Điện thoại & Internet": return "📱";
+            case "Đăng ký & Dịch vụ": return "💳";
+            case "Phần mềm & Apps": return "💻";
+            case "Ngân hàng & Phí": return "🏦";
+            case "Con cái": return "👶";
+            case "Thú cưng": return "🐕";
+            case "Gia đình": return "👨‍👩‍👧‍👦";
+            case "Lương": return "💰";
+            case "Đầu tư": return "📈";
+            case "Thu nhập phụ": return "💵";
+            case "Tiết kiệm": return "🏦";
+            case "Khác": return "📝";
+            default: return "💳";
+        }
     }
 
     private void setupListeners() {
@@ -240,6 +349,24 @@ public class AiChatBottomSheet extends DialogFragment {
     }
 
     private void sendToAI(String text) {
+        // Check if user is asking for financial analysis or reports
+        if (isFinancialQuery(text)) {
+            // Get comprehensive financial data from database
+            Executors.newSingleThreadExecutor().execute(() -> {
+                try {
+                    String financialContext = getFinancialContext();
+                    getActivity().runOnUiThread(() -> {
+                        sendPromptToAIWithContext(text, financialContext);
+                    });
+                } catch (Exception e) {
+                    getActivity().runOnUiThread(() -> {
+                        sendPromptToAI(text);
+                    });
+                }
+            });
+            return;
+        }
+
         // Check if user is requesting budget management like the button
         if (text.toLowerCase().contains("ngân sách") && (text.toLowerCase().contains("tháng") || text.toLowerCase().contains("thiết lập") || text.toLowerCase().contains("hiện tại") || text.toLowerCase().contains("bao nhiêu"))) {
             // Handle like the button: query DB and create prompt
@@ -307,7 +434,58 @@ public class AiChatBottomSheet extends DialogFragment {
             JSONObject systemInstruction = new JSONObject();
             JSONArray systemParts = new JSONArray();
             JSONObject systemPart = new JSONObject();
-            systemPart.put("text", "Bạn là trợ lý ghi chi tiêu. " + currentDateInfo + ". Khi user nói 'Tôi muốn thêm chi tiêu', hãy trả lời một cách thân thiện và đưa ra VÍ DỤ cụ thể như: 'Chào bạn! Tôi sẽ giúp bạn ghi lại chi tiêu. Hãy cho tôi biết chi tiêu cụ thể nhé, ví dụ: \"Hôm qua ăn bún đậu hết 50k\" hoặc \"Ngày 5/11 mua cafe 25k\" hoặc \"Hôm nay ăn sáng 30k\". Sau đó tôi sẽ tự động lưu luôn cho bạn!' Khi user cung cấp thông tin chi tiêu cụ thể, hãy trích xuất ngày tháng CHÍNH XÁC và trả về JSON với cấu trúc: {\"type\": \"expense\", \"name\": \"tên giao dịch\", \"amount\": số tiền, \"currency\": \"VND\", \"category\": \"Ăn uống\", \"day\": ngày (1-31), \"month\": tháng (1-12), \"year\": năm} kèm câu trả lời tự nhiên hài hước theo FORMAT: 'Okela! Đã ghi nhận và LƯU LUÔN chi tiêu [TÊN] với số tiền [SỐ TIỀN] VND thuộc danh mục [DANH MỤC] vào ngày [NGÀY/THÁNG/NĂM]. [CÂU HÀI HƯỚC VỀ CHI TIÊU ĐÓ]. Bạn có muốn thêm chi tiêu nào khác không?' QUAN TRỌNG: Bạn phải trả về CÙNG LÚC cả JSON và text trong cùng một response. Ví dụ: '{\"type\":\"expense\",\"name\":\"Ăn phở\",\"amount\":45000,\"currency\":\"VND\",\"category\":\"Ăn uống\",\"day\":10,\"month\":11,\"year\":2025} Okela! Đã ghi nhận và LƯU LUÔN chi tiêu Ăn phở với số tiền 45,000 VND thuộc danh mục Ăn uống vào ngày 10/11/2025. Phở ngon thế này thì tiền bay cũng đáng rồi! 🍜 Bạn có muốn thêm chi tiêu nào khác không?'. QUY TẮC NGÀY: 'hôm nay'=" + currentDay + "/" + currentMonth + "/" + currentYear + ", 'hôm qua'=" + yesterdayDay + "/" + yesterdayMonth + "/" + yesterdayYear + ", 'ngày X/Y'=ngày X tháng Y năm " + currentYear + ". Nếu user không nói rõ ngày, hãy dùng ngày hiện tại (" + currentDay + "/" + currentMonth + "/" + currentYear + "). Khi user muốn thay đổi ngân sách tháng, trả về JSON {\"action\":\"update_budget\", \"amount\": số tiền mới, \"currency\": \"VND\"} và câu trả lời tự nhiên để xác nhận. Nếu không phải thêm giao dịch hoặc thay đổi ngân sách, trả lời bình thường.");
+            systemPart.put("text", "Bạn là trợ lý ghi chi tiêu thông minh. " + currentDateInfo + ".\n\n" +
+                    "DANH MỤC CHI TIÊU CÓ SẴN (chỉ chọn 1 trong các danh mục sau):\n" +
+                    "• NHU CẦU THIẾT YẾU: Ăn uống, Di chuyển, Tiện ích, Y tế, Nhà ở\n" +
+                    "• MUA SẮM & PHÁT TRIỂN: Mua sắm, Giáo dục, Sách & Học tập, Thể thao, Sức khỏe & Làm đẹp\n" +
+                    "• GIẢI TRÍ & XÃ HỘI: Giải trí, Du lịch, Ăn ngoài & Cafe, Quà tặng & Từ thiện, Hội họp & Tiệc tụng\n" +
+                    "• CÔNG NGHỆ & DỊCH VỤ: Điện thoại & Internet, Đăng ký & Dịch vụ, Phần mềm & Apps, Ngân hàng & Phí\n" +
+                    "• GIA ĐÌNH: Con cái, Thú cưng, Gia đình\n" +
+                    "• THU NHẬP: Lương, Đầu tư, Thu nhập phụ, Tiết kiệm\n" +
+                    "• KHÁC: Khác (chỉ dùng khi không thuộc danh mục nào)\n\n" +
+                    "QUY TẮC PHÂN LOẠI:\n" +
+                    "- Cà phê/trà sữa/đồ uống → Ăn ngoài & Cafe\n" +
+                    "- Mua đồ ăn nấu → Ăn uống\n" +
+                    "- Ăn nhà hàng/quán → Ăn ngoài & Cafe\n" +
+                    "- Xe/xăng/grab/taxi → Di chuyển\n" +
+                    "- Điện/nước/rác → Tiện ích\n" +
+                    "- Thuốc/khám bệnh → Y tế\n" +
+                    "- Thuê nhà/vật liệu xây → Nhà ở\n" +
+                    "- Quần áo/mỹ phẩm → Mua sắm\n" +
+                    "- Học phí/khóa học → Giáo dục\n" +
+                    "- Sách/tài liệu → Sách & Học tập\n" +
+                    "- Gym/thể dục/sport → Thể thao\n" +
+                    "- Spa/massage/làm tóc → Sức khỏe & Làm đẹp\n" +
+                    "- Phim/game/concert → Giải trí\n" +
+                    "- Vé máy bay/khách sạn → Du lịch\n" +
+                    "- Điện thoại/internet/data → Điện thoại & Internet\n" +
+                    "- Netflix/Spotify/dịch vụ online → Đăng ký & Dịch vụ\n" +
+                    "- App/phần mềm → Phần mềm & Apps\n" +
+                    "- Phí chuyển khoản/ATM → Ngân hàng & Phí\n" +
+                    "- Đồ cho con → Con cái\n" +
+                    "- Thức ăn/phụ kiện thú cưng → Thú cưng\n\n" +
+                    "KHI THÊM CHI TIÊU:\n" +
+                    "- Nếu user nói 'Tôi muốn thêm chi tiêu', trả lời thân thiện với VÍ DỤ cụ thể\n" +
+                    "- Khi user cung cấp thông tin chi tiêu, trích xuất CHÍNH XÁC và trả về JSON: {\"type\": \"expense\", \"name\": \"tên\", \"amount\": số, \"currency\": \"VND\", \"category\": \"danh mục\", \"day\": ngày, \"month\": tháng, \"year\": năm}\n" +
+                    "- Chọn ĐÚNG danh mục từ danh sách trên, KHÔNG tự tạo danh mục mới\n" +
+                    "- Kèm theo câu trả lời ngắn gọn, hài hước\n\n" +
+                    "KHI PHÂN TÍCH/BÁO CÁO CHI TIÊU:\n" +
+                    "- Luôn FORMAT rõ ràng, dễ đọc với XUỐNG DÒNG\n" +
+                    "- Dùng emoji để làm nổi bật (💰 🍽️ 🚗 🛍️ 💸 ⚡ 📚 🎉)\n" +
+                    "- Mỗi mục CHI TIÊU trên MỘT DÒNG riêng\n" +
+                    "- Format: [Emoji] [Tên]: [Số tiền] VND ([Ghi chú nếu có])\n" +
+                    "- Nhóm theo danh mục nếu có nhiều giao dịch\n" +
+                    "- Kết thúc bằng câu tư vấn ngắn gọn\n\n" +
+                    "QUY TẮC NGÀY: 'hôm nay'=" + currentDay + "/" + currentMonth + "/" + currentYear + 
+                    ", 'hôm qua'=" + yesterdayDay + "/" + yesterdayMonth + "/" + yesterdayYear + 
+                    ", 'ngày X/Y'=ngày X tháng Y năm " + currentYear + 
+                    ". Mặc định dùng ngày hiện tại.\n\n" +
+                    "QUAN TRỌNG:\n" +
+                    "- KHÔNG dùng markdown (*, **, ###)\n" +
+                    "- Dùng XUỐNG DÒNG (\\n) để tách các mục\n" +
+                    "- Dùng emoji thay vì bullet points\n" +
+                    "- Căn chỉnh số tiền dễ đọc với dấu phẩy\n" +
+                    "- Câu trả lời ngắn gọn, súc tích, dễ hiểu");
             systemParts.put(systemPart);
             systemInstruction.put("parts", systemParts);
             json.put("system_instruction", systemInstruction);
@@ -363,12 +541,16 @@ public class AiChatBottomSheet extends DialogFragment {
                             getActivity().runOnUiThread(() -> {
                                 // Replace analyzing message with display text
                                 android.util.Log.d("AiChatBottomSheet", "Updating message at index: " + analyzingIndex + " with: " + displayText);
-                                messages.set(analyzingIndex, new ChatMessage(displayText, false, "Bây giờ"));
+                                
+                                // Format markdown text để dễ đọc hơn
+                                String formattedDisplayText = formatMarkdownText(displayText);
+                                
+                                messages.set(analyzingIndex, new ChatMessage(formattedDisplayText, false, "Bây giờ"));
                                 chatAdapter.notifyItemChanged(analyzingIndex);
-                                Log.d("AiChatBottomSheet", "AI response: " + displayText);
+                                Log.d("AiChatBottomSheet", "AI response: " + formattedDisplayText);
 
                                 messagesRecycler.smoothScrollToPosition(messages.size() - 1);
-                                textToSpeech.speak(displayText, TextToSpeech.QUEUE_FLUSH, null, null);
+                                textToSpeech.speak(formattedDisplayText, TextToSpeech.QUEUE_FLUSH, null, null);
 
                                 // If JSON found, route to appropriate confirmation dialog
                                 if (jsonPart != null) {
@@ -521,6 +703,12 @@ public class AiChatBottomSheet extends DialogFragment {
                             
                             // Hiển thị 1 toast duy nhất ở TOP với UI đẹp
                             showToastOnTop(toastMessage);
+                            
+                            // Refresh HomeFragment if available
+                            refreshHomeFragment();
+                            
+                            // Also refresh HistoryFragment if it exists
+                            refreshHistoryFragment();
                         });
 
                         // Hiển thị message trong chat trên main thread
@@ -682,6 +870,59 @@ public class AiChatBottomSheet extends DialogFragment {
     // Method riêng cho error toast
     private void showErrorToast(String message) {
         showCustomToastWithType(message, "error");
+    }
+    
+    // Method to refresh HomeFragment after successful transaction save
+    private void refreshHomeFragment() {
+        try {
+            if (getActivity() != null && getActivity() instanceof MainActivity) {
+                MainActivity mainActivity = (MainActivity) getActivity();
+                // Find HomeFragment and refresh it
+                androidx.fragment.app.FragmentManager fragmentManager = mainActivity.getSupportFragmentManager();
+                androidx.navigation.fragment.NavHostFragment navHostFragment = 
+                    (androidx.navigation.fragment.NavHostFragment) fragmentManager.findFragmentById(R.id.nav_host_fragment_activity_main);
+                
+                if (navHostFragment != null) {
+                    androidx.fragment.app.Fragment currentFragment = navHostFragment.getChildFragmentManager().getPrimaryNavigationFragment();
+                    if (currentFragment instanceof com.example.spending_management_app.ui.home.HomeFragment) {
+                        com.example.spending_management_app.ui.home.HomeFragment homeFragment = 
+                            (com.example.spending_management_app.ui.home.HomeFragment) currentFragment;
+                        homeFragment.refreshRecentTransactions();
+                        android.util.Log.d("AiChatBottomSheet", "HomeFragment refreshed after transaction save");
+                    } else {
+                        android.util.Log.d("AiChatBottomSheet", "Current fragment is not HomeFragment: " + 
+                            (currentFragment != null ? currentFragment.getClass().getSimpleName() : "null"));
+                    }
+                }
+            }
+        } catch (Exception e) {
+            android.util.Log.e("AiChatBottomSheet", "Error refreshing HomeFragment", e);
+        }
+    }
+    
+    // Method to refresh HistoryFragment after successful transaction save
+    private void refreshHistoryFragment() {
+        try {
+            if (getActivity() != null && getActivity() instanceof MainActivity) {
+                MainActivity mainActivity = (MainActivity) getActivity();
+                // Find HistoryFragment and refresh it
+                androidx.fragment.app.FragmentManager fragmentManager = mainActivity.getSupportFragmentManager();
+                androidx.navigation.fragment.NavHostFragment navHostFragment = 
+                    (androidx.navigation.fragment.NavHostFragment) fragmentManager.findFragmentById(R.id.nav_host_fragment_activity_main);
+                
+                if (navHostFragment != null) {
+                    androidx.fragment.app.Fragment currentFragment = navHostFragment.getChildFragmentManager().getPrimaryNavigationFragment();
+                    if (currentFragment instanceof com.example.spending_management_app.ui.history.HistoryFragment) {
+                        com.example.spending_management_app.ui.history.HistoryFragment historyFragment = 
+                            (com.example.spending_management_app.ui.history.HistoryFragment) currentFragment;
+                        historyFragment.refreshTransactions();
+                        android.util.Log.d("AiChatBottomSheet", "HistoryFragment refreshed after transaction save");
+                    }
+                }
+            }
+        } catch (Exception e) {
+            android.util.Log.e("AiChatBottomSheet", "Error refreshing HistoryFragment", e);
+        }
     }
 
     private void showBudgetConfirmationDialog(String jsonString) {
@@ -891,6 +1132,286 @@ public class AiChatBottomSheet extends DialogFragment {
                 ((android.widget.LinearLayout.LayoutParams) messageBubble.getLayoutParams()).gravity = android.view.Gravity.START;
                 ((android.widget.LinearLayout.LayoutParams) timeText.getLayoutParams()).gravity = android.view.Gravity.START;
             }
+        }
+    }
+
+    // Check if user is asking for financial analysis
+    private boolean isFinancialQuery(String text) {
+        String lowerText = text.toLowerCase();
+        return lowerText.contains("chi tiêu") && (
+                lowerText.contains("hôm nay") || lowerText.contains("hôm qua") || 
+                lowerText.contains("tuần") || lowerText.contains("tháng") ||
+                lowerText.contains("tổng") || lowerText.contains("bao nhiêu") ||
+                lowerText.contains("phân tích") || lowerText.contains("báo cáo") ||
+                lowerText.contains("danh mục") || lowerText.contains("thống kê") ||
+                lowerText.contains("ngày") && (lowerText.contains("/") || lowerText.matches(".*\\d+.*")) ||
+                lowerText.contains("so với") || lowerText.contains("tư vấn")
+        );
+    }
+
+    // Get comprehensive financial context from database
+    private String getFinancialContext() {
+        StringBuilder context = new StringBuilder();
+        
+        try {
+            // Get current month date range
+            Calendar cal = Calendar.getInstance();
+            cal.set(Calendar.DAY_OF_MONTH, 1);
+            cal.set(Calendar.HOUR_OF_DAY, 0);
+            cal.set(Calendar.MINUTE, 0);
+            cal.set(Calendar.SECOND, 0);
+            cal.set(Calendar.MILLISECOND, 0);
+            Date startOfMonth = cal.getTime();
+            
+            cal.set(Calendar.DAY_OF_MONTH, cal.getActualMaximum(Calendar.DAY_OF_MONTH));
+            cal.set(Calendar.HOUR_OF_DAY, 23);
+            cal.set(Calendar.MINUTE, 59);
+            cal.set(Calendar.SECOND, 59);
+            Date endOfMonth = cal.getTime();
+
+            // Get all transactions this month
+            List<TransactionEntity> monthlyTransactions = AppDatabase.getInstance(getContext())
+                    .transactionDao()
+                    .getTransactionsByDateRange(startOfMonth, endOfMonth);
+
+            // Calculate totals
+            long totalExpense = 0;
+            long totalIncome = 0;
+            java.util.Map<String, Long> expensesByCategory = new java.util.HashMap<>();
+            java.util.Map<String, Integer> transactionCountByDay = new java.util.HashMap<>();
+            
+            SimpleDateFormat dayFormat = new SimpleDateFormat("d", Locale.getDefault());
+            
+            for (TransactionEntity transaction : monthlyTransactions) {
+                if ("expense".equals(transaction.type)) {
+                    totalExpense += Math.abs(transaction.amount);
+                    expensesByCategory.put(transaction.category, 
+                        expensesByCategory.getOrDefault(transaction.category, 0L) + Math.abs(transaction.amount));
+                } else if ("income".equals(transaction.type)) {
+                    totalIncome += transaction.amount;
+                }
+                
+                // Count transactions by day
+                String day = dayFormat.format(transaction.date);
+                transactionCountByDay.put(day, transactionCountByDay.getOrDefault(day, 0) + 1);
+            }
+
+            // Get budget info
+            List<BudgetEntity> monthlyBudgets = AppDatabase.getInstance(getContext())
+                    .budgetDao()
+                    .getBudgetsByDateRange(startOfMonth, endOfMonth);
+
+            // Build context string
+            context.append("THÔNG TIN TÀI CHÍNH THÁNG NÀY:\n");
+            context.append("- Tổng thu nhập: ").append(String.format(Locale.getDefault(), "%,d", totalIncome)).append(" VND\n");
+            context.append("- Tổng chi tiêu: ").append(String.format(Locale.getDefault(), "%,d", totalExpense)).append(" VND\n");
+            context.append("- Số dư ước tính: ").append(String.format(Locale.getDefault(), "%,d", (totalIncome - totalExpense))).append(" VND\n");
+            
+            if (!monthlyBudgets.isEmpty()) {
+                BudgetEntity budget = monthlyBudgets.get(0);
+                long remaining = budget.getMonthlyLimit() - totalExpense;
+                context.append("- Ngân sách tháng: ").append(String.format(Locale.getDefault(), "%,d", budget.getMonthlyLimit())).append(" VND\n");
+                context.append("- Còn lại: ").append(String.format(Locale.getDefault(), "%,d", remaining)).append(" VND\n");
+                context.append("- Tỷ lệ sử dụng: ").append(String.format("%.1f", (double)totalExpense/budget.getMonthlyLimit()*100)).append("%\n");
+            }
+            
+            context.append("\nCHI TIÊU THEO DANH MỤC:\n");
+            for (java.util.Map.Entry<String, Long> entry : expensesByCategory.entrySet()) {
+                double percentage = totalExpense > 0 ? (double)entry.getValue()/totalExpense*100 : 0;
+                context.append("- ").append(entry.getKey()).append(": ")
+                       .append(String.format(Locale.getDefault(), "%,d", entry.getValue()))
+                       .append(" VND (").append(String.format("%.1f", percentage)).append("%)\n");
+            }
+            
+            context.append("\nGAO DỊCH GẦN ĐÂY:\n");
+            SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM", Locale.getDefault());
+            List<TransactionEntity> recentTransactions = monthlyTransactions.stream()
+                    .sorted((t1, t2) -> t2.date.compareTo(t1.date))
+                    .limit(10)
+                    .collect(java.util.stream.Collectors.toList());
+            
+            for (TransactionEntity t : recentTransactions) {
+                context.append("- ").append(dateFormat.format(t.date)).append(": ")
+                       .append(t.description).append(" (").append(t.category).append(") - ")
+                       .append(String.format(Locale.getDefault(), "%,d", Math.abs(t.amount))).append(" VND\n");
+            }
+
+        } catch (Exception e) {
+            context.append("Lỗi khi truy xuất dữ liệu tài chính: ").append(e.getMessage());
+        }
+        
+        return context.toString();
+    }
+
+    // Send prompt to AI with financial context
+    private void sendPromptToAIWithContext(String userQuery, String financialContext) {
+        // Add temporary "Đang phân tích..." message
+        int analyzingIndex = messages.size();
+        messages.add(new ChatMessage("Đang phân tích dữ liệu tài chính...", false, "Bây giờ"));
+        chatAdapter.notifyItemInserted(messages.size() - 1);
+        messagesRecycler.smoothScrollToPosition(messages.size() - 1);
+
+        try {
+            JSONObject json = new JSONObject();
+
+            // Get current date for AI context
+            java.util.Calendar currentCalendar = java.util.Calendar.getInstance();
+            int currentDay = currentCalendar.get(java.util.Calendar.DAY_OF_MONTH);
+            int currentMonth = currentCalendar.get(java.util.Calendar.MONTH) + 1;
+            int currentYear = currentCalendar.get(java.util.Calendar.YEAR);
+            String currentDateInfo = String.format("Hôm nay là ngày %d/%d/%d", currentDay, currentMonth, currentYear);
+
+            // Enhanced system instruction with financial analysis capabilities
+            JSONObject systemInstruction = new JSONObject();
+            JSONArray systemParts = new JSONArray();
+            JSONObject systemPart = new JSONObject();
+            
+            String enhancedInstruction = "Bạn là trợ lý tài chính thông minh. " + currentDateInfo + ".\n\n" +
+                "DANH MỤC CHI TIÊU CHUẨN:\n" +
+                "• NHU CẦU THIẾT YẾU: Ăn uống, Di chuyển, Tiện ích, Y tế, Nhà ở\n" +
+                "• MUA SẮM & PHÁT TRIỂN: Mua sắm, Giáo dục, Sách & Học tập, Thể thao, Sức khỏe & Làm đẹp\n" +
+                "• GIẢI TRÍ & XÃ HỘI: Giải trí, Du lịch, Ăn ngoài & Cafe, Quà tặng & Từ thiện, Hội họp & Tiệc tụng\n" +
+                "• CÔNG NGHỆ & DỊCH VỤ: Điện thoại & Internet, Đăng ký & Dịch vụ, Phần mềm & Apps, Ngân hàng & Phí\n" +
+                "• GIA ĐÌNH: Con cái, Thú cưng, Gia đình\n" +
+                "• THU NHẬP: Lương, Đầu tư, Thu nhập phụ, Tiết kiệm\n\n" +
+                "QUYỀN TRUY CẬP: Bạn có TOÀN BỘ dữ liệu tài chính của người dùng.\n\n" +
+                "KHẢ NĂNG PHÂN TÍCH:\n" +
+                "- Chi tiêu theo ngày/tuần/tháng cụ thể\n" +
+                "- So sánh chi tiêu giữa các thời kỳ\n" +
+                "- Phân tích chi tiêu theo danh mục\n" +
+                "- Tư vấn tiết kiệm và quản lý ngân sách\n" +
+                "- Dự báo và cảnh báo chi tiêu\n\n" +
+                "DỮ LIỆU TÀI CHÍNH:\n" + financialContext + "\n\n" +
+                "QUY TẮC TRẢ LỜI:\n" +
+                "1. FORMAT RÕ RÀNG:\n" +
+                "   - Mỗi mục chi tiêu trên MỘT DÒNG riêng\n" +
+                "   - Dùng emoji để phân loại (💰 💸 🍽️ 🚗 🛍️ ⚡ 🏥 🏠 � 🎬 ✈️ ☕ 🎁 📱 👶 🐕)\n" +
+                "   - Format: [Emoji] [Tên]: [Số tiền] VND ([Danh mục])\n" +
+                "   - Xuống dòng giữa các phần\n\n" +
+                "2. CẤU TRÚC:\n" +
+                "   - Mở đầu: Câu chào/tóm tắt ngắn\n" +
+                "   - Chi tiết: Nhóm theo danh mục, liệt kê từng mục rõ ràng\n" +
+                "   - Tổng kết: Tổng chi tiêu từng danh mục\n" +
+                "   - Kết thúc: Tư vấn/nhận xét ngắn gọn, thực tế\n\n" +
+                "3. KHÔNG DÙNG:\n" +
+                "   - Markdown (*, **, ###)\n" +
+                "   - Text dài dòng không xuống dòng\n" +
+                "   - Số thứ tự (1., 2., 3.)\n\n" +
+                "4. SỬ DỤNG:\n" +
+                "   - Emoji thay bullet points\n" +
+                "   - Xuống dòng (\\n) để tách mục\n" +
+                "   - Dấu phẩy ngăn cách số tiền\n" +
+                "   - Ngôn ngữ thân thiện, có thể hài hước\n" +
+                "   - Nhóm chi tiêu theo danh mục để dễ theo dõi\n\n" +
+                "Hãy phân tích chính xác và trả lời rõ ràng, dễ đọc!";
+            
+            systemPart.put("text", enhancedInstruction);
+            systemParts.put(systemPart);
+            systemInstruction.put("parts", systemParts);
+            json.put("system_instruction", systemInstruction);
+
+            // User message
+            JSONArray contents = new JSONArray();
+            JSONObject userContent = new JSONObject();
+            JSONArray userParts = new JSONArray();
+            JSONObject userPart = new JSONObject();
+            userPart.put("text", userQuery);
+            userParts.put(userPart);
+            userContent.put("parts", userParts);
+            userContent.put("role", "user");
+            contents.put(userContent);
+            json.put("contents", contents);
+
+            RequestBody body = RequestBody.create(json.toString(), MediaType.parse("application/json"));
+            Request request = new Request.Builder()
+                    .url("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyB7cKKNvETdnd379olrAJpXzEfmfIGyx-M")
+                    .post(body)
+                    .build();
+
+            client.newCall(request).enqueue(new Callback() {
+                @Override
+                public void onFailure(Call call, IOException e) {
+                    getActivity().runOnUiThread(() -> {
+                        messages.set(analyzingIndex, new ChatMessage("Lỗi kết nối AI.", false, "Bây giờ"));
+                        chatAdapter.notifyItemChanged(analyzingIndex);
+                    });
+                }
+
+                @Override
+                public void onResponse(Call call, Response response) throws IOException {
+                    if (response.isSuccessful()) {
+                        try {
+                            String responseBody = response.body().string();
+                            JSONObject jsonResponse = new JSONObject(responseBody);
+                            JSONArray candidates = jsonResponse.getJSONArray("candidates");
+                            JSONObject candidate = candidates.getJSONObject(0);
+                            JSONObject content = candidate.getJSONObject("content");
+                            JSONArray parts = content.getJSONArray("parts");
+                            String aiText = parts.getJSONObject(0).getString("text").trim();
+
+                            // Format markdown text để dễ đọc
+                            String formattedText = formatMarkdownText(aiText);
+
+                            getActivity().runOnUiThread(() -> {
+                                messages.set(analyzingIndex, new ChatMessage(formattedText, false, "Bây giờ"));
+                                chatAdapter.notifyItemChanged(analyzingIndex);
+                                messagesRecycler.smoothScrollToPosition(messages.size() - 1);
+                                textToSpeech.speak(formattedText, TextToSpeech.QUEUE_FLUSH, null, null);
+                            });
+                        } catch (Exception e) {
+                            getActivity().runOnUiThread(() -> {
+                                messages.set(analyzingIndex, new ChatMessage("Lỗi xử lý phản hồi AI.", false, "Bây giờ"));
+                                chatAdapter.notifyItemChanged(analyzingIndex);
+                            });
+                        }
+                    } else {
+                        getActivity().runOnUiThread(() -> {
+                            messages.set(analyzingIndex, new ChatMessage("Lỗi từ AI: " + response.code(), false, "Bây giờ"));
+                            chatAdapter.notifyItemChanged(analyzingIndex);
+                        });
+                    }
+                }
+            });
+        } catch (Exception e) {
+            messages.set(analyzingIndex, new ChatMessage("Lỗi gửi tin nhắn.", false, "Bây giờ"));
+            chatAdapter.notifyItemChanged(analyzingIndex);
+        }
+    }
+
+    // Helper method để format markdown text thành plain text dễ đọc
+    private String formatMarkdownText(String text) {
+        if (text == null || text.isEmpty()) {
+            return text;
+        }
+        
+        try {
+            // Xóa bold markdown (**text**)
+            text = text.replaceAll("\\*\\*(.*?)\\*\\*", "$1");
+            
+            // Xóa italic markdown (*text*)
+            text = text.replaceAll("(?<!\\*)\\*(?!\\*)([^*]+)\\*(?!\\*)", "$1");
+            
+            // Xóa heading markdown (###, ##, #)
+            text = text.replaceAll("^#{1,6}\\s+", "");
+            text = text.replaceAll("\\n#{1,6}\\s+", "\n");
+            
+            // Giữ nguyên xuống dòng - KHÔNG xóa
+            // Chỉ chuẩn hóa: tối đa 2 xuống dòng liên tiếp
+            text = text.replaceAll("\\n{3,}", "\n\n");
+            
+            // Xóa các asterisk đơn lẻ còn sót lại
+            text = text.replaceAll("(?<!\\S)\\*(?!\\S)", "");
+            
+            // Trim whitespace đầu cuối
+            text = text.trim();
+            
+            android.util.Log.d("AiChatBottomSheet", "Formatted text: " + text);
+            
+            return text;
+            
+        } catch (Exception e) {
+            android.util.Log.e("AiChatBottomSheet", "Error formatting markdown", e);
+            return text; // Return original if error
         }
     }
 }
