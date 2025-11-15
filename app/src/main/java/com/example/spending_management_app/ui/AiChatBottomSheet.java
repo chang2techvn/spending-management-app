@@ -204,12 +204,132 @@ public class AiChatBottomSheet extends DialogFragment {
     private void setupMessages() {
         messages = new ArrayList<>();
         
-        // Load initial message with recent transactions
-        loadRecentTransactionsForWelcome();
+        // Check if this is budget management mode
+        Bundle args = getArguments();
+        if (args != null && "budget_management".equals(args.getString("mode"))) {
+            // Load budget welcome message
+            loadBudgetWelcomeMessage();
+        } else {
+            // Load expense tracking welcome message
+            loadRecentTransactionsForWelcome();
+        }
 
         chatAdapter = new ChatAdapter(messages);
         messagesRecycler.setLayoutManager(new LinearLayoutManager(getContext()));
         messagesRecycler.setAdapter(chatAdapter);
+    }
+    
+    private void loadBudgetWelcomeMessage() {
+        // Add a temporary loading message
+        messages.add(new ChatMessage("Đang tải thông tin ngân sách...", false, "Bây giờ"));
+        
+        // Load budget data from database in background
+        Executors.newSingleThreadExecutor().execute(() -> {
+            try {
+                // Get current month's budget
+                Calendar currentCal = Calendar.getInstance();
+                currentCal.set(Calendar.DAY_OF_MONTH, 1);
+                Date currentMonthStart = currentCal.getTime();
+                currentCal.set(Calendar.DAY_OF_MONTH, currentCal.getActualMaximum(Calendar.DAY_OF_MONTH));
+                Date currentMonthEnd = currentCal.getTime();
+                
+                List<BudgetEntity> currentMonthBudgets = AppDatabase.getInstance(getContext())
+                        .budgetDao()
+                        .getBudgetsByDateRange(currentMonthStart, currentMonthEnd);
+                
+                // Get budgets from 6 months ago
+                Calendar pastCal = Calendar.getInstance();
+                pastCal.add(Calendar.MONTH, -6);
+                pastCal.set(Calendar.DAY_OF_MONTH, 1);
+                Date sixMonthsAgoStart = pastCal.getTime();
+                
+                List<BudgetEntity> pastBudgets = AppDatabase.getInstance(getContext())
+                        .budgetDao()
+                        .getBudgetsByDateRange(sixMonthsAgoStart, currentMonthEnd);
+                
+                SimpleDateFormat monthFormat = new SimpleDateFormat("MM/yyyy", new Locale("vi", "VN"));
+                
+                // Build welcome message with budget information
+                StringBuilder welcomeMessage = new StringBuilder();
+                welcomeMessage.append("Chào bạn! 👋\n\n");
+                welcomeMessage.append("💰 Quản lý ngân sách tháng\n\n");
+                
+                // Part 1: Budget history from 6 months ago
+                if (!pastBudgets.isEmpty()) {
+                    welcomeMessage.append("📊 Lịch sử ngân sách (6 tháng gần đây):\n\n");
+                    
+                    // Group budgets by month and show the most recent one for each month
+                    java.util.Map<String, BudgetEntity> budgetsByMonth = new java.util.HashMap<>();
+                    for (BudgetEntity budget : pastBudgets) {
+                        String monthKey = monthFormat.format(budget.date);
+                        if (!budgetsByMonth.containsKey(monthKey) || 
+                            budget.date.after(budgetsByMonth.get(monthKey).date)) {
+                            budgetsByMonth.put(monthKey, budget);
+                        }
+                    }
+                    
+                    // Sort and display
+                    java.util.List<String> sortedMonths = new java.util.ArrayList<>(budgetsByMonth.keySet());
+                    java.util.Collections.sort(sortedMonths);
+                    
+                    for (String month : sortedMonths) {
+                        BudgetEntity budget = budgetsByMonth.get(month);
+                        String formattedAmount = String.format("%,d", budget.monthlyLimit);
+                        welcomeMessage.append("   • Tháng ").append(month).append(": ")
+                                .append(formattedAmount).append(" VND\n");
+                    }
+                    welcomeMessage.append("\n");
+                }
+                
+                // Current month budget
+                if (!currentMonthBudgets.isEmpty()) {
+                    BudgetEntity currentBudget = currentMonthBudgets.get(0);
+                    String formattedAmount = String.format("%,d", currentBudget.monthlyLimit);
+                    String currentMonth = monthFormat.format(currentBudget.date);
+                    welcomeMessage.append("📅 Ngân sách hiện tại (").append(currentMonth).append("): ")
+                            .append(formattedAmount).append(" VND\n\n");
+                } else {
+                    welcomeMessage.append("📅 Ngân sách hiện tại: Chưa thiết lập\n\n");
+                }
+                
+                // Part 2: Instructions for managing budget
+                welcomeMessage.append("💡 Hướng dẫn quản lý:\n\n");
+                welcomeMessage.append("   Để thêm ngân sách tháng này: Thêm ngân sách 15 triệu hoặc Đặt ngân sách 20 triệu\n");
+                welcomeMessage.append("   Để sửa ngân sách: Sửa ngân sách lên 25 triệu hoặc Thay đổi ngân sách 18 triệu\n\n");
+                welcomeMessage.append("Hãy cho tôi biết số tiền ngân sách bạn muốn thiết lập! 😊");
+                
+                String finalMessage = welcomeMessage.toString();
+                
+                // Update UI on main thread
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(() -> {
+                        // Replace loading message with actual welcome message
+                        if (!messages.isEmpty()) {
+                            messages.set(0, new ChatMessage(finalMessage, false, "Bây giờ"));
+                            chatAdapter.notifyItemChanged(0);
+                        }
+                    });
+                }
+                
+            } catch (Exception e) {
+                android.util.Log.e("AiChatBottomSheet", "Error loading budget information", e);
+                
+                // Fallback to simple welcome message
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(() -> {
+                        String fallbackMessage = "Chào bạn! 👋\n\n" +
+                                "💰 Quản lý ngân sách tháng\n\n" +
+                                "💡 Để thêm ngân sách tháng này, hãy cho tôi biết:\n" +
+                                "Ví dụ: \"Thêm ngân sách 15 triệu\" hoặc \"Đặt ngân sách 20 triệu\"";
+                        
+                        if (!messages.isEmpty()) {
+                            messages.set(0, new ChatMessage(fallbackMessage, false, "Bây giờ"));
+                            chatAdapter.notifyItemChanged(0);
+                        }
+                    });
+                }
+            }
+        });
     }
     
     private void loadRecentTransactionsForWelcome() {
@@ -318,8 +438,12 @@ public class AiChatBottomSheet extends DialogFragment {
     }
 
     private void sendToAI(String text) {
+        // Check if this is budget management mode
+        Bundle args = getArguments();
+        boolean isBudgetMode = args != null && "budget_management".equals(args.getString("mode"));
+        
         // Check if user is asking for financial analysis or reports
-        if (isFinancialQuery(text)) {
+        if (!isBudgetMode && isFinancialQuery(text)) {
             // Get comprehensive financial data from database
             Executors.newSingleThreadExecutor().execute(() -> {
                 try {
@@ -336,41 +460,149 @@ public class AiChatBottomSheet extends DialogFragment {
             return;
         }
 
-        // Check if user is requesting budget management like the button
-        if (text.toLowerCase().contains("ngân sách") && (text.toLowerCase().contains("tháng") || text.toLowerCase().contains("thiết lập") || text.toLowerCase().contains("hiện tại") || text.toLowerCase().contains("bao nhiêu"))) {
-            // Handle like the button: query DB and create prompt
-            Executors.newSingleThreadExecutor().execute(() -> {
-                Calendar cal = Calendar.getInstance();
-                cal.set(Calendar.DAY_OF_MONTH, 1);
-                Date startOfMonth = cal.getTime();
-                cal.set(Calendar.DAY_OF_MONTH, cal.getActualMaximum(Calendar.DAY_OF_MONTH));
-                Date endOfMonth = cal.getTime();
-
-                List<BudgetEntity> monthlyBudgets = AppDatabase.getInstance(getContext()).budgetDao().getBudgetsByDateRange(startOfMonth, endOfMonth);
-
-                getActivity().runOnUiThread(() -> {
-                    String prompt;
-                    if (monthlyBudgets == null || monthlyBudgets.isEmpty()) {
-                        // No budget set: ask AI to prompt user naturally and request an amount
-                        prompt = "Người dùng chưa thiết lập ngân sách cho tháng này. Hãy hỏi họ bằng một câu tự nhiên, đa dạng (không quá cứng nhắc) để yêu cầu họ nhập số ngân sách cho tháng này. Sau câu hỏi, khi người dùng trả lời, hãy trả về JSON dạng {\"action\":\"set_budget\", \"amount\": số, \"currency\": \"VND\"} để app có thể lưu." 
-                                + " Hãy đưa ra một câu hỏi kèm theo gợi ý ngắn nếu cần.";
-                    } else {
-                        BudgetEntity budget = monthlyBudgets.get(0);
-                        SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy", new Locale("vi", "VN"));
-                        String dateStr = budget.getDate() != null ? dateFormat.format(budget.getDate()) : "(không xác định)";
-                        prompt = "Người dùng đã thiết lập ngân sách tháng này vào ngày " + dateStr + ". Số tiền hiện tại là "
-                                + String.format(Locale.getDefault(), "%,d", budget.getMonthlyLimit()) + " VND. Hãy trả lời người dùng bằng ngôn ngữ tự nhiên (có thể hài hước), thông báo số ngân sách hiện tại và hỏi xem họ có muốn thay đổi không. Nếu user muốn thay đổi và cung cấp số mới, trả về JSON {\"action\":\"update_budget\", \"amount\": số, \"currency\": \"VND\"}.";
-                    }
-
-                    // Send the crafted prompt to AI
-                    sendPromptToAI(prompt);
-                });
-            });
+        // Check if user is requesting budget management
+        if (isBudgetMode || (text.toLowerCase().contains("ngân sách") && 
+            (text.toLowerCase().contains("thêm") || text.toLowerCase().contains("đặt") || 
+             text.toLowerCase().contains("sửa") || text.toLowerCase().contains("thay đổi") ||
+             text.toLowerCase().contains("thiết lập")))) {
+            
+            // Extract budget amount from text
+            handleBudgetRequest(text);
             return;
         }
 
-        // Normal send to AI
+        // Normal send to AI for expense tracking
         sendPromptToAI(text);
+    }
+    
+    private void handleBudgetRequest(String text) {
+        // Add analyzing message
+        int analyzingIndex = messages.size();
+        messages.add(new ChatMessage("Đang xử lý yêu cầu...", false, "Bây giờ"));
+        chatAdapter.notifyItemInserted(messages.size() - 1);
+        messagesRecycler.smoothScrollToPosition(messages.size() - 1);
+        
+        // Extract amount from text (support various formats like "15 triệu", "20000000", "25tr")
+        long amount = extractBudgetAmount(text);
+        
+        if (amount > 0) {
+            // Save budget to database
+            Executors.newSingleThreadExecutor().execute(() -> {
+                try {
+                    Calendar cal = Calendar.getInstance();
+                    cal.set(Calendar.DAY_OF_MONTH, 1);
+                    Date startOfMonth = cal.getTime();
+                    cal.set(Calendar.DAY_OF_MONTH, cal.getActualMaximum(Calendar.DAY_OF_MONTH));
+                    Date endOfMonth = cal.getTime();
+                    
+                    List<BudgetEntity> existingBudgets = AppDatabase.getInstance(getContext())
+                            .budgetDao()
+                            .getBudgetsByDateRange(startOfMonth, endOfMonth);
+                    
+                    boolean isUpdate = !existingBudgets.isEmpty();
+                    
+                    if (isUpdate) {
+                        // Update existing budget
+                        BudgetEntity existing = existingBudgets.get(0);
+                        existing.monthlyLimit = amount;
+                        existing.date = new Date();
+                        AppDatabase.getInstance(getContext()).budgetDao().update(existing);
+                    } else {
+                        // Insert new budget
+                        BudgetEntity budget = new BudgetEntity("Ngân sách tháng", amount, 0L, new Date());
+                        AppDatabase.getInstance(getContext()).budgetDao().insert(budget);
+                    }
+                    
+                    String formattedAmount = String.format("%,d", amount);
+                    
+                    // Update UI
+                    if (getActivity() != null) {
+                        getActivity().runOnUiThread(() -> {
+                            String responseMessage = isUpdate ? 
+                                    "✅ Đã cập nhật ngân sách tháng này thành " + formattedAmount + " VND!\n\n" +
+                                    "Chúc bạn quản lý tài chính tốt! 💪" :
+                                    "✅ Đã thiết lập ngân sách tháng này là " + formattedAmount + " VND!\n\n" +
+                                    "Chúc bạn chi tiêu hợp lý! 💰";
+                            
+                            messages.set(analyzingIndex, new ChatMessage(responseMessage, false, "Bây giờ"));
+                            chatAdapter.notifyItemChanged(analyzingIndex);
+                            messagesRecycler.smoothScrollToPosition(messages.size() - 1);
+                            
+                            // Show toast
+                            String toastMessage = isUpdate ? 
+                                    "✅ Đã cập nhật ngân sách: " + formattedAmount + " VND" :
+                                    "✅ Đã thiết lập ngân sách: " + formattedAmount + " VND";
+                            showToastOnTop(toastMessage);
+                            
+                            // Refresh HomeFragment
+                            refreshHomeFragment();
+                        });
+                    }
+                    
+                } catch (Exception e) {
+                    android.util.Log.e("AiChatBottomSheet", "Error saving budget", e);
+                    
+                    if (getActivity() != null) {
+                        getActivity().runOnUiThread(() -> {
+                            messages.set(analyzingIndex, new ChatMessage(
+                                    "❌ Có lỗi xảy ra khi lưu ngân sách. Vui lòng thử lại!", 
+                                    false, "Bây giờ"));
+                            chatAdapter.notifyItemChanged(analyzingIndex);
+                            showErrorToast("Lỗi lưu ngân sách");
+                        });
+                    }
+                }
+            });
+        } else {
+            // Could not extract amount, ask AI to help
+            getActivity().runOnUiThread(() -> {
+                messages.set(analyzingIndex, new ChatMessage(
+                        "🤔 Tôi không thể xác định số tiền ngân sách từ yêu cầu của bạn.\n\n" +
+                        "Vui lòng nhập rõ số tiền, ví dụ:\n" +
+                        "   • \"Thêm ngân sách 15 triệu\"\n" +
+                        "   • \"Đặt ngân sách 20000000\"\n" +
+                        "   • \"Sửa ngân sách lên 25tr\"",
+                        false, "Bây giờ"));
+                chatAdapter.notifyItemChanged(analyzingIndex);
+            });
+        }
+    }
+    
+    private long extractBudgetAmount(String text) {
+        try {
+            text = text.toLowerCase().trim();
+            
+            // Pattern 1: "X triệu" or "X tr"
+            Pattern trPattern = Pattern.compile("(\\d+(?:[,.]\\d+)?)\\s*(?:triệu|tr)");
+            Matcher trMatcher = trPattern.matcher(text);
+            if (trMatcher.find()) {
+                String numberStr = trMatcher.group(1).replace(",", ".").replace(".", "");
+                double millions = Double.parseDouble(numberStr);
+                return (long)(millions * 1000000);
+            }
+            
+            // Pattern 2: "X nghìn" or "X k"
+            Pattern kPattern = Pattern.compile("(\\d+(?:[,.]\\d+)?)\\s*(?:nghìn|k|ng)");
+            Matcher kMatcher = kPattern.matcher(text);
+            if (kMatcher.find()) {
+                String numberStr = kMatcher.group(1).replace(",", ".").replace(".", "");
+                double thousands = Double.parseDouble(numberStr);
+                return (long)(thousands * 1000);
+            }
+            
+            // Pattern 3: Plain number (should be large enough to be a budget)
+            Pattern numberPattern = Pattern.compile("(\\d{5,})"); // At least 5 digits
+            Matcher numberMatcher = numberPattern.matcher(text);
+            if (numberMatcher.find()) {
+                return Long.parseLong(numberMatcher.group(1));
+            }
+            
+            return 0;
+            
+        } catch (Exception e) {
+            android.util.Log.e("AiChatBottomSheet", "Error extracting budget amount", e);
+            return 0;
+        }
     }
 
     private void sendPromptToAI(String text) {
