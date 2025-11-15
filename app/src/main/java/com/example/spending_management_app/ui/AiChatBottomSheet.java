@@ -462,6 +462,12 @@ public class AiChatBottomSheet extends DialogFragment {
         Bundle args = getArguments();
         boolean isBudgetMode = args != null && "budget_management".equals(args.getString("mode"));
         
+        // Check if user is asking for budget analysis, view, or delete
+        if (isBudgetMode || isBudgetQuery(text)) {
+            handleBudgetQuery(text);
+            return;
+        }
+        
         // Check if user is asking for financial analysis or reports
         if (!isBudgetMode && isFinancialQuery(text)) {
             // Get comprehensive financial data from database
@@ -480,19 +486,77 @@ public class AiChatBottomSheet extends DialogFragment {
             return;
         }
 
-        // Check if user is requesting budget management
-        if (isBudgetMode || (text.toLowerCase().contains("ngân sách") && 
-            (text.toLowerCase().contains("thêm") || text.toLowerCase().contains("đặt") || 
-             text.toLowerCase().contains("sửa") || text.toLowerCase().contains("thay đổi") ||
-             text.toLowerCase().contains("thiết lập")))) {
-            
-            // Extract budget amount from text
+        // Normal send to AI for expense tracking
+        sendPromptToAI(text);
+    }
+    
+    // Check if user is querying about budget
+    private boolean isBudgetQuery(String text) {
+        String lowerText = text.toLowerCase();
+        
+        // Nếu có từ "ngân sách"
+        if (!lowerText.contains("ngân sách")) {
+            return false;
+        }
+        
+        // Các trường hợp luôn là câu hỏi về ngân sách:
+        // 1. Có động từ hành động hoặc câu hỏi
+        boolean hasActionOrQuestion = 
+                lowerText.contains("xem") || lowerText.contains("hiển thị") ||
+                lowerText.contains("cho tôi biết") || lowerText.contains("thế nào") ||
+                lowerText.contains("bao nhiêu") || lowerText.contains("phân tích") ||
+                lowerText.contains("tư vấn") || lowerText.contains("đánh giá") ||
+                lowerText.contains("so sánh") || lowerText.contains("xu hướng") ||
+                lowerText.contains("xóa") || lowerText.contains("xoá") ||
+                lowerText.contains("thêm") || lowerText.contains("đặt") || 
+                lowerText.contains("sửa") || lowerText.contains("thay đổi") ||
+                lowerText.contains("thiết lập");
+        
+        // 2. Có từ khóa thời gian (năm, tháng, ngày) - ngầm hiểu là xem ngân sách
+        boolean hasTimeKeyword = 
+                lowerText.contains("năm") || lowerText.contains("tháng") ||
+                lowerText.contains("này") || lowerText.contains("trước") ||
+                lowerText.contains("sau") || lowerText.contains("tất cả") ||
+                lowerText.contains("toàn bộ") || lowerText.contains("hiện tại");
+        
+        // 3. Chỉ có "ngân sách" một mình (câu ngắn <= 15 ký tự) - có thể là xem tổng quan
+        boolean isShortBudgetQuery = lowerText.trim().length() <= 15;
+        
+        return hasActionOrQuestion || hasTimeKeyword || isShortBudgetQuery;
+    }
+    
+    // Handle budget queries (view, analyze, add, edit, delete)
+    private void handleBudgetQuery(String text) {
+        String lowerText = text.toLowerCase();
+        
+        // Check if user wants to delete budget
+        if (lowerText.contains("xóa") || lowerText.contains("xoá")) {
+            handleDeleteBudget(text);
+            return;
+        }
+        
+        // Check if user wants to add/edit budget
+        if (lowerText.contains("thêm") || lowerText.contains("đặt") || 
+            lowerText.contains("sửa") || lowerText.contains("thay đổi") ||
+            lowerText.contains("thiết lập")) {
             handleBudgetRequest(text);
             return;
         }
-
-        // Normal send to AI for expense tracking
-        sendPromptToAI(text);
+        
+        // User wants to view or analyze budget - get budget data and send to AI
+        Executors.newSingleThreadExecutor().execute(() -> {
+            try {
+                String budgetContext = getBudgetContext();
+                getActivity().runOnUiThread(() -> {
+                    sendPromptToAIWithBudgetContext(text, budgetContext);
+                });
+            } catch (Exception e) {
+                android.util.Log.e("AiChatBottomSheet", "Error getting budget context", e);
+                getActivity().runOnUiThread(() -> {
+                    sendPromptToAI(text);
+                });
+            }
+        });
     }
     
     private void handleBudgetRequest(String text) {
@@ -1657,5 +1721,306 @@ public class AiChatBottomSheet extends DialogFragment {
             android.util.Log.e("AiChatBottomSheet", "Error formatting markdown", e);
             return text; // Return original if error
         }
+    }
+    
+    // Get comprehensive budget context from database
+    private String getBudgetContext() {
+        StringBuilder context = new StringBuilder();
+        
+        try {
+            // Get all budgets (last 12 months)
+            Calendar cal = Calendar.getInstance();
+            cal.add(Calendar.MONTH, -12);
+            cal.set(Calendar.DAY_OF_MONTH, 1);
+            cal.set(Calendar.HOUR_OF_DAY, 0);
+            cal.set(Calendar.MINUTE, 0);
+            cal.set(Calendar.SECOND, 0);
+            cal.set(Calendar.MILLISECOND, 0);
+            Date twelveMonthsAgo = cal.getTime();
+            
+            cal = Calendar.getInstance();
+            cal.add(Calendar.MONTH, 6); // Include 6 months in future
+            cal.set(Calendar.DAY_OF_MONTH, cal.getActualMaximum(Calendar.DAY_OF_MONTH));
+            cal.set(Calendar.HOUR_OF_DAY, 23);
+            cal.set(Calendar.MINUTE, 59);
+            cal.set(Calendar.SECOND, 59);
+            Date sixMonthsLater = cal.getTime();
+            
+            List<BudgetEntity> allBudgets = AppDatabase.getInstance(getContext())
+                    .budgetDao()
+                    .getBudgetsByDateRangeOrdered(twelveMonthsAgo, sixMonthsLater);
+            
+            SimpleDateFormat monthYearFormat = new SimpleDateFormat("MM/yyyy", new Locale("vi", "VN"));
+            
+            context.append("THÔNG TIN NGÂN SÁCH:\n");
+            
+            if (allBudgets != null && !allBudgets.isEmpty()) {
+                // Group by month
+                java.util.Map<String, BudgetEntity> budgetsByMonth = new java.util.HashMap<>();
+                for (BudgetEntity budget : allBudgets) {
+                    String monthKey = monthYearFormat.format(budget.date);
+                    if (!budgetsByMonth.containsKey(monthKey) || 
+                        budget.date.after(budgetsByMonth.get(monthKey).date)) {
+                        budgetsByMonth.put(monthKey, budget);
+                    }
+                }
+                
+                // Sort months
+                java.util.List<String> sortedMonths = new java.util.ArrayList<>(budgetsByMonth.keySet());
+                java.util.Collections.sort(sortedMonths);
+                
+                // Calculate current month
+                Calendar currentCal = Calendar.getInstance();
+                String currentMonth = monthYearFormat.format(currentCal.getTime());
+                
+                // List all budgets
+                context.append("\nDanh sách ngân sách theo tháng:\n");
+                for (String month : sortedMonths) {
+                    BudgetEntity budget = budgetsByMonth.get(month);
+                    String formattedAmount = String.format(Locale.getDefault(), "%,d", budget.monthlyLimit);
+                    
+                    String marker = month.equals(currentMonth) ? " (Tháng hiện tại)" : "";
+                    context.append("- Tháng ").append(month).append(marker).append(": ")
+                           .append(formattedAmount).append(" VND\n");
+                }
+                
+                // Calculate statistics
+                long totalBudget = 0;
+                long maxBudget = Long.MIN_VALUE;
+                long minBudget = Long.MAX_VALUE;
+                String maxMonth = "";
+                String minMonth = "";
+                
+                for (String month : sortedMonths) {
+                    BudgetEntity budget = budgetsByMonth.get(month);
+                    totalBudget += budget.monthlyLimit;
+                    
+                    if (budget.monthlyLimit > maxBudget) {
+                        maxBudget = budget.monthlyLimit;
+                        maxMonth = month;
+                    }
+                    
+                    if (budget.monthlyLimit < minBudget) {
+                        minBudget = budget.monthlyLimit;
+                        minMonth = month;
+                    }
+                }
+                
+                long avgBudget = totalBudget / sortedMonths.size();
+                
+                context.append("\nThống kê ngân sách:\n");
+                context.append("- Tổng số tháng đã thiết lập: ").append(sortedMonths.size()).append("\n");
+                context.append("- Ngân sách trung bình: ").append(String.format(Locale.getDefault(), "%,d", avgBudget)).append(" VND\n");
+                context.append("- Ngân sách cao nhất: ").append(String.format(Locale.getDefault(), "%,d", maxBudget))
+                       .append(" VND (Tháng ").append(maxMonth).append(")\n");
+                context.append("- Ngân sách thấp nhất: ").append(String.format(Locale.getDefault(), "%,d", minBudget))
+                       .append(" VND (Tháng ").append(minMonth).append(")\n");
+                
+                // Current month budget status
+                if (budgetsByMonth.containsKey(currentMonth)) {
+                    BudgetEntity currentBudget = budgetsByMonth.get(currentMonth);
+                    context.append("\nNgân sách tháng hiện tại: ")
+                           .append(String.format(Locale.getDefault(), "%,d", currentBudget.monthlyLimit))
+                           .append(" VND\n");
+                } else {
+                    context.append("\nNgân sách tháng hiện tại: Chưa thiết lập\n");
+                }
+                
+            } else {
+                context.append("Chưa có ngân sách nào được thiết lập.\n");
+            }
+            
+        } catch (Exception e) {
+            context.append("Lỗi khi truy xuất dữ liệu ngân sách: ").append(e.getMessage());
+            android.util.Log.e("AiChatBottomSheet", "Error getting budget context", e);
+        }
+        
+        return context.toString();
+    }
+    
+    // Send prompt to AI with budget context
+    private void sendPromptToAIWithBudgetContext(String userQuery, String budgetContext) {
+        // Add temporary "Đang phân tích..." message
+        int analyzingIndex = messages.size();
+        messages.add(new ChatMessage("Đang phân tích ngân sách...", false, "Bây giờ"));
+        chatAdapter.notifyItemInserted(messages.size() - 1);
+        messagesRecycler.smoothScrollToPosition(messages.size() - 1);
+
+        try {
+            JSONObject json = new JSONObject();
+
+            // Get current date for AI context
+            java.util.Calendar currentCalendar = java.util.Calendar.getInstance();
+            int currentDay = currentCalendar.get(java.util.Calendar.DAY_OF_MONTH);
+            int currentMonth = currentCalendar.get(java.util.Calendar.MONTH) + 1;
+            int currentYear = currentCalendar.get(java.util.Calendar.YEAR);
+            String currentDateInfo = String.format("Hôm nay là ngày %d/%d/%d", currentDay, currentMonth, currentYear);
+
+            // System instruction for budget analysis
+            JSONObject systemInstruction = new JSONObject();
+            JSONArray systemParts = new JSONArray();
+            JSONObject systemPart = new JSONObject();
+            
+            String instruction = AiSystemInstructions.getBudgetAnalysisInstruction(currentDateInfo, budgetContext);
+            
+            systemPart.put("text", instruction);
+            systemParts.put(systemPart);
+            systemInstruction.put("parts", systemParts);
+            json.put("system_instruction", systemInstruction);
+
+            // User message
+            JSONArray contents = new JSONArray();
+            JSONObject userContent = new JSONObject();
+            JSONArray userParts = new JSONArray();
+            JSONObject userPart = new JSONObject();
+            userPart.put("text", userQuery);
+            userParts.put(userPart);
+            userContent.put("parts", userParts);
+            userContent.put("role", "user");
+            contents.put(userContent);
+            json.put("contents", contents);
+
+            RequestBody body = RequestBody.create(json.toString(), MediaType.parse("application/json"));
+            Request request = new Request.Builder()
+                    .url("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyAsDEIa1N6Dn_rCXYiRCXuUAY-E1DQ0Yv8")
+                    .post(body)
+                    .build();
+
+            client.newCall(request).enqueue(new Callback() {
+                @Override
+                public void onFailure(Call call, IOException e) {
+                    getActivity().runOnUiThread(() -> {
+                        messages.set(analyzingIndex, new ChatMessage("Lỗi kết nối AI.", false, "Bây giờ"));
+                        chatAdapter.notifyItemChanged(analyzingIndex);
+                    });
+                }
+
+                @Override
+                public void onResponse(Call call, Response response) throws IOException {
+                    if (response.isSuccessful()) {
+                        try {
+                            String responseBody = response.body().string();
+                            JSONObject jsonResponse = new JSONObject(responseBody);
+                            JSONArray candidates = jsonResponse.getJSONArray("candidates");
+                            JSONObject candidate = candidates.getJSONObject(0);
+                            JSONObject content = candidate.getJSONObject("content");
+                            JSONArray parts = content.getJSONArray("parts");
+                            String aiText = parts.getJSONObject(0).getString("text").trim();
+
+                            String formattedText = formatMarkdownText(aiText);
+
+                            getActivity().runOnUiThread(() -> {
+                                messages.set(analyzingIndex, new ChatMessage(formattedText, false, "Bây giờ"));
+                                chatAdapter.notifyItemChanged(analyzingIndex);
+                                messagesRecycler.smoothScrollToPosition(messages.size() - 1);
+                                textToSpeech.speak(formattedText, TextToSpeech.QUEUE_FLUSH, null, null);
+                            });
+                        } catch (Exception e) {
+                            getActivity().runOnUiThread(() -> {
+                                messages.set(analyzingIndex, new ChatMessage("Lỗi xử lý phản hồi AI.", false, "Bây giờ"));
+                                chatAdapter.notifyItemChanged(analyzingIndex);
+                            });
+                        }
+                    } else {
+                        getActivity().runOnUiThread(() -> {
+                            messages.set(analyzingIndex, new ChatMessage("Lỗi từ AI: " + response.code(), false, "Bây giờ"));
+                            chatAdapter.notifyItemChanged(analyzingIndex);
+                        });
+                    }
+                }
+            });
+        } catch (Exception e) {
+            messages.set(analyzingIndex, new ChatMessage("Lỗi gửi tin nhắn.", false, "Bây giờ"));
+            chatAdapter.notifyItemChanged(analyzingIndex);
+        }
+    }
+    
+    // Handle delete budget request
+    private void handleDeleteBudget(String text) {
+        // Add analyzing message
+        int analyzingIndex = messages.size();
+        messages.add(new ChatMessage("Đang xử lý yêu cầu xóa...", false, "Bây giờ"));
+        chatAdapter.notifyItemInserted(messages.size() - 1);
+        messagesRecycler.smoothScrollToPosition(messages.size() - 1);
+        
+        // Extract month and year from text
+        int[] monthYear = extractMonthYear(text);
+        int targetMonth = monthYear[0];
+        int targetYear = monthYear[1];
+        
+        Executors.newSingleThreadExecutor().execute(() -> {
+            try {
+                // Create calendar for target month
+                Calendar targetCal = Calendar.getInstance();
+                targetCal.set(Calendar.YEAR, targetYear);
+                targetCal.set(Calendar.MONTH, targetMonth - 1);
+                targetCal.set(Calendar.DAY_OF_MONTH, 1);
+                targetCal.set(Calendar.HOUR_OF_DAY, 0);
+                targetCal.set(Calendar.MINUTE, 0);
+                targetCal.set(Calendar.SECOND, 0);
+                targetCal.set(Calendar.MILLISECOND, 0);
+                Date startOfMonth = targetCal.getTime();
+                
+                targetCal.set(Calendar.DAY_OF_MONTH, targetCal.getActualMaximum(Calendar.DAY_OF_MONTH));
+                targetCal.set(Calendar.HOUR_OF_DAY, 23);
+                targetCal.set(Calendar.MINUTE, 59);
+                targetCal.set(Calendar.SECOND, 59);
+                Date endOfMonth = targetCal.getTime();
+                
+                // Check if budget exists
+                List<BudgetEntity> existingBudgets = AppDatabase.getInstance(getContext())
+                        .budgetDao()
+                        .getBudgetsByDateRangeOrdered(startOfMonth, endOfMonth);
+                
+                if (existingBudgets != null && !existingBudgets.isEmpty()) {
+                    // Delete budget
+                    AppDatabase.getInstance(getContext())
+                            .budgetDao()
+                            .deleteBudgetsByDateRange(startOfMonth, endOfMonth);
+                    
+                    SimpleDateFormat monthYearFormat = new SimpleDateFormat("MM/yyyy", new Locale("vi", "VN"));
+                    String monthYearStr = monthYearFormat.format(startOfMonth);
+                    
+                    if (getActivity() != null) {
+                        getActivity().runOnUiThread(() -> {
+                            String responseMessage = "✅ Đã xóa ngân sách tháng " + monthYearStr + "!\n\n" +
+                                    "Bạn có thể thiết lập lại bất cứ lúc nào. 💰";
+                            
+                            messages.set(analyzingIndex, new ChatMessage(responseMessage, false, "Bây giờ"));
+                            chatAdapter.notifyItemChanged(analyzingIndex);
+                            messagesRecycler.smoothScrollToPosition(messages.size() - 1);
+                            
+                            showToastOnTop("✅ Đã xóa ngân sách tháng " + monthYearStr);
+                            refreshHomeFragment();
+                        });
+                    }
+                } else {
+                    SimpleDateFormat monthYearFormat = new SimpleDateFormat("MM/yyyy", new Locale("vi", "VN"));
+                    String monthYearStr = monthYearFormat.format(startOfMonth);
+                    
+                    if (getActivity() != null) {
+                        getActivity().runOnUiThread(() -> {
+                            String responseMessage = "⚠️ Không tìm thấy ngân sách tháng " + monthYearStr + " để xóa!";
+                            
+                            messages.set(analyzingIndex, new ChatMessage(responseMessage, false, "Bây giờ"));
+                            chatAdapter.notifyItemChanged(analyzingIndex);
+                        });
+                    }
+                }
+                
+            } catch (Exception e) {
+                android.util.Log.e("AiChatBottomSheet", "Error deleting budget", e);
+                
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(() -> {
+                        messages.set(analyzingIndex, new ChatMessage(
+                                "❌ Có lỗi xảy ra khi xóa ngân sách. Vui lòng thử lại!", 
+                                false, "Bây giờ"));
+                        chatAdapter.notifyItemChanged(analyzingIndex);
+                        showErrorToast("Lỗi xóa ngân sách");
+                    });
+                }
+            }
+        });
     }
 }

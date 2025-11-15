@@ -23,4 +23,7 @@ public interface BudgetDao {
     
     @Query("SELECT * FROM budgets WHERE date >= :startDate AND date <= :endDate ORDER BY date DESC")
     List<BudgetEntity> getBudgetsByDateRangeOrdered(java.util.Date startDate, java.util.Date endDate);
+    
+    @Query("DELETE FROM budgets WHERE date >= :startDate AND date <= :endDate")
+    void deleteBudgetsByDateRange(java.util.Date startDate, java.util.Date endDate);
 }
