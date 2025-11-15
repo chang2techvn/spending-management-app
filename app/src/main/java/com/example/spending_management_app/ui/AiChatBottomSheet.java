@@ -547,8 +547,28 @@ public class AiChatBottomSheet extends DialogFragment {
         Executors.newSingleThreadExecutor().execute(() -> {
             try {
                 String budgetContext = getBudgetContext();
+                
+                // Detect if user wants detailed analysis/consultation or just viewing
+                boolean needsDetailedAnalysis = lowerText.contains("phân tích") || 
+                                               lowerText.contains("tư vấn") || 
+                                               lowerText.contains("đánh giá") ||
+                                               lowerText.contains("so sánh") ||
+                                               lowerText.contains("xu hướng") ||
+                                               lowerText.contains("dự báo") ||
+                                               lowerText.contains("nhận xét") ||
+                                               lowerText.contains("góp ý");
+                
+                // Add context prefix to help AI understand user's intent
+                String queryWithContext = text;
+                if (needsDetailedAnalysis) {
+                    queryWithContext = "[YÊU CẦU PHÂN TÍCH CHI TIẾT] " + text;
+                } else {
+                    queryWithContext = "[CHỈ XEM THÔNG TIN] " + text;
+                }
+                
+                String finalQuery = queryWithContext;
                 getActivity().runOnUiThread(() -> {
-                    sendPromptToAIWithBudgetContext(text, budgetContext);
+                    sendPromptToAIWithBudgetContext(finalQuery, budgetContext);
                 });
             } catch (Exception e) {
                 android.util.Log.e("AiChatBottomSheet", "Error getting budget context", e);
