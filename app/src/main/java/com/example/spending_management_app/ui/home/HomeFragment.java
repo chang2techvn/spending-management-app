@@ -62,16 +62,35 @@ public class HomeFragment extends Fragment {
     private void loadBalanceDataFromDatabase() {
         Executors.newSingleThreadExecutor().execute(() -> {
             try {
-                // Calculate month range
+                // Calculate month range with precise time
                 Calendar cal = Calendar.getInstance();
                 cal.set(Calendar.DAY_OF_MONTH, 1);
+                cal.set(Calendar.HOUR_OF_DAY, 0);
+                cal.set(Calendar.MINUTE, 0);
+                cal.set(Calendar.SECOND, 0);
+                cal.set(Calendar.MILLISECOND, 0);
                 Date startOfMonth = cal.getTime();
+                
                 cal.set(Calendar.DAY_OF_MONTH, cal.getActualMaximum(Calendar.DAY_OF_MONTH));
+                cal.set(Calendar.HOUR_OF_DAY, 23);
+                cal.set(Calendar.MINUTE, 59);
+                cal.set(Calendar.SECOND, 59);
+                cal.set(Calendar.MILLISECOND, 999);
                 Date endOfMonth = cal.getTime();
 
-                // Get monthly budget
+                android.util.Log.d("HomeFragment", "Loading budget for range: " + startOfMonth + " to " + endOfMonth);
+
+                // Get monthly budget using improved query
                 List<BudgetEntity> monthlyBudgets = AppDatabase.getInstance(getContext())
-                        .budgetDao().getBudgetsByDateRange(startOfMonth, endOfMonth);
+                        .budgetDao().getBudgetsByDateRangeOrdered(startOfMonth, endOfMonth);
+                
+                android.util.Log.d("HomeFragment", "Found " + (monthlyBudgets != null ? monthlyBudgets.size() : 0) + " budgets");
+                if (monthlyBudgets != null) {
+                    for (int i = 0; i < monthlyBudgets.size(); i++) {
+                        BudgetEntity b = monthlyBudgets.get(i);
+                        android.util.Log.d("HomeFragment", "Budget " + i + ": date=" + b.date + ", amount=" + b.monthlyLimit);
+                    }
+                }
                 
                 // Get total income and expenses from database
                 Long totalIncome = AppDatabase.getInstance(getContext()).transactionDao().getTotalIncome();
@@ -85,8 +104,10 @@ public class HomeFragment extends Fragment {
                             BudgetEntity budget = monthlyBudgets.get(0);
                             long budgetValue = budget.getMonthlyLimit();
                             binding.monthlyIncome.setText(String.format(Locale.getDefault(), "%,d", budgetValue) + " VND");
+                            android.util.Log.d("HomeFragment", "Budget displayed: " + budgetValue);
                         } else {
                             binding.monthlyIncome.setText("Chưa thiết lập");
+                            android.util.Log.d("HomeFragment", "No budget found - displaying 'Chưa thiết lập'");
                         }
                         
                         // Set total expense (absolute value, should be negative)
