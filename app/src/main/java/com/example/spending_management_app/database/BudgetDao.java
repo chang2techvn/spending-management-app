@@ -1,5 +1,6 @@
 package com.example.spending_management_app.database;
 
+import androidx.lifecycle.LiveData;
 import androidx.room.Dao;
 import androidx.room.Insert;
 import androidx.room.Query;
@@ -26,4 +27,12 @@ public interface BudgetDao {
     
     @Query("DELETE FROM budgets WHERE date >= :startDate AND date <= :endDate")
     void deleteBudgetsByDateRange(java.util.Date startDate, java.util.Date endDate);
+
+    // Get total budget of all months
+    @Query("SELECT SUM(monthlyLimit) FROM budgets")
+    Long getTotalBudget();
+
+    // Get total budget of all months (LiveData for real-time updates)
+    @Query("SELECT SUM(monthlyLimit) FROM budgets")
+    LiveData<Long> getTotalBudgetLive();
 }

@@ -49,6 +49,7 @@ dependencies {
     implementation(libs.room.runtime)
     implementation(libs.androidx.room.common.jvm)
     annotationProcessor(libs.room.compiler)
+    implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)

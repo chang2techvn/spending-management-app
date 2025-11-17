@@ -1,5 +1,6 @@
 package com.example.spending_management_app.database;
 
+import androidx.lifecycle.LiveData;
 import androidx.room.Dao;
 import androidx.room.Insert;
 import androidx.room.Query;
@@ -54,4 +55,36 @@ public interface TransactionDao {
 
     @Query("SELECT category, SUM(ABS(amount)) as total FROM transactions WHERE type = 'expense' AND date BETWEEN :startDate AND :endDate GROUP BY category ORDER BY total DESC")
     List<CategorySummary> getExpensesByCategory(java.util.Date startDate, java.util.Date endDate);
+
+    // Get monthly spending for chart (non-observable)
+    @Query("SELECT strftime('%Y-%m', date / 1000, 'unixepoch') as month, SUM(ABS(amount)) as total " +
+           "FROM transactions WHERE type = 'expense' " +
+           "GROUP BY month ORDER BY month ASC")
+    List<MonthlySpending> getMonthlySpending();
+
+    // Get monthly spending for chart (LiveData for real-time updates)
+    @Query("SELECT strftime('%Y-%m', date / 1000, 'unixepoch') as month, SUM(ABS(amount)) as total " +
+           "FROM transactions WHERE type = 'expense' " +
+           "GROUP BY month ORDER BY month ASC")
+    LiveData<List<MonthlySpending>> getMonthlySpendingLive();
+
+    // Get monthly spending by year (LiveData for real-time updates)
+    @Query("SELECT strftime('%Y-%m', date / 1000, 'unixepoch') as month, SUM(ABS(amount)) as total " +
+           "FROM transactions WHERE type = 'expense' " +
+           "AND strftime('%Y', date / 1000, 'unixepoch') = :year " +
+           "GROUP BY month ORDER BY month ASC")
+    LiveData<List<MonthlySpending>> getMonthlySpendingByYearLive(String year);
+
+    // Get total income/expense as LiveData for real-time updates
+    @Query("SELECT SUM(amount) FROM transactions WHERE type = 'income'")
+    LiveData<Long> getTotalIncomeLive();
+
+    @Query("SELECT SUM(amount) FROM transactions WHERE type = 'expense'")
+    LiveData<Long> getTotalExpenseLive();
+
+    // Get distinct years from transactions for year dropdown
+    @Query("SELECT DISTINCT strftime('%Y', date / 1000, 'unixepoch') as year " +
+           "FROM transactions WHERE type = 'expense' " +
+           "ORDER BY year DESC")
+    List<String> getDistinctYears();
 }

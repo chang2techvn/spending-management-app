@@ -92,17 +92,21 @@ public class HomeFragment extends Fragment {
                     }
                 }
                 
-                // Get total income and expenses from database
-                Long totalIncome = AppDatabase.getInstance(getContext()).transactionDao().getTotalIncome();
-                Long totalExpense = AppDatabase.getInstance(getContext()).transactionDao().getTotalExpense();
+                // Get total expense for THIS MONTH ONLY (not all time)
+                Long totalExpense = AppDatabase.getInstance(getContext())
+                        .transactionDao()
+                        .getTotalExpenseByDateRange(startOfMonth, endOfMonth);
+                
+                android.util.Log.d("HomeFragment", "Monthly expense from " + startOfMonth + " to " + endOfMonth + ": " + totalExpense);
                 
                 // Update UI on main thread
                 if (getActivity() != null) {
                     getActivity().runOnUiThread(() -> {
-                        // Set monthly budget (income)
+                        // Get monthly budget value
+                        long budgetValue = 0;
                         if (monthlyBudgets != null && !monthlyBudgets.isEmpty()) {
                             BudgetEntity budget = monthlyBudgets.get(0);
-                            long budgetValue = budget.getMonthlyLimit();
+                            budgetValue = budget.getMonthlyLimit();
                             binding.monthlyIncome.setText(String.format(Locale.getDefault(), "%,d", budgetValue) + " VND");
                             android.util.Log.d("HomeFragment", "Budget displayed: " + budgetValue);
                         } else {
@@ -110,17 +114,16 @@ public class HomeFragment extends Fragment {
                             android.util.Log.d("HomeFragment", "No budget found - displaying 'Chưa thiết lập'");
                         }
                         
-                        // Set total expense (absolute value, should be negative)
+                        // Set monthly expense (absolute value, should be negative)
                         long expenseValue = totalExpense != null ? Math.abs(totalExpense) : 0;
                         binding.monthlyExpense.setText(String.format(Locale.getDefault(), "-%,d", expenseValue) + " VND");
                         
-                        // Calculate and set current balance
-                        long incomeValue = totalIncome != null ? totalIncome : 0;
-                        long currentBalance = incomeValue + (totalExpense != null ? totalExpense : 0); // totalExpense is negative
-                        binding.currentBalance.setText(String.format(Locale.getDefault(), "%,d", currentBalance) + " VND");
+                        // Calculate and set remaining balance (budget - expense)
+                        long remainingBalance = budgetValue - expenseValue;
+                        binding.currentBalance.setText(String.format(Locale.getDefault(), "%,d", remainingBalance) + " VND");
                         
-                        android.util.Log.d("HomeFragment", "Balance updated - Income: " + incomeValue + 
-                                ", Expense: " + expenseValue + ", Balance: " + currentBalance);
+                        android.util.Log.d("HomeFragment", "Balance updated - Budget: " + budgetValue + 
+                                ", Expense: " + expenseValue + ", Remaining: " + remainingBalance);
                     });
                 }
             } catch (Exception e) {
