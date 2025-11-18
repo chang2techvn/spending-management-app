@@ -73,16 +73,37 @@
                         android:textSize="18sp"
                         android:textStyle="bold" />
 
-                    <!-- Year Dropdown Spinner -->
-                    <Spinner
-                        android:id="@+id/year_spinner"
+                    <!-- Custom Year Dropdown -->
+                    <LinearLayout
+                        android:id="@+id/year_dropdown_container"
                         android:layout_width="wrap_content"
-                        android:layout_height="40dp"
-                        android:minWidth="120dp"
-                        android:background="@drawable/spinner_background"
+                        android:layout_height="36dp"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:background="@drawable/year_dropdown_background"
                         android:paddingStart="12dp"
-                        android:paddingEnd="8dp"
-                        android:spinnerMode="dropdown" />
+                        android:paddingEnd="10dp"
+                        android:clickable="true"
+                        android:focusable="true">
+
+                        <TextView
+                            android:id="@+id/year_text"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="2025"
+                            android:textColor="#212121"
+                            android:textSize="15sp"
+                            android:textStyle="bold"
+                            android:layout_marginEnd="6dp" />
+
+                        <ImageView
+                            android:id="@+id/dropdown_icon"
+                            android:layout_width="14dp"
+                            android:layout_height="14dp"
+                            android:src="@drawable/ic_arrow_drop_down"
+                            android:tint="#757575" />
+
+                    </LinearLayout>
 
                 </LinearLayout>
 

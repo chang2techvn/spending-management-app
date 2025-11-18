@@ -23,8 +23,8 @@ import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
 import com.github.mikephil.charting.formatter.ValueFormatter;
 
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
+import android.widget.PopupMenu;
+import android.widget.TextView;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.Observer;
@@ -71,6 +71,9 @@ public class StatisticsFragment extends Fragment {
         // Get current year as default
         selectedYear = String.valueOf(Calendar.getInstance().get(Calendar.YEAR));
         
+        // Set initial year text
+        binding.yearText.setText(selectedYear);
+        
         // Load available years from database in background
         Executors.newSingleThreadExecutor().execute(() -> {
             List<String> years = transactionDao.getDistinctYears();
@@ -85,35 +88,44 @@ public class StatisticsFragment extends Fragment {
             
             // Update UI on main thread
             requireActivity().runOnUiThread(() -> {
-                // Create adapter for spinner
-                ArrayAdapter<String> adapter = new ArrayAdapter<>(
-                        requireContext(),
-                        com.example.spending_management_app.R.layout.spinner_item,
-                        finalYears
-                );
-                adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-                binding.yearSpinner.setAdapter(adapter);
-                
-                // Set current year as selected
-                int currentYearIndex = finalYears.indexOf(selectedYear);
-                if (currentYearIndex >= 0) {
-                    binding.yearSpinner.setSelection(currentYearIndex);
-                }
-                
-                // Set listener for year selection
-                binding.yearSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-                    @Override
-                    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                // Setup click listener for dropdown
+                binding.yearDropdownContainer.setOnClickListener(v -> {
+                    // Change icon to arrow up when opening dropdown
+                    binding.dropdownIcon.setImageResource(com.example.spending_management_app.R.drawable.ic_arrow_drop_up);
+                    
+                    // Create popup menu
+                    PopupMenu popupMenu = new PopupMenu(requireContext(), binding.yearDropdownContainer);
+                    
+                    // Add menu items for each year
+                    for (int i = 0; i < finalYears.size(); i++) {
+                        popupMenu.getMenu().add(0, i, i, finalYears.get(i));
+                    }
+                    
+                    // Set menu item click listener
+                    popupMenu.setOnMenuItemClickListener(item -> {
+                        int position = item.getItemId();
                         selectedYear = finalYears.get(position);
+                        
+                        // Update year text
+                        binding.yearText.setText(selectedYear);
+                        
                         // Reload chart with selected year
                         setupMonthlySpendingChart(selectedYear);
-                    }
-
-                    @Override
-                    public void onNothingSelected(AdapterView<?> parent) {
-                        // Do nothing
-                    }
+                        
+                        return true;
+                    });
+                    
+                    // Change icon back to arrow down when menu is dismissed
+                    popupMenu.setOnDismissListener(menu -> {
+                        binding.dropdownIcon.setImageResource(com.example.spending_management_app.R.drawable.ic_arrow_drop_down);
+                    });
+                    
+                    // Show popup menu
+                    popupMenu.show();
                 });
+                
+                // Initial chart load with current year
+                setupMonthlySpendingChart(selectedYear);
             });
         });
     }
