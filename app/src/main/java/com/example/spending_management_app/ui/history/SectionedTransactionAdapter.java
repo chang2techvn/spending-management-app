@@ -199,7 +199,7 @@ public class SectionedTransactionAdapter extends RecyclerView.Adapter<RecyclerVi
                 case "Giáo dục":
                     return "📚";
                 case "Sách & Học tập":
-                    return "�";
+                    return "📖";
                 case "Thể thao":
                     return "⚽";
                 case "Sức khỏe & Làm đẹp":

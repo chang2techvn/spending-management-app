@@ -106,8 +106,12 @@ public class HistoryFragment extends Fragment implements DateRangePickerDialog.D
                     if ("delete".equals(entity.getAction())) {
                         // Delete action: show negative amount (red color)
                         displayAmount = -Math.abs(entity.getAmount());
+                    } else if ("update".equals(entity.getAction())) {
+                        // Update action: amount is already delta (can be positive or negative)
+                        // Positive = increase (green), Negative = decrease (red)
+                        displayAmount = entity.getAmount();
                     } else {
-                        // Create or Update action: show positive amount (green color)
+                        // Create action: show positive amount (green color)
                         displayAmount = Math.abs(entity.getAmount());
                     }
                     
@@ -255,9 +259,27 @@ public class HistoryFragment extends Fragment implements DateRangePickerDialog.D
         // Apply date filter first
         List<Transaction> dateFiltered = new ArrayList<>();
         if (startDateFilter != null && endDateFilter != null) {
+            // Normalize start date to beginning of day (00:00:00)
+            java.util.Calendar startCal = java.util.Calendar.getInstance();
+            startCal.setTime(startDateFilter);
+            startCal.set(java.util.Calendar.HOUR_OF_DAY, 0);
+            startCal.set(java.util.Calendar.MINUTE, 0);
+            startCal.set(java.util.Calendar.SECOND, 0);
+            startCal.set(java.util.Calendar.MILLISECOND, 0);
+            Date normalizedStartDate = startCal.getTime();
+            
+            // Normalize end date to end of day (23:59:59)
+            java.util.Calendar endCal = java.util.Calendar.getInstance();
+            endCal.setTime(endDateFilter);
+            endCal.set(java.util.Calendar.HOUR_OF_DAY, 23);
+            endCal.set(java.util.Calendar.MINUTE, 59);
+            endCal.set(java.util.Calendar.SECOND, 59);
+            endCal.set(java.util.Calendar.MILLISECOND, 999);
+            Date normalizedEndDate = endCal.getTime();
+            
             for (Transaction transaction : allTransactions) {
-                if (transaction.getDate().compareTo(startDateFilter) >= 0 &&
-                    transaction.getDate().compareTo(endDateFilter) <= 0) {
+                if (transaction.getDate().compareTo(normalizedStartDate) >= 0 &&
+                    transaction.getDate().compareTo(normalizedEndDate) <= 0) {
                     dateFiltered.add(transaction);
                 }
             }
@@ -367,7 +389,7 @@ public class HistoryFragment extends Fragment implements DateRangePickerDialog.D
             case "Giáo dục":
                 return "📚";
             case "Sách & Học tập":
-                return "�";
+                return "📖";
             case "Thể thao":
                 return "⚽";
             case "Sức khỏe & Làm đẹp":

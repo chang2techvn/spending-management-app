@@ -364,8 +364,8 @@ public class AiChatBottomSheet extends DialogFragment {
                 if (getActivity() != null) {
                     getActivity().runOnUiThread(() -> {
                         String fallbackMessage = "Chào bạn! 👋\n\n" +
-                                "� Để quản lý ngân sách, hãy cho tôi biết:\n" +
-                                "Ví dụ: \"Thêm ngân sách 15 triệu\" hoặc \"Sửa ngân sách lên 20 triệu\"";
+                                "� Để quản lý ngân sách tháng, hãy cho tôi biết:\n" +
+                                "Ví dụ: \"Đặt ngân sách 15 triệu\" hoặc \"Sửa ngân sách lên 20 triệu\"";
                         
                         if (!messages.isEmpty()) {
                             messages.set(0, new ChatMessage(fallbackMessage, false, "Bây giờ"));
@@ -646,10 +646,15 @@ public class AiChatBottomSheet extends DialogFragment {
             return;
         }
         
-        // Check if user wants to add/edit budget
+        // Check if user wants to add/edit/increase/decrease budget
+        // Include: set, add, edit, increase, decrease keywords
         if (lowerText.contains("thêm") || lowerText.contains("đặt") || 
             lowerText.contains("sửa") || lowerText.contains("thay đổi") ||
-            lowerText.contains("thiết lập")) {
+            lowerText.contains("thiết lập") ||
+            lowerText.contains("tăng") || lowerText.contains("nâng") ||
+            lowerText.contains("giảm") || lowerText.contains("hạ") ||
+            lowerText.contains("cộng") || lowerText.contains("trừ") ||
+            lowerText.contains("bớt") || lowerText.contains("cắt")) {
             handleBudgetRequest(text);
             return;
         }
@@ -696,6 +701,45 @@ public class AiChatBottomSheet extends DialogFragment {
         messages.add(new ChatMessage("Đang xử lý yêu cầu...", false, "Bây giờ"));
         chatAdapter.notifyItemInserted(messages.size() - 1);
         messagesRecycler.smoothScrollToPosition(messages.size() - 1);
+        
+        // Check if this is an increase/decrease request or absolute set request
+        String textLower = text.toLowerCase().trim();
+        
+        android.util.Log.d("AiChatBottomSheet", "=== BUDGET REQUEST DEBUG ===");
+        android.util.Log.d("AiChatBottomSheet", "Original text: [" + text + "]");
+        android.util.Log.d("AiChatBottomSheet", "Lowercase text: [" + textLower + "]");
+        
+        // Check for ABSOLUTE set commands with "lên" or "xuống" 
+        // "Tăng lên 10 triệu", "Nâng lên 10 triệu", "Hạ xuống 10 triệu", "Giảm xuống 10 triệu"
+        boolean hasLenKeyword = textLower.contains("lên");
+        boolean hasXuongKeyword = textLower.contains("xuống");
+        boolean isAbsoluteSet = ((textLower.contains("tăng") || textLower.contains("nâng")) && hasLenKeyword) ||
+                                ((textLower.contains("giảm") || textLower.contains("hạ")) && hasXuongKeyword);
+        
+        android.util.Log.d("AiChatBottomSheet", "Has 'lên': " + hasLenKeyword + ", Has 'xuống': " + hasXuongKeyword);
+        android.util.Log.d("AiChatBottomSheet", "isAbsoluteSet: " + isAbsoluteSet);
+        
+        // Check for RELATIVE increase (add more) - only if NOT absolute set
+        // "Nâng ngân sách 10 triệu", "Tăng ngân sách 10 triệu", "Tăng thêm 10 triệu"
+        boolean hasIncreaseKeyword = textLower.contains("nâng") || 
+                                     textLower.contains("tăng") || 
+                                     textLower.contains("cộng") || 
+                                     textLower.contains("thêm");
+        boolean isIncrease = !isAbsoluteSet && hasIncreaseKeyword;
+        
+        android.util.Log.d("AiChatBottomSheet", "Has increase keyword: " + hasIncreaseKeyword + ", isIncrease: " + isIncrease);
+        
+        // Check for RELATIVE decrease (subtract) - only if NOT absolute set
+        // "Giảm ngân sách 2 triệu", "Hạ ngân sách 1 triệu", "Trừ 2 triệu"
+        boolean hasDecreaseKeyword = textLower.contains("giảm") || 
+                                     textLower.contains("hạ") || 
+                                     textLower.contains("trừ") || 
+                                     textLower.contains("bớt") ||
+                                     textLower.contains("cắt");
+        boolean isDecrease = !isAbsoluteSet && hasDecreaseKeyword;
+        
+        android.util.Log.d("AiChatBottomSheet", "Has decrease keyword: " + hasDecreaseKeyword + ", isDecrease: " + isDecrease);
+        android.util.Log.d("AiChatBottomSheet", "=== FINAL RESULT: isAbsoluteSet=" + isAbsoluteSet + ", isIncrease=" + isIncrease + ", isDecrease=" + isDecrease + " ===");
         
         // Extract amount from text (support various formats like "15 triệu", "20000000", "25tr")
         long amount = extractBudgetAmount(text);
@@ -756,52 +800,127 @@ public class AiChatBottomSheet extends DialogFragment {
                     // Use the first day of target month as the budget date
                     Date budgetDate = startOfMonth;
                     
-                    android.util.Log.d("AiChatBottomSheet", "Budget date to save: " + budgetDate + ", Amount: " + amount);
+                    android.util.Log.d("AiChatBottomSheet", "Budget date to save: " + budgetDate + ", Amount: " + amount + ", isAbsoluteSet: " + isAbsoluteSet + ", isIncrease: " + isIncrease + ", isDecrease: " + isDecrease);
+                    
+                    // Calculate final amount and determine action type
+                    long calculatedFinalAmount;
+                    String determinedActionType;
                     
                     if (isUpdate) {
                         // Update existing budget
                         BudgetEntity existing = existingBudgets.get(0);
                         android.util.Log.d("AiChatBottomSheet", "Updating existing budget, old date: " + existing.date + ", new date: " + budgetDate);
                         long oldAmount = existing.monthlyLimit;
-                        existing.monthlyLimit = amount;
+                        
+                        // Calculate final amount based on operation type
+                        if (isAbsoluteSet) {
+                            // Absolute set: "Tăng lên 10 triệu", "Giảm xuống 10 triệu" -> Set to exact amount
+                            calculatedFinalAmount = amount;
+                            determinedActionType = "set";
+                            android.util.Log.d("AiChatBottomSheet", "Setting budget to absolute value: " + calculatedFinalAmount);
+                        } else if (isIncrease) {
+                            // Relative increase: "Nâng 10 triệu", "Tăng thêm 10 triệu" -> Add amount
+                            calculatedFinalAmount = oldAmount + amount;
+                            determinedActionType = "increase";
+                            android.util.Log.d("AiChatBottomSheet", "Increasing budget: " + oldAmount + " + " + amount + " = " + calculatedFinalAmount);
+                        } else if (isDecrease) {
+                            // Relative decrease: "Giảm 2 triệu", "Trừ 2 triệu" -> Subtract amount
+                            long tempAmount = oldAmount - amount;
+                            // Don't allow negative budget
+                            if (tempAmount < 0) {
+                                android.util.Log.w("AiChatBottomSheet", "Final amount would be negative, setting to 0");
+                                calculatedFinalAmount = 0;
+                            } else {
+                                calculatedFinalAmount = tempAmount;
+                            }
+                            determinedActionType = "decrease";
+                            android.util.Log.d("AiChatBottomSheet", "Decreasing budget: " + oldAmount + " - " + amount + " = " + calculatedFinalAmount);
+                        } else {
+                            // Default: Set to amount (backward compatibility)
+                            calculatedFinalAmount = amount;
+                            determinedActionType = "set";
+                        }
+                        
+                        existing.monthlyLimit = calculatedFinalAmount;
                         existing.date = budgetDate;
                         AppDatabase.getInstance(getContext()).budgetDao().update(existing);
                         
                         // Log budget history
                         com.example.spending_management_app.utils.BudgetHistoryLogger.logMonthlyBudgetUpdated(
-                                getContext(), oldAmount, amount, budgetDate);
+                                getContext(), oldAmount, calculatedFinalAmount, budgetDate);
                     } else {
-                        // Insert new budget
-                        BudgetEntity budget = new BudgetEntity("Ngân sách tháng", amount, 0L, budgetDate);
+                        // Insert new budget - ignore increase/decrease for new budget
+                        if (isIncrease || isDecrease) {
+                            // No existing budget to increase/decrease
+                            if (getActivity() != null) {
+                                getActivity().runOnUiThread(() -> {
+                                    SimpleDateFormat monthYearFormat = new SimpleDateFormat("MM/yyyy", new Locale("vi", "VN"));
+                                    String monthYearStr = monthYearFormat.format(budgetDate);
+                                    messages.set(analyzingIndex, new ChatMessage(
+                                            "⚠️ Chưa có ngân sách cho tháng " + monthYearStr + " để " + 
+                                            (isIncrease ? "nâng" : "giảm") + "!\n\n" +
+                                            "Vui lòng đặt ngân sách trước. Ví dụ:\n" +
+                                            "   • \"Đặt ngân sách tháng " + monthYearStr + " là 15 triệu\"",
+                                            false, "Bây giờ"));
+                                    chatAdapter.notifyItemChanged(analyzingIndex);
+                                });
+                            }
+                            return; // Exit without creating new budget
+                        }
+                        
+                        calculatedFinalAmount = amount;
+                        determinedActionType = "set";
+                        
+                        BudgetEntity budget = new BudgetEntity("Ngân sách tháng", calculatedFinalAmount, 0L, budgetDate);
                         android.util.Log.d("AiChatBottomSheet", "Inserting new budget: " + budget.date);
                         AppDatabase.getInstance(getContext()).budgetDao().insert(budget);
                         
                         // Log budget history
                         com.example.spending_management_app.utils.BudgetHistoryLogger.logMonthlyBudgetCreated(
-                                getContext(), amount, budgetDate);
+                                getContext(), calculatedFinalAmount, budgetDate);
                     }
                     
-                    String formattedAmount = String.format("%,d", amount);
+                    // Make final variables for lambda
+                    final long finalAmount = calculatedFinalAmount;
+                    final String actionType = determinedActionType;
+                    
+                    String formattedFinalAmount = String.format("%,d", finalAmount);
+                    String formattedChangeAmount = String.format("%,d", amount);
                     SimpleDateFormat monthYearFormat = new SimpleDateFormat("MM/yyyy", new Locale("vi", "VN"));
                     String monthYearStr = monthYearFormat.format(budgetDate);
                     
                     // Update UI
                     if (getActivity() != null) {
                         getActivity().runOnUiThread(() -> {
-                            String responseMessage = isUpdate ? 
-                                    "✅ Đã cập nhật ngân sách tháng " + monthYearStr + " thành " + formattedAmount + " VND!\n\n" +
-                                    "Chúc bạn quản lý tài chính tốt! 💪" :
-                                    "✅ Đã thiết lập ngân sách tháng " + monthYearStr + " là " + formattedAmount + " VND!\n\n" +
-                                    "Chúc bạn chi tiêu hợp lý! 💰";
+                            String responseMessage;
+                            String toastMessage;
+                            
+                            if (isUpdate) {
+                                if (actionType.equals("increase")) {
+                                    responseMessage = "✅ Đã nâng ngân sách tháng " + monthYearStr + " thêm " + formattedChangeAmount + " VND!\n\n" +
+                                            "💰 Ngân sách mới: " + formattedFinalAmount + " VND\n\n" +
+                                            "Chúc bạn quản lý tài chính tốt! 💪";
+                                    toastMessage = "✅ Đã nâng ngân sách tháng " + monthYearStr + ": +" + formattedChangeAmount + " VND";
+                                } else if (actionType.equals("decrease")) {
+                                    responseMessage = "✅ Đã giảm ngân sách tháng " + monthYearStr + " xuống " + formattedChangeAmount + " VND!\n\n" +
+                                            "💰 Ngân sách mới: " + formattedFinalAmount + " VND\n\n" +
+                                            "Chúc bạn chi tiêu hợp lý! 💰";
+                                    toastMessage = "✅ Đã giảm ngân sách tháng " + monthYearStr + ": -" + formattedChangeAmount + " VND";
+                                } else {
+                                    responseMessage = "✅ Đã cập nhật ngân sách tháng " + monthYearStr + " thành " + formattedFinalAmount + " VND!\n\n" +
+                                            "Chúc bạn quản lý tài chính tốt! 💪";
+                                    toastMessage = "✅ Đã cập nhật ngân sách tháng " + monthYearStr + ": " + formattedFinalAmount + " VND";
+                                }
+                            } else {
+                                responseMessage = "✅ Đã thiết lập ngân sách tháng " + monthYearStr + " là " + formattedFinalAmount + " VND!\n\n" +
+                                        "Chúc bạn chi tiêu hợp lý! 💰";
+                                toastMessage = "✅ Đã thiết lập ngân sách tháng " + monthYearStr + ": " + formattedFinalAmount + " VND";
+                            }
                             
                             messages.set(analyzingIndex, new ChatMessage(responseMessage, false, "Bây giờ"));
                             chatAdapter.notifyItemChanged(analyzingIndex);
                             messagesRecycler.smoothScrollToPosition(messages.size() - 1);
                             
-                            // Show toast
-                            String toastMessage = isUpdate ? 
-                                    "✅ Đã cập nhật ngân sách tháng " + monthYearStr + ": " + formattedAmount + " VND" :
-                                    "✅ Đã thiết lập ngân sách tháng " + monthYearStr + ": " + formattedAmount + " VND";
                             showToastOnTop(toastMessage);
                             
                             // Refresh HomeFragment
@@ -828,10 +947,19 @@ public class AiChatBottomSheet extends DialogFragment {
             getActivity().runOnUiThread(() -> {
                 messages.set(analyzingIndex, new ChatMessage(
                         "🤔 Tôi không thể xác định số tiền ngân sách từ yêu cầu của bạn.\n\n" +
-                        "Vui lòng nhập rõ số tiền và tháng (nếu cần), ví dụ:\n" +
-                        "   • \"Thêm ngân sách tháng 12 là 15 triệu\"\n" +
-                        "   • \"Đặt ngân sách 20 triệu cho tháng 1/2026\"\n" +
-                        "   • \"Sửa ngân sách tháng này lên 25tr\"",
+                        "Vui lòng nhập rõ số tiền và tháng (nếu cần), ví dụ:\n\n" +
+                        "📝 Đặt ngân sách:\n" +
+                        "   • \"Đặt ngân sách tháng này 15 triệu\"\n" +
+                        "   • \"Đặt ngân sách tháng 12 là 20 triệu\"\n\n" +
+                        "➕ Tăng thêm (cộng vào ngân sách hiện tại):\n" +
+                        "   • \"Nâng ngân sách 2 triệu\"\n" +
+                        "   • \"Tăng thêm 1.5 triệu\"\n\n" +
+                        "➖ Giảm bớt (trừ khỏi ngân sách hiện tại):\n" +
+                        "   • \"Giảm ngân sách 500k\"\n" +
+                        "   • \"Trừ 1 triệu\"\n\n" +
+                        "🎯 Đặt lại thành số cụ thể:\n" +
+                        "   • \"Tăng ngân sách lên 10 triệu\"\n" +
+                        "   • \"Giảm ngân sách xuống 8 triệu\"",
                         false, "Bây giờ"));
                 chatAdapter.notifyItemChanged(analyzingIndex);
             });

@@ -81,7 +81,7 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
             case "Giáo dục":
                 return "📚";
             case "Sách & Học tập":
-                return "�";
+                return "📖";
             case "Thể thao":
                 return "⚽";
             case "Sức khỏe & Làm đẹp":

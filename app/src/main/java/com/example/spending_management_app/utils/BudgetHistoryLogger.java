@@ -26,11 +26,30 @@ public class BudgetHistoryLogger {
      * Log when monthly budget is updated
      */
     public static void logMonthlyBudgetUpdated(Context context, long oldAmount, long newAmount, Date budgetDate) {
-        String description = String.format(Locale.getDefault(),
-                "Cập nhật ngân sách tháng: %,d VND → %,d VND",
-                oldAmount, newAmount);
+        // Calculate the change (delta)
+        long delta = newAmount - oldAmount;
         
-        logBudgetHistory(context, "update", "monthly", null, newAmount, new Date(), description);
+        String description;
+        if (delta > 0) {
+            // Increased
+            description = String.format(Locale.getDefault(),
+                    "Tăng ngân sách tháng: %,d VND → %,d VND (+%,d VND)",
+                    oldAmount, newAmount, delta);
+        } else if (delta < 0) {
+            // Decreased
+            description = String.format(Locale.getDefault(),
+                    "Giảm ngân sách tháng: %,d VND → %,d VND (%,d VND)",
+                    oldAmount, newAmount, delta);
+        } else {
+            // No change
+            description = String.format(Locale.getDefault(),
+                    "Cập nhật ngân sách tháng: %,d VND",
+                    newAmount);
+        }
+        
+        // Store delta instead of newAmount
+        // Positive delta = increase (green), Negative delta = decrease (red)
+        logBudgetHistory(context, "update", "monthly", null, delta, new Date(), description);
     }
     
     /**
@@ -59,11 +78,30 @@ public class BudgetHistoryLogger {
      * Log when category budget is updated
      */
     public static void logCategoryBudgetUpdated(Context context, String category, long oldAmount, long newAmount) {
-        String description = String.format(Locale.getDefault(),
-                "Cập nhật ngân sách '%s': %,d VND → %,d VND",
-                category, oldAmount, newAmount);
+        // Calculate the change (delta)
+        long delta = newAmount - oldAmount;
         
-        logBudgetHistory(context, "update", "category", category, newAmount, new Date(), description);
+        String description;
+        if (delta > 0) {
+            // Increased
+            description = String.format(Locale.getDefault(),
+                    "Tăng ngân sách '%s': %,d VND → %,d VND (+%,d VND)",
+                    category, oldAmount, newAmount, delta);
+        } else if (delta < 0) {
+            // Decreased
+            description = String.format(Locale.getDefault(),
+                    "Giảm ngân sách '%s': %,d VND → %,d VND (%,d VND)",
+                    category, oldAmount, newAmount, delta);
+        } else {
+            // No change
+            description = String.format(Locale.getDefault(),
+                    "Cập nhật ngân sách '%s': %,d VND",
+                    category, newAmount);
+        }
+        
+        // Store delta instead of newAmount
+        // Positive delta = increase (green), Negative delta = decrease (red)
+        logBudgetHistory(context, "update", "category", category, delta, new Date(), description);
     }
     
     /**
