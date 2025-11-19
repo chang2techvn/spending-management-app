@@ -269,10 +269,11 @@
                     android:textStyle="bold" />
 
                 <!-- Spending Categories -->
+                <!-- Food Category -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
+                    android:layout_marginTop="16dp"
                     android:orientation="vertical">
 
                     <LinearLayout
@@ -285,14 +286,15 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="Ăn uống"
-                            android:textColor="#757575"
-                            android:textSize="14sp" />
+                            android:text="🍽️ Ăn uống"
+                            android:textColor="#212121"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="2,500,000 VND"
+                            android:text="35%"
                             android:textColor="#F44336"
                             android:textSize="14sp"
                             android:textStyle="bold" />
@@ -302,17 +304,26 @@
                     <ProgressBar
                         style="@android:style/Widget.ProgressBar.Horizontal"
                         android:layout_width="match_parent"
-                        android:layout_height="4dp"
+                        android:layout_height="6dp"
                         android:backgroundTint="#E0E0E0"
                         android:progress="35"
                         android:progressTint="#F44336" />
 
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="2,500,000/3,000,000 VND"
+                        android:textColor="#757575"
+                        android:textSize="12sp" />
+
                 </LinearLayout>
 
+                <!-- Transport Category -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
+                    android:layout_marginTop="16dp"
                     android:orientation="vertical">
 
                     <LinearLayout
@@ -325,14 +336,15 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="Di chuyển"
-                            android:textColor="#757575"
-                            android:textSize="14sp" />
+                            android:text="🚗 Di chuyển"
+                            android:textColor="#212121"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="-1,200,000 VND"
+                            android:text="20%"
                             android:textColor="#FF9800"
                             android:textSize="14sp"
                             android:textStyle="bold" />
@@ -342,17 +354,26 @@
                     <ProgressBar
                         style="@android:style/Widget.ProgressBar.Horizontal"
                         android:layout_width="match_parent"
-                        android:layout_height="4dp"
+                        android:layout_height="6dp"
                         android:backgroundTint="#E0E0E0"
                         android:progress="20"
                         android:progressTint="#FF9800" />
 
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="1,200,000/2,000,000 VND"
+                        android:textColor="#757575"
+                        android:textSize="12sp" />
+
                 </LinearLayout>
 
+                <!-- Shopping Category -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
+                    android:layout_marginTop="16dp"
                     android:orientation="vertical">
 
                     <LinearLayout
@@ -365,14 +386,15 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="Mua sắm"
-                            android:textColor="#757575"
-                            android:textSize="14sp" />
+                            android:text="🛍️ Mua sắm"
+                            android:textColor="#212121"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="-800,000 VND"
+                            android:text="15%"
                             android:textColor="#9C27B0"
                             android:textSize="14sp"
                             android:textStyle="bold" />
@@ -382,10 +404,18 @@
                     <ProgressBar
                         style="@android:style/Widget.ProgressBar.Horizontal"
                         android:layout_width="match_parent"
-                        android:layout_height="4dp"
+                        android:layout_height="6dp"
                         android:backgroundTint="#E0E0E0"
                         android:progress="15"
                         android:progressTint="#9C27B0" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="800,000/1,500,000 VND"
+                        android:textColor="#757575"
+                        android:textSize="12sp" />
 
                 </LinearLayout>
 

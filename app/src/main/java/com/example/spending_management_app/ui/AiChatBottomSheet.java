@@ -204,13 +204,34 @@ public class AiChatBottomSheet extends DialogFragment {
     private void setupMessages() {
         messages = new ArrayList<>();
         
-        // Check if this is budget management mode
+        // Check if this is budget management mode or category budget management mode
         Bundle args = getArguments();
-        if (args != null && "budget_management".equals(args.getString("mode"))) {
-            // Load budget welcome message
-            loadBudgetWelcomeMessage();
+        if (args != null) {
+            String mode = args.getString("mode");
+            
+            // Check if there's a custom welcome message
+            if (args.containsKey("welcome_message")) {
+                String welcomeMessage = args.getString("welcome_message");
+                android.util.Log.d("AiChatBottomSheet", "Using custom welcome message: " + welcomeMessage);
+                messages.add(new ChatMessage(welcomeMessage, false, "Bây giờ"));
+            } else if ("budget_management".equals(mode)) {
+                // Load budget welcome message
+                loadBudgetWelcomeMessage();
+            } else if ("category_budget_management".equals(mode)) {
+                // This should not happen since category budget always provides welcome_message
+                // But add fallback just in case
+                String fallbackMessage = "📊 Ngân sách theo danh mục\n\n" +
+                        "💡 Hướng dẫn:\n" +
+                        "• Thêm: 'Thêm 500 ngàn cho danh mục ăn uống'\n" +
+                        "• Sửa: 'Sửa ăn uống 700 ngàn'\n" +
+                        "• Xóa: 'Xóa ngân sách danh mục ăn uống'";
+                messages.add(new ChatMessage(fallbackMessage, false, "Bây giờ"));
+            } else {
+                // Load expense tracking welcome message
+                loadRecentTransactionsForWelcome();
+            }
         } else {
-            // Load expense tracking welcome message
+            // Load expense tracking welcome message (default)
             loadRecentTransactionsForWelcome();
         }
 
@@ -458,9 +479,16 @@ public class AiChatBottomSheet extends DialogFragment {
     }
 
     private void sendToAI(String text) {
-        // Check if this is budget management mode
+        // Check if this is budget management mode or category budget management mode
         Bundle args = getArguments();
         boolean isBudgetMode = args != null && "budget_management".equals(args.getString("mode"));
+        boolean isCategoryBudgetMode = args != null && "category_budget_management".equals(args.getString("mode"));
+        
+        // Handle category budget management
+        if (isCategoryBudgetMode) {
+            handleCategoryBudgetRequest(text);
+            return;
+        }
         
         // Check if user is asking for budget analysis, view, or delete
         if (isBudgetMode || isBudgetQuery(text)) {
@@ -2042,5 +2070,319 @@ public class AiChatBottomSheet extends DialogFragment {
                 }
             }
         });
+    }
+    
+    private void handleCategoryBudgetRequest(String text) {
+        android.util.Log.d("AiChatBottomSheet", "handleCategoryBudgetRequest: " + text);
+        
+        // Add analyzing message
+        int analyzingIndex = messages.size();
+        messages.add(new ChatMessage("Đang xử lý yêu cầu...", false, "Bây giờ"));
+        chatAdapter.notifyItemInserted(messages.size() - 1);
+        messagesRecycler.smoothScrollToPosition(messages.size() - 1);
+        
+        String lowerText = text.toLowerCase();
+        
+        // Check if user wants to delete category budget
+        if (lowerText.contains("xóa") || lowerText.contains("xoá")) {
+            handleDeleteCategoryBudget(text, analyzingIndex);
+            return;
+        }
+        
+        // Check if user wants to add or edit category budget
+        if (lowerText.contains("thêm") || lowerText.contains("sửa") || lowerText.contains("thay đổi")) {
+            handleAddOrEditCategoryBudget(text, analyzingIndex);
+            return;
+        }
+        
+        // Unknown command
+        getActivity().runOnUiThread(() -> {
+            messages.set(analyzingIndex, new ChatMessage(
+                    "⚠️ Không hiểu yêu cầu của bạn.\n\n" +
+                    "💡 Hướng dẫn:\n" +
+                    "• Thêm: 'Thêm 500 ngàn cho danh mục ăn uống'\n" +
+                    "• Sửa: 'Sửa ăn uống 700 ngàn'\n" +
+                    "• Xóa: 'Xóa ngân sách danh mục ăn uống'",
+                    false, "Bây giờ"));
+            chatAdapter.notifyItemChanged(analyzingIndex);
+        });
+    }
+    
+    private void handleAddOrEditCategoryBudget(String text, int analyzingIndex) {
+        // Extract category name and amount
+        String category = extractCategory(text);
+        long amount = extractBudgetAmount(text);
+        
+        if (category == null || category.isEmpty()) {
+            getActivity().runOnUiThread(() -> {
+                messages.set(analyzingIndex, new ChatMessage(
+                        "⚠️ Không tìm thấy tên danh mục!\n\n" +
+                        "Ví dụ: 'Thêm 500 ngàn cho danh mục ăn uống'",
+                        false, "Bây giờ"));
+                chatAdapter.notifyItemChanged(analyzingIndex);
+            });
+            return;
+        }
+        
+        if (amount <= 0) {
+            getActivity().runOnUiThread(() -> {
+                messages.set(analyzingIndex, new ChatMessage(
+                        "⚠️ Không tìm thấy số tiền hợp lệ!\n\n" +
+                        "Ví dụ: 'Thêm 500 ngàn cho danh mục ăn uống'",
+                        false, "Bây giờ"));
+                chatAdapter.notifyItemChanged(analyzingIndex);
+            });
+            return;
+        }
+        
+        // Save to database
+        Executors.newSingleThreadExecutor().execute(() -> {
+            try {
+                // Get current month range
+                Calendar cal = Calendar.getInstance();
+                cal.set(Calendar.DAY_OF_MONTH, 1);
+                cal.set(Calendar.HOUR_OF_DAY, 0);
+                cal.set(Calendar.MINUTE, 0);
+                cal.set(Calendar.SECOND, 0);
+                cal.set(Calendar.MILLISECOND, 0);
+                Date startOfMonth = cal.getTime();
+                
+                cal.set(Calendar.DAY_OF_MONTH, cal.getActualMaximum(Calendar.DAY_OF_MONTH));
+                cal.set(Calendar.HOUR_OF_DAY, 23);
+                cal.set(Calendar.MINUTE, 59);
+                cal.set(Calendar.SECOND, 59);
+                cal.set(Calendar.MILLISECOND, 999);
+                Date endOfMonth = cal.getTime();
+                
+                // Check if category budget exists
+                com.example.spending_management_app.database.CategoryBudgetEntity existing = 
+                        AppDatabase.getInstance(getContext())
+                                .categoryBudgetDao()
+                                .getCategoryBudgetForMonth(category, startOfMonth, endOfMonth);
+                
+                boolean isUpdate = (existing != null);
+                
+                if (isUpdate) {
+                    // Update existing
+                    existing.budgetAmount = amount;
+                    AppDatabase.getInstance(getContext()).categoryBudgetDao().update(existing);
+                } else {
+                    // Insert new
+                    com.example.spending_management_app.database.CategoryBudgetEntity newBudget = 
+                            new com.example.spending_management_app.database.CategoryBudgetEntity(
+                                    category, amount, startOfMonth);
+                    AppDatabase.getInstance(getContext()).categoryBudgetDao().insert(newBudget);
+                }
+                
+                String icon = getIconEmoji(category);
+                String formattedAmount = String.format("%,d", amount);
+                String action = isUpdate ? "cập nhật" : "thêm";
+                
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(() -> {
+                        messages.set(analyzingIndex, new ChatMessage(
+                                "✅ Đã " + action + " ngân sách cho danh mục!\n\n" +
+                                icon + " " + category + ": " + formattedAmount + " VND",
+                                false, "Bây giờ"));
+                        chatAdapter.notifyItemChanged(analyzingIndex);
+                        
+                        showToastOnTop("✅ Đã " + action + " ngân sách " + category);
+                        refreshHomeFragment();
+                    });
+                }
+                
+            } catch (Exception e) {
+                android.util.Log.e("AiChatBottomSheet", "Error saving category budget", e);
+                
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(() -> {
+                        messages.set(analyzingIndex, new ChatMessage(
+                                "❌ Có lỗi xảy ra khi lưu ngân sách danh mục!", 
+                                false, "Bây giờ"));
+                        chatAdapter.notifyItemChanged(analyzingIndex);
+                    });
+                }
+            }
+        });
+    }
+    
+    private void handleDeleteCategoryBudget(String text, int analyzingIndex) {
+        String category = extractCategory(text);
+        
+        if (category == null || category.isEmpty()) {
+            getActivity().runOnUiThread(() -> {
+                messages.set(analyzingIndex, new ChatMessage(
+                        "⚠️ Không tìm thấy tên danh mục!\n\n" +
+                        "Ví dụ: 'Xóa ngân sách danh mục ăn uống'",
+                        false, "Bây giờ"));
+                chatAdapter.notifyItemChanged(analyzingIndex);
+            });
+            return;
+        }
+        
+        // Delete from database
+        Executors.newSingleThreadExecutor().execute(() -> {
+            try {
+                // Get current month range
+                Calendar cal = Calendar.getInstance();
+                cal.set(Calendar.DAY_OF_MONTH, 1);
+                cal.set(Calendar.HOUR_OF_DAY, 0);
+                cal.set(Calendar.MINUTE, 0);
+                cal.set(Calendar.SECOND, 0);
+                cal.set(Calendar.MILLISECOND, 0);
+                Date startOfMonth = cal.getTime();
+                
+                cal.set(Calendar.DAY_OF_MONTH, cal.getActualMaximum(Calendar.DAY_OF_MONTH));
+                cal.set(Calendar.HOUR_OF_DAY, 23);
+                cal.set(Calendar.MINUTE, 59);
+                cal.set(Calendar.SECOND, 59);
+                cal.set(Calendar.MILLISECOND, 999);
+                Date endOfMonth = cal.getTime();
+                
+                // Find and delete
+                com.example.spending_management_app.database.CategoryBudgetEntity existing = 
+                        AppDatabase.getInstance(getContext())
+                                .categoryBudgetDao()
+                                .getCategoryBudgetForMonth(category, startOfMonth, endOfMonth);
+                
+                if (existing != null) {
+                    AppDatabase.getInstance(getContext()).categoryBudgetDao().delete(existing);
+                    
+                    String icon = getIconEmoji(category);
+                    
+                    if (getActivity() != null) {
+                        getActivity().runOnUiThread(() -> {
+                            messages.set(analyzingIndex, new ChatMessage(
+                                    "✅ Đã xóa ngân sách danh mục!\n\n" +
+                                    icon + " " + category,
+                                    false, "Bây giờ"));
+                            chatAdapter.notifyItemChanged(analyzingIndex);
+                            
+                            showToastOnTop("✅ Đã xóa ngân sách " + category);
+                            refreshHomeFragment();
+                        });
+                    }
+                } else {
+                    if (getActivity() != null) {
+                        getActivity().runOnUiThread(() -> {
+                            messages.set(analyzingIndex, new ChatMessage(
+                                    "⚠️ Không tìm thấy ngân sách cho danh mục: " + category,
+                                    false, "Bây giờ"));
+                            chatAdapter.notifyItemChanged(analyzingIndex);
+                        });
+                    }
+                }
+                
+            } catch (Exception e) {
+                android.util.Log.e("AiChatBottomSheet", "Error deleting category budget", e);
+                
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(() -> {
+                        messages.set(analyzingIndex, new ChatMessage(
+                                "❌ Có lỗi xảy ra khi xóa ngân sách danh mục!", 
+                                false, "Bây giờ"));
+                        chatAdapter.notifyItemChanged(analyzingIndex);
+                    });
+                }
+            }
+        });
+    }
+    
+    private String extractCategory(String text) {
+        String lowerText = text.toLowerCase();
+        
+        // List of all categories
+        String[] categories = {
+            "Ăn uống", "Di chuyển", "Tiện ích", "Y tế", "Nhà ở",
+            "Mua sắm", "Giáo dục", "Sách & Học tập", "Thể thao", "Sức khỏe & Làm đẹp",
+            "Giải trí", "Du lịch", "Ăn ngoài & Cafe", "Quà tặng & Từ thiện", "Hội họp & Tiệc tụng",
+            "Điện thoại & Internet", "Đăng ký & Dịch vụ", "Phần mềm & Apps", "Ngân hàng & Phí",
+            "Con cái", "Thú cưng", "Gia đình",
+            "Lương", "Đầu tư", "Thu nhập phụ", "Tiết kiệm",
+            "Khác"
+        };
+        
+        // Try to find category in text
+        for (String category : categories) {
+            if (lowerText.contains(category.toLowerCase())) {
+                return category;
+            }
+        }
+        
+        return null;
+    }
+    
+    private String getIconEmoji(String category) {
+        switch (category) {
+            // Nhu cầu thiết yếu
+            case "Ăn uống":
+                return "🍽️";
+            case "Di chuyển":
+                return "🚗";
+            case "Tiện ích":
+                return "⚡";
+            case "Y tế":
+                return "🏥";
+            case "Nhà ở":
+                return "🏠";
+            
+            // Mua sắm & Phát triển bản thân
+            case "Mua sắm":
+                return "🛍️";
+            case "Giáo dục":
+                return "📚";
+            case "Sách & Học tập":
+                return "📖";
+            case "Thể thao":
+                return "⚽";
+            case "Sức khỏe & Làm đẹp":
+                return "💆";
+            
+            // Giải trí & Xã hội
+            case "Giải trí":
+                return "🎬";
+            case "Du lịch":
+                return "✈️";
+            case "Ăn ngoài & Cafe":
+                return "☕";
+            case "Quà tặng & Từ thiện":
+                return "🎁";
+            case "Hội họp & Tiệc tụng":
+                return "🎉";
+            
+            // Công nghệ & Dịch vụ
+            case "Điện thoại & Internet":
+                return "📱";
+            case "Đăng ký & Dịch vụ":
+                return "💳";
+            case "Phần mềm & Apps":
+                return "💻";
+            case "Ngân hàng & Phí":
+                return "🏦";
+            
+            // Gia đình & Con cái
+            case "Con cái":
+                return "👶";
+            case "Thú cưng":
+                return "🐕";
+            case "Gia đình":
+                return "👨‍👩‍👧‍👦";
+            
+            // Thu nhập & Tài chính
+            case "Lương":
+                return "💰";
+            case "Đầu tư":
+                return "📈";
+            case "Thu nhập phụ":
+                return "💵";
+            case "Tiết kiệm":
+                return "🏦";
+            
+            // Khác
+            case "Khác":
+                return "📌";
+            default:
+                return "💳";
+        }
     }
 }

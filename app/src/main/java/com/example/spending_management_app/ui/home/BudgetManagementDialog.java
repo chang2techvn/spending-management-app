@@ -18,6 +18,7 @@ import androidx.lifecycle.ViewModelProvider;
 import com.example.spending_management_app.R;
 import com.example.spending_management_app.database.AppDatabase;
 import com.example.spending_management_app.database.BudgetEntity;
+import com.example.spending_management_app.database.CategoryBudgetEntity;
 import com.example.spending_management_app.ui.AiChatBottomSheet;
 
 import java.text.SimpleDateFormat;
@@ -80,10 +81,9 @@ public class BudgetManagementDialog extends DialogFragment {
         });
 
         btnSetBudget.setOnClickListener(v -> {
-            if (listener != null) {
-                listener.onSetBudgetSelected();
-            }
-            dismiss();
+            android.util.Log.d("BudgetDialog", "Category Budget button clicked");
+            handleCategoryBudget();
+            // Don't dismiss immediately - let handleCategoryBudget finish first
         });
 
         btnCancel.setOnClickListener(v -> dismiss());
@@ -98,5 +98,190 @@ public class BudgetManagementDialog extends DialogFragment {
         args.putString("mode", "budget_management"); // New flag to indicate budget mode
         aiChatBottomSheet.setArguments(args);
         aiChatBottomSheet.show(getParentFragmentManager(), aiChatBottomSheet.getTag());
+    }
+    
+    private void handleCategoryBudget() {
+        android.util.Log.d("BudgetDialog", "handleCategoryBudget called");
+        
+        // Open AI chat bottom sheet with category budget mode and show all category budgets
+        Executors.newSingleThreadExecutor().execute(() -> {
+            try {
+                android.util.Log.d("BudgetDialog", "Background thread started");
+                
+                // Calculate month range
+                Calendar cal = Calendar.getInstance();
+                cal.set(Calendar.DAY_OF_MONTH, 1);
+                cal.set(Calendar.HOUR_OF_DAY, 0);
+                cal.set(Calendar.MINUTE, 0);
+                cal.set(Calendar.SECOND, 0);
+                cal.set(Calendar.MILLISECOND, 0);
+                Date startOfMonth = cal.getTime();
+                
+                cal.set(Calendar.DAY_OF_MONTH, cal.getActualMaximum(Calendar.DAY_OF_MONTH));
+                cal.set(Calendar.HOUR_OF_DAY, 23);
+                cal.set(Calendar.MINUTE, 59);
+                cal.set(Calendar.SECOND, 59);
+                cal.set(Calendar.MILLISECOND, 999);
+                Date endOfMonth = cal.getTime();
+                
+                android.util.Log.d("BudgetDialog", "Date range: " + startOfMonth + " to " + endOfMonth);
+                
+                // Get all category budgets for current month
+                List<CategoryBudgetEntity> categoryBudgets = db.categoryBudgetDao()
+                        .getAllCategoryBudgetsForMonth(startOfMonth, endOfMonth);
+                
+                android.util.Log.d("BudgetDialog", "Category budgets loaded: " + (categoryBudgets != null ? categoryBudgets.size() : "null"));
+                
+                // Build message to display
+                StringBuilder message = new StringBuilder();
+                message.append("📊 Ngân sách theo danh mục hiện tại:\n\n");
+                
+                if (categoryBudgets.isEmpty()) {
+                    message.append("Chưa có ngân sách nào được thiết lập.\n\n");
+                } else {
+                    for (CategoryBudgetEntity budget : categoryBudgets) {
+                        String icon = getIconEmoji(budget.getCategory());
+                        message.append(String.format("%s %s: %,d VND\n", 
+                                icon, budget.getCategory(), budget.getBudgetAmount()));
+                    }
+                    message.append("\n");
+                }
+                
+                message.append("💡 Hướng dẫn:\n");
+                message.append("• Thêm: 'Thêm 500 ngàn cho danh mục ăn uống'\n");
+                message.append("• Sửa: 'Sửa ăn uống 700 ngàn'\n");
+                message.append("• Xóa: 'Xóa ngân sách danh mục ăn uống'");
+                
+                String finalMessage = message.toString();
+                
+                android.util.Log.d("BudgetDialog", "Final message: " + finalMessage);
+                
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(() -> {
+                        android.util.Log.d("BudgetDialog", "Opening AiChatBottomSheet");
+                        
+                        // Open AI chat with category budget context
+                        AiChatBottomSheet aiChatBottomSheet = new AiChatBottomSheet();
+                        Bundle args = new Bundle();
+                        args.putString("mode", "category_budget_management");
+                        args.putString("welcome_message", finalMessage);
+                        aiChatBottomSheet.setArguments(args);
+                        aiChatBottomSheet.show(getParentFragmentManager(), aiChatBottomSheet.getTag());
+                        
+                        android.util.Log.d("BudgetDialog", "AiChatBottomSheet shown");
+                        
+                        // Dismiss dialog after showing chat
+                        dismiss();
+                    });
+                } else {
+                    android.util.Log.e("BudgetDialog", "Activity is null!");
+                }
+                
+            } catch (Exception e) {
+                android.util.Log.e("BudgetDialog", "Error loading category budgets", e);
+                e.printStackTrace();
+                
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(() -> {
+                        android.util.Log.d("BudgetDialog", "Showing default message due to error");
+                        
+                        // Show error or default message
+                        String defaultMessage = "📊 Ngân sách theo danh mục\n\n" +
+                                "💡 Hướng dẫn:\n" +
+                                "• Thêm: 'Thêm 500 ngàn cho danh mục ăn uống'\n" +
+                                "• Sửa: 'Sửa ăn uống 700 ngàn'\n" +
+                                "• Xóa: 'Xóa ngân sách danh mục ăn uống'";
+                        
+                        AiChatBottomSheet aiChatBottomSheet = new AiChatBottomSheet();
+                        Bundle args = new Bundle();
+                        args.putString("mode", "category_budget_management");
+                        args.putString("welcome_message", defaultMessage);
+                        aiChatBottomSheet.setArguments(args);
+                        aiChatBottomSheet.show(getParentFragmentManager(), aiChatBottomSheet.getTag());
+                        
+                        android.util.Log.d("BudgetDialog", "Default AiChatBottomSheet shown");
+                        
+                        // Dismiss dialog after showing chat
+                        dismiss();
+                    });
+                } else {
+                    android.util.Log.e("BudgetDialog", "Activity is null in error handler!");
+                }
+            }
+        });
+    }
+    
+    private String getIconEmoji(String category) {
+        switch (category) {
+            // Nhu cầu thiết yếu
+            case "Ăn uống":
+                return "🍽️";
+            case "Di chuyển":
+                return "🚗";
+            case "Tiện ích":
+                return "⚡";
+            case "Y tế":
+                return "🏥";
+            case "Nhà ở":
+                return "🏠";
+            
+            // Mua sắm & Phát triển bản thân
+            case "Mua sắm":
+                return "🛍️";
+            case "Giáo dục":
+                return "📚";
+            case "Sách & Học tập":
+                return "📖";
+            case "Thể thao":
+                return "⚽";
+            case "Sức khỏe & Làm đẹp":
+                return "💆";
+            
+            // Giải trí & Xã hội
+            case "Giải trí":
+                return "🎬";
+            case "Du lịch":
+                return "✈️";
+            case "Ăn ngoài & Cafe":
+                return "☕";
+            case "Quà tặng & Từ thiện":
+                return "🎁";
+            case "Hội họp & Tiệc tụng":
+                return "🎉";
+            
+            // Công nghệ & Dịch vụ
+            case "Điện thoại & Internet":
+                return "📱";
+            case "Đăng ký & Dịch vụ":
+                return "💳";
+            case "Phần mềm & Apps":
+                return "💻";
+            case "Ngân hàng & Phí":
+                return "🏦";
+            
+            // Gia đình & Con cái
+            case "Con cái":
+                return "👶";
+            case "Thú cưng":
+                return "🐕";
+            case "Gia đình":
+                return "👨‍👩‍👧‍👦";
+            
+            // Thu nhập & Tài chính
+            case "Lương":
+                return "💰";
+            case "Đầu tư":
+                return "📈";
+            case "Thu nhập phụ":
+                return "💵";
+            case "Tiết kiệm":
+                return "🏦";
+            
+            // Khác
+            case "Khác":
+                return "📌";
+            default:
+                return "💳";
+        }
     }
 }
