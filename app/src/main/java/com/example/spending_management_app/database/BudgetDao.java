@@ -2,6 +2,7 @@ package com.example.spending_management_app.database;
 
 import androidx.lifecycle.LiveData;
 import androidx.room.Dao;
+import androidx.room.Delete;
 import androidx.room.Insert;
 import androidx.room.Query;
 import androidx.room.Update;
@@ -15,6 +16,9 @@ public interface BudgetDao {
 
     @Update
     void update(BudgetEntity budget);
+    
+    @Delete
+    void delete(BudgetEntity budget);
 
     @Query("SELECT * FROM budgets")
     List<BudgetEntity> getAllBudgets();

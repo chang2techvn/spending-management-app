@@ -130,4 +130,158 @@ public class CategoryHelper {
                 "- Đồ cho con → Con cái\n" +
                 "- Thức ăn/phụ kiện thú cưng → Thú cưng";
     }
+    
+    /**
+     * Get all available categories
+     * @return Array of all category names
+     */
+    public static String[] getAllCategories() {
+        return new String[]{
+                "Ăn uống", "Di chuyển", "Tiện ích", "Y tế", "Nhà ở",
+                "Mua sắm", "Giáo dục", "Sách & Học tập", "Thể thao", "Sức khỏe & Làm đẹp",
+                "Giải trí", "Du lịch", "Ăn ngoài & Cafe", "Quà tặng & Từ thiện", "Hội họp & Tiệc tụng",
+                "Điện thoại & Internet", "Đăng ký & Dịch vụ", "Phần mềm & Apps", "Ngân hàng & Phí",
+                "Con cái", "Thú cưng", "Gia đình",
+                "Lương", "Đầu tư", "Thu nhập phụ", "Tiết kiệm",
+                "Khác"
+        };
+    }
+    
+    /**
+     * Detect category from text description
+     * @param text The text to analyze
+     * @return The detected category name
+     */
+    public static String detectCategory(String text) {
+        String lowerText = text.toLowerCase();
+        
+        // Ăn ngoài & Cafe
+        if (lowerText.contains("cafe") || lowerText.contains("cà phê") || lowerText.contains("ca phe") ||
+            lowerText.contains("trà sữa") || lowerText.contains("đồ uống") || lowerText.contains("nhà hàng") ||
+            lowerText.contains("quán ăn") || lowerText.contains("buffet")) {
+            return "Ăn ngoài & Cafe";
+        }
+        
+        // Ăn uống (mua đồ ăn về nấu)
+        if (lowerText.contains("siêu thị") || lowerText.contains("chợ") || lowerText.contains("thực phẩm") ||
+            lowerText.contains("đồ ăn") || lowerText.contains("rau") || lowerText.contains("thịt") ||
+            lowerText.contains("cá") || lowerText.contains("trứng")) {
+            return "Ăn uống";
+        }
+        
+        // Di chuyển
+        if (lowerText.contains("xăng") || lowerText.contains("xe") || lowerText.contains("grab") ||
+            lowerText.contains("taxi") || lowerText.contains("bus") || lowerText.contains("xe buýt") ||
+            lowerText.contains("gửi xe") || lowerText.contains("đỗ xe") || lowerText.contains("bãi xe") ||
+            lowerText.contains("vé xe")) {
+            return "Di chuyển";
+        }
+        
+        // Tiện ích
+        if (lowerText.contains("điện") || lowerText.contains("nước") || lowerText.contains("rác") ||
+            lowerText.contains("gas") || lowerText.contains("ga")) {
+            return "Tiện ích";
+        }
+        
+        // Y tế
+        if (lowerText.contains("thuốc") || lowerText.contains("khám") || lowerText.contains("bệnh viện") ||
+            lowerText.contains("phòng khám") || lowerText.contains("bác sĩ") || lowerText.contains("nha khoa")) {
+            return "Y tế";
+        }
+        
+        // Nhà ở
+        if (lowerText.contains("thuê nhà") || lowerText.contains("tiền nhà") || lowerText.contains("sửa nhà") ||
+            lowerText.contains("xây dựng") || lowerText.contains("vật liệu")) {
+            return "Nhà ở";
+        }
+        
+        // Mua sắm
+        if (lowerText.contains("quần áo") || lowerText.contains("giày") || lowerText.contains("dép") ||
+            lowerText.contains("mỹ phẩm") || lowerText.contains("đồ dùng") || lowerText.contains("shopping")) {
+            return "Mua sắm";
+        }
+        
+        // Giáo dục
+        if (lowerText.contains("học phí") || lowerText.contains("khóa học") || lowerText.contains("lớp học")) {
+            return "Giáo dục";
+        }
+        
+        // Sách & Học tập
+        if (lowerText.contains("sách") || lowerText.contains("tài liệu") || lowerText.contains("vở")) {
+            return "Sách & Học tập";
+        }
+        
+        // Thể thao
+        if (lowerText.contains("gym") || lowerText.contains("thể dục") || lowerText.contains("thể thao") ||
+            lowerText.contains("bơi") || lowerText.contains("chạy bộ") || lowerText.contains("yoga")) {
+            return "Thể thao";
+        }
+        
+        // Sức khỏe & Làm đẹp
+        if (lowerText.contains("spa") || lowerText.contains("massage") || lowerText.contains("làm tóc") ||
+            lowerText.contains("cắt tóc") || lowerText.contains("nails") || lowerText.contains("làm đẹp")) {
+            return "Sức khỏe & Làm đẹp";
+        }
+        
+        // Giải trí
+        if (lowerText.contains("phim") || lowerText.contains("rạp") || lowerText.contains("game") ||
+            lowerText.contains("concert") || lowerText.contains("show")) {
+            return "Giải trí";
+        }
+        
+        // Du lịch
+        if (lowerText.contains("du lịch") || lowerText.contains("máy bay") || lowerText.contains("khách sạn") ||
+            lowerText.contains("resort") || lowerText.contains("vé tham quan")) {
+            return "Du lịch";
+        }
+        
+        // Điện thoại & Internet
+        if (lowerText.contains("điện thoại") || lowerText.contains("internet") || lowerText.contains("data") ||
+            lowerText.contains("sim") || lowerText.contains("cước")) {
+            return "Điện thoại & Internet";
+        }
+        
+        // Đăng ký & Dịch vụ
+        if (lowerText.contains("netflix") || lowerText.contains("spotify") || lowerText.contains("dịch vụ") ||
+            lowerText.contains("đăng ký")) {
+            return "Đăng ký & Dịch vụ";
+        }
+        
+        // Phần mềm & Apps
+        if (lowerText.contains("app") || lowerText.contains("phần mềm") || lowerText.contains("software")) {
+            return "Phần mềm & Apps";
+        }
+        
+        // Ngân hàng & Phí
+        if (lowerText.contains("phí") || lowerText.contains("chuyển khoản") || lowerText.contains("atm") ||
+            lowerText.contains("ngân hàng")) {
+            return "Ngân hàng & Phí";
+        }
+        
+        // Con cái
+        if (lowerText.contains("con") || lowerText.contains("bé") || lowerText.contains("em bé") ||
+            lowerText.contains("trẻ em")) {
+            return "Con cái";
+        }
+        
+        // Thú cưng
+        if (lowerText.contains("thú cưng") || lowerText.contains("chó") || lowerText.contains("mèo") ||
+            lowerText.contains("pet")) {
+            return "Thú cưng";
+        }
+        
+        // Gia đình
+        if (lowerText.contains("gia đình") || lowerText.contains("bố") || lowerText.contains("mẹ") ||
+            lowerText.contains("ông") || lowerText.contains("bà")) {
+            return "Gia đình";
+        }
+        
+        // Quà tặng & Từ thiện
+        if (lowerText.contains("quà") || lowerText.contains("tặng") || lowerText.contains("từ thiện")) {
+            return "Quà tặng & Từ thiện";
+        }
+        
+        // Default
+        return "Khác";
+    }
 }

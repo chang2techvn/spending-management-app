@@ -208,9 +208,10 @@ public class BudgetManagementDialog extends DialogFragment {
                 }
                 
                 message.append("\n💡 Hướng dẫn:\n");
-                message.append("        • Thêm: 'Thêm 500 ngàn ăn uống và 300 ngàn di chuyển'\n");
-                message.append("        • Sửa: 'Sửa ăn uống 700 ngàn, mua sắm 400 ngàn'\n");
-                message.append("        • Xóa: 'Xóa ngân sách ăn uống và di chuyển'\n");
+                message.append("        • Đặt: 'Đặt ngân sách ăn uống 2 triệu'\n");
+                message.append("        • Sửa: 'Sửa ngân sách di chuyển 1 triệu'\n");
+                message.append("        • Xóa: 'Xóa ngân sách cafe'\n");
+                message.append("        • Nhiều: 'Thêm 500k ăn uống và 300k di chuyển'\n");
                 message.append("\n⚠️ Lưu ý: Tổng ngân sách danh mục không vượt quá ngân sách tháng");
                 
                 String finalMessage = message.toString();
@@ -249,9 +250,11 @@ public class BudgetManagementDialog extends DialogFragment {
                         // Show error or default message
                         String defaultMessage = "📊 Ngân sách theo danh mục\n\n" +
                                 "💡 Hướng dẫn:\n" +
-                                "• Thêm: 'Thêm 500 ngàn cho danh mục ăn uống'\n" +
-                                "• Sửa: 'Sửa ăn uống 700 ngàn'\n" +
-                                "• Xóa: 'Xóa ngân sách danh mục ăn uống'";
+                                "• Đặt: 'Đặt ngân sách ăn uống 2 triệu'\n" +
+                                "• Sửa: 'Sửa ngân sách di chuyển 1 triệu'\n" +
+                                "• Xóa: 'Xóa ngân sách cafe'\n" +
+                                "• Nhiều: 'Thêm 500k ăn uống và 300k di chuyển'\n\n" +
+                                "📂 Danh mục: Ăn uống, Di chuyển, Tiện ích, Y tế, Nhà ở, Mua sắm, v.v.";
                         
                         AiChatBottomSheet aiChatBottomSheet = new AiChatBottomSheet();
                         Bundle args = new Bundle();
