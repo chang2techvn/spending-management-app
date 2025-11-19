@@ -195,4 +195,13 @@ public class MainActivity extends AppCompatActivity {
         aiChatBottomSheet.setArguments(args);
         aiChatBottomSheet.show(getSupportFragmentManager(), aiChatBottomSheet.getTag());
     }
+    
+    public void openExpenseBulkManagement() {
+        AiChatBottomSheet aiChatBottomSheet = new AiChatBottomSheet();
+        Bundle args = new Bundle();
+        args.putString("mode", "expense_bulk_management");
+        args.putString("initial_prompt", "expense_bulk");
+        aiChatBottomSheet.setArguments(args);
+        aiChatBottomSheet.show(getSupportFragmentManager(), aiChatBottomSheet.getTag());
+    }
 }

@@ -2,6 +2,7 @@ package com.example.spending_management_app.database;
 
 import androidx.lifecycle.LiveData;
 import androidx.room.Dao;
+import androidx.room.Delete;
 import androidx.room.Insert;
 import androidx.room.Query;
 import androidx.room.Update;
@@ -12,6 +13,15 @@ import java.util.List;
 public interface TransactionDao {
     @Insert
     void insert(TransactionEntity transaction);
+    
+    @Update
+    void update(TransactionEntity transaction);
+    
+    @Delete
+    void delete(TransactionEntity transaction);
+    
+    @Query("SELECT * FROM transactions WHERE id = :id LIMIT 1")
+    TransactionEntity getTransactionById(int id);
 
     @Query("SELECT * FROM transactions ORDER BY date DESC")
     List<TransactionEntity> getAllTransactions();

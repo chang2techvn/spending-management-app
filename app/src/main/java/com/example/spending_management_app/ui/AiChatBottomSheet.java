@@ -149,10 +149,11 @@ public class AiChatBottomSheet extends DialogFragment {
                 String lower = prompt.toLowerCase();
                 
                 // Check if this is "Add expense" request
-                if (lower.contains("chi tiêu") || lower.contains("thêm chi tiêu") || lower.contains("chi tieu")) {
-                    // For "Add expense", don't send to AI, just show the welcome message
+                if (lower.contains("chi tiêu") || lower.contains("thêm chi tiêu") || lower.contains("chi tieu") ||
+                    lower.contains("expense_bulk")) {
+                    // For "Add expense" or "expense_bulk", don't send to AI, just show the welcome message
                     // The welcome message with recent transactions is already loaded in setupMessages()
-                    android.util.Log.d("AiChatBottomSheet", "Add expense request - showing welcome message only");
+                    android.util.Log.d("AiChatBottomSheet", "Add expense/expense bulk request - showing welcome message only");
                 } else if (lower.contains("ngân sách") || lower.contains("thiet lap ngan sach") || lower.contains("thiết lập ngân sách")) {
                     // For budget management, send to AI
                     String userVisibleMessage = "Thiết lập ngân sách tháng này";
@@ -226,6 +227,9 @@ public class AiChatBottomSheet extends DialogFragment {
                         "• Sửa: 'Sửa ăn uống 700 ngàn'\n" +
                         "• Xóa: 'Xóa ngân sách danh mục ăn uống'";
                 messages.add(new ChatMessage(fallbackMessage, false, "Bây giờ"));
+            } else if ("expense_bulk_management".equals(mode)) {
+                // Load expense bulk management welcome message
+                loadExpenseBulkWelcomeMessage();
             } else {
                 // Load expense tracking welcome message
                 loadRecentTransactionsForWelcome();
@@ -439,6 +443,78 @@ public class AiChatBottomSheet extends DialogFragment {
         });
     }
     
+    private void loadExpenseBulkWelcomeMessage() {
+        // Add a temporary loading message
+        messages.add(new ChatMessage("Đang tải...", false, "Bây giờ"));
+        
+        // Load recent transactions from database in background
+        Executors.newSingleThreadExecutor().execute(() -> {
+            try {
+                List<TransactionEntity> recentTransactions = AppDatabase.getInstance(getContext())
+                        .transactionDao()
+                        .getRecentTransactions(5); // Show 5 recent transactions
+                
+                // Build welcome message with recent transactions
+                StringBuilder welcomeMessage = new StringBuilder();
+                welcomeMessage.append("📋 Quản lý chi tiêu hàng loạt\n\n");
+                
+                if (!recentTransactions.isEmpty()) {
+                    welcomeMessage.append("💳 Chi tiêu gần đây:\n\n");
+                    
+                    SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM", new Locale("vi", "VN"));
+                    
+                    for (TransactionEntity transaction : recentTransactions) {
+                        String emoji = getIconEmoji(transaction.category);
+                        String formattedAmount = String.format("%,d", Math.abs(transaction.amount));
+                        String dateStr = dateFormat.format(transaction.date);
+                        
+                        welcomeMessage.append(emoji).append(" ")
+                                .append(transaction.description)
+                                .append(": ").append(formattedAmount).append(" VND")
+                                .append(" - ").append(dateStr)
+                                .append("\n");
+                    }
+                    welcomeMessage.append("\n");
+                }
+                
+                welcomeMessage.append("💡 Hướng dẫn:\n");
+                welcomeMessage.append("• Thêm: 'Hôm qua ăn sáng 25k và cafe 30k'\n");
+                welcomeMessage.append("• Xóa: 'Xóa chi tiêu #123' (tìm ID ở trang Lịch sử)");
+                
+                String finalMessage = welcomeMessage.toString();
+                
+                // Update UI on main thread
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(() -> {
+                        // Replace loading message with actual welcome message
+                        if (!messages.isEmpty()) {
+                            messages.set(0, new ChatMessage(finalMessage, false, "Bây giờ"));
+                            chatAdapter.notifyItemChanged(0);
+                        }
+                    });
+                }
+                
+            } catch (Exception e) {
+                android.util.Log.e("AiChatBottomSheet", "Error loading expense bulk welcome message", e);
+                
+                // Fallback to simple welcome message
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(() -> {
+                        String fallbackMessage = "📋 Quản lý chi tiêu hàng loạt\n\n" +
+                                "💡 Hướng dẫn:\n" +
+                                "• Thêm: 'Hôm qua ăn sáng 25k và cafe 30k'\n" +
+                                "• Xóa: 'Xóa chi tiêu #123' (tìm ID ở trang Lịch sử)";
+                        
+                        if (!messages.isEmpty()) {
+                            messages.set(0, new ChatMessage(fallbackMessage, false, "Bây giờ"));
+                            chatAdapter.notifyItemChanged(0);
+                        }
+                    });
+                }
+            }
+        });
+    }
+    
     private void setupListeners() {
         sendButton.setOnClickListener(v -> {
             String message = messageInput.getText().toString().trim();
@@ -479,10 +555,17 @@ public class AiChatBottomSheet extends DialogFragment {
     }
 
     private void sendToAI(String text) {
-        // Check if this is budget management mode or category budget management mode
+        // Check if this is budget management mode or category budget management mode or expense bulk management mode
         Bundle args = getArguments();
         boolean isBudgetMode = args != null && "budget_management".equals(args.getString("mode"));
         boolean isCategoryBudgetMode = args != null && "category_budget_management".equals(args.getString("mode"));
+        boolean isExpenseBulkMode = args != null && "expense_bulk_management".equals(args.getString("mode"));
+        
+        // Handle expense bulk management
+        if (isExpenseBulkMode) {
+            handleExpenseBulkRequest(text);
+            return;
+        }
         
         // Handle category budget management
         if (isCategoryBudgetMode) {
@@ -929,12 +1012,12 @@ public class AiChatBottomSheet extends DialogFragment {
                             JSONArray parts = content.getJSONArray("parts");
                             String aiText = parts.getJSONObject(0).getString("text").trim();
 
-                            // Check if response contains JSON
-                            String jsonPart = extractJsonFromText(aiText);
+                            // Check if response contains JSON - extract ALL JSON objects
+                            List<String> allJsonParts = extractAllJsonFromText(aiText);
                             String displayText = extractDisplayText(aiText);
 
                             android.util.Log.d("AiChatBottomSheet", "AI full response: " + aiText);
-                            android.util.Log.d("AiChatBottomSheet", "Extracted JSON: " + jsonPart);
+                            android.util.Log.d("AiChatBottomSheet", "Number of JSON objects found: " + allJsonParts.size());
                             android.util.Log.d("AiChatBottomSheet", "Display text: " + displayText);
 
                             getActivity().runOnUiThread(() -> {
@@ -951,23 +1034,27 @@ public class AiChatBottomSheet extends DialogFragment {
                                 messagesRecycler.smoothScrollToPosition(messages.size() - 1);
                                 textToSpeech.speak(formattedDisplayText, TextToSpeech.QUEUE_FLUSH, null, null);
 
-                                // If JSON found, route to appropriate confirmation dialog
-                                if (jsonPart != null) {
-                                    android.util.Log.d("AiChatBottomSheet", "JSON found, processing...");
-                                    try {
-                                        JSONObject parsed = new JSONObject(jsonPart);
-                                        String action = parsed.optString("action", "");
-                                        android.util.Log.d("AiChatBottomSheet", "Action: " + action);
-                                        if ("set_budget".equals(action) || "update_budget".equals(action)) {
-                                            android.util.Log.d("AiChatBottomSheet", "Routing to budget dialog");
-                                            showBudgetConfirmationDialog(jsonPart);
-                                        } else {
-                                            android.util.Log.d("AiChatBottomSheet", "Routing to saveExpenseDirectly");
+                                // Process ALL JSON objects found
+                                if (!allJsonParts.isEmpty()) {
+                                    android.util.Log.d("AiChatBottomSheet", "Processing " + allJsonParts.size() + " JSON objects");
+                                    
+                                    for (String jsonPart : allJsonParts) {
+                                        try {
+                                            JSONObject parsed = new JSONObject(jsonPart);
+                                            String action = parsed.optString("action", "");
+                                            android.util.Log.d("AiChatBottomSheet", "Processing JSON with action: " + action);
+                                            
+                                            if ("set_budget".equals(action) || "update_budget".equals(action)) {
+                                                android.util.Log.d("AiChatBottomSheet", "Routing to budget dialog");
+                                                showBudgetConfirmationDialog(jsonPart);
+                                            } else {
+                                                android.util.Log.d("AiChatBottomSheet", "Routing to saveExpenseDirectly");
+                                                saveExpenseDirectly(jsonPart);
+                                            }
+                                        } catch (Exception e) {
+                                            android.util.Log.e("AiChatBottomSheet", "Error processing JSON: " + jsonPart, e);
                                             saveExpenseDirectly(jsonPart);
                                         }
-                                    } catch (Exception e) {
-                                        android.util.Log.d("AiChatBottomSheet", "JSON parsing failed, routing to saveExpenseDirectly anyway");
-                                        saveExpenseDirectly(jsonPart);
                                     }
                                 } else {
                                     android.util.Log.d("AiChatBottomSheet", "No JSON found in AI response");
@@ -1037,14 +1124,86 @@ public class AiChatBottomSheet extends DialogFragment {
         android.util.Log.d("AiChatBottomSheet", "No JSON found in text");
         return null;
     }
+    
+    private List<String> extractAllJsonFromText(String text) {
+        android.util.Log.d("AiChatBottomSheet", "Extracting ALL JSON objects from text");
+        List<String> jsonList = new ArrayList<>();
+        
+        int pos = 0;
+        while (pos < text.length()) {
+            int start = text.indexOf('{', pos);
+            if (start == -1) break;
+            
+            // Find matching closing brace
+            int braceCount = 0;
+            int end = start;
+            boolean inString = false;
+            boolean escapeNext = false;
+            
+            for (int i = start; i < text.length(); i++) {
+                char c = text.charAt(i);
+                
+                if (escapeNext) {
+                    escapeNext = false;
+                    continue;
+                }
+                
+                if (c == '\\') {
+                    escapeNext = true;
+                    continue;
+                }
+                
+                if (c == '"') {
+                    inString = !inString;
+                    continue;
+                }
+                
+                if (!inString) {
+                    if (c == '{') {
+                        braceCount++;
+                    } else if (c == '}') {
+                        braceCount--;
+                        if (braceCount == 0) {
+                            end = i;
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            if (braceCount == 0 && end > start) {
+                String json = text.substring(start, end + 1);
+                android.util.Log.d("AiChatBottomSheet", "Found JSON object: " + json);
+                jsonList.add(json);
+                pos = end + 1;
+            } else {
+                pos = start + 1;
+            }
+        }
+        
+        android.util.Log.d("AiChatBottomSheet", "Total JSON objects found: " + jsonList.size());
+        return jsonList;
+    }
 
     private String extractDisplayText(String text) {
-        // Remove JSON part and return the rest
-        String jsonPart = extractJsonFromText(text);
-        if (jsonPart != null) {
-            return text.replace(jsonPart, "").trim();
+        // Remove ALL JSON parts and markdown code blocks
+        String result = text;
+        
+        // Remove markdown code blocks (```json ... ```)
+        result = result.replaceAll("```json[\\s\\S]*?```", "");
+        result = result.replaceAll("```[\\s\\S]*?```", "");
+        
+        // Remove all JSON objects
+        List<String> allJsons = extractAllJsonFromText(result);
+        for (String json : allJsons) {
+            result = result.replace(json, "");
         }
-        return text;
+        
+        // Clean up extra whitespace and newlines
+        result = result.replaceAll("\\n{3,}", "\n\n"); // Max 2 consecutive newlines
+        result = result.trim();
+        
+        return result.isEmpty() ? "✅ Đã xử lý!" : result;
     }
 
     private void saveExpenseDirectly(String jsonString) {
@@ -2755,5 +2914,450 @@ public class AiChatBottomSheet extends DialogFragment {
             default:
                 return "💳";
         }
+    }
+    
+    // ==================== EXPENSE BULK MANAGEMENT ====================
+    
+    private void handleExpenseBulkRequest(String text) {
+        android.util.Log.d("AiChatBottomSheet", "handleExpenseBulkRequest: " + text);
+        
+        // Add analyzing message
+        int analyzingIndex = messages.size();
+        messages.add(new ChatMessage("Đang xử lý yêu cầu...", false, "Bây giờ"));
+        chatAdapter.notifyItemInserted(messages.size() - 1);
+        messagesRecycler.smoothScrollToPosition(messages.size() - 1);
+        
+        String lowerText = text.toLowerCase();
+        
+        // Parse multiple expense operations from text
+        List<ExpenseOperation> operations = parseMultipleExpenseOperations(text);
+        
+        if (operations.isEmpty()) {
+            // Unknown command
+            getActivity().runOnUiThread(() -> {
+                messages.set(analyzingIndex, new ChatMessage(
+                        "⚠️ Không hiểu yêu cầu của bạn.\n\n" +
+                        "💡 Hướng dẫn:\n" +
+                        "• Thêm: 'Hôm qua ăn sáng 25k và cafe 30k'\n" +
+                        "• Sửa: 'Sửa chi tiêu [ID] thành 50k'\n" +
+                        "• Xóa: 'Xóa chi tiêu [ID]'",
+                        false, "Bây giờ"));
+                chatAdapter.notifyItemChanged(analyzingIndex);
+            });
+            return;
+        }
+        
+        // Process all operations
+        processExpenseOperations(operations, analyzingIndex);
+    }
+    
+    // Helper class for expense operations
+    private static class ExpenseOperation {
+        String type; // "add", "edit", "delete"
+        String description;
+        String category;
+        long amount;
+        Date date;
+        int transactionId; // For edit/delete operations
+        
+        ExpenseOperation(String type, String description, String category, long amount, Date date) {
+            this.type = type;
+            this.description = description;
+            this.category = category;
+            this.amount = amount;
+            this.date = date;
+            this.transactionId = -1;
+        }
+        
+        ExpenseOperation(String type, int transactionId) {
+            this.type = type;
+            this.transactionId = transactionId;
+            this.description = "";
+            this.category = "";
+            this.amount = 0;
+            this.date = new Date();
+        }
+    }
+    
+    private List<ExpenseOperation> parseMultipleExpenseOperations(String text) {
+        List<ExpenseOperation> operations = new ArrayList<>();
+        String lowerText = text.toLowerCase();
+        
+        // Determine operation type
+        String operationType = "add"; // default
+        if (lowerText.contains("xóa") || lowerText.contains("xoá")) {
+            operationType = "delete";
+        } else if (lowerText.contains("sửa") || lowerText.contains("thay đổi") || lowerText.contains("cập nhật")) {
+            operationType = "edit";
+        }
+        
+        // For edit/delete, try to extract transaction ID
+        if (operationType.equals("delete") || operationType.equals("edit")) {
+            // Try to find ID pattern like "#123", "ID 123", "id:123"
+            Pattern idPattern = Pattern.compile("(?:#|id[:\\s]+)(\\d+)", Pattern.CASE_INSENSITIVE);
+            Matcher matcher = idPattern.matcher(lowerText);
+            
+            while (matcher.find()) {
+                int transactionId = Integer.parseInt(matcher.group(1));
+                operations.add(new ExpenseOperation(operationType, transactionId));
+            }
+            
+            // If no ID found but user said delete/edit, inform them
+            if (operations.isEmpty()) {
+                // Return empty - will show error message
+                return operations;
+            }
+        }
+        
+        // For add operations, parse expenses from text
+        if (operationType.equals("add")) {
+            operations = parseExpensesFromText(text);
+        }
+        
+        return operations;
+    }
+    
+    private List<ExpenseOperation> parseExpensesFromText(String text) {
+        List<ExpenseOperation> operations = new ArrayList<>();
+        
+        android.util.Log.d("AiChatBottomSheet", "=== parseExpensesFromText START ===");
+        android.util.Log.d("AiChatBottomSheet", "Input text: [" + text + "]");
+        
+        // List of all categories with their aliases
+        java.util.Map<String, String> categoryAliases = new java.util.HashMap<>();
+        
+        // Full category names
+        String[] allCategories = {
+            "Ăn uống", "Di chuyển", "Tiện ích", "Y tế", "Nhà ở",
+            "Mua sắm", "Giáo dục", "Sách & Học tập", "Thể thao", "Sức khỏe & Làm đẹp",
+            "Giải trí", "Du lịch", "Ăn ngoài & Cafe", "Quà tặng & Từ thiện", "Hội họp & Tiệc tụng",
+            "Điện thoại & Internet", "Đăng ký & Dịch vụ", "Phần mềm & Apps", "Ngân hàng & Phí",
+            "Con cái", "Thú cưng", "Gia đình", "Khác"
+        };
+        
+        // Add aliases
+        categoryAliases.put("ăn sáng", "Ăn uống");
+        categoryAliases.put("ăn trưa", "Ăn uống");
+        categoryAliases.put("ăn tối", "Ăn uống");
+        categoryAliases.put("cafe", "Ăn ngoài & Cafe");
+        categoryAliases.put("cà phê", "Ăn ngoài & Cafe");
+        categoryAliases.put("cơm", "Ăn uống");
+        categoryAliases.put("xăng", "Di chuyển");
+        categoryAliases.put("xe", "Di chuyển");
+        categoryAliases.put("taxi", "Di chuyển");
+        categoryAliases.put("grab", "Di chuyển");
+        categoryAliases.put("bus", "Di chuyển");
+        categoryAliases.put("điện", "Tiện ích");
+        categoryAliases.put("nước", "Tiện ích");
+        categoryAliases.put("internet", "Điện thoại & Internet");
+        categoryAliases.put("điện thoại", "Điện thoại & Internet");
+        categoryAliases.put("phim", "Giải trí");
+        categoryAliases.put("game", "Giải trí");
+        
+        // First, split by newlines to handle multi-line input
+        String[] lines = text.split("\\r?\\n");
+        
+        android.util.Log.d("AiChatBottomSheet", "Number of lines: " + lines.length);
+        for (int i = 0; i < lines.length; i++) {
+            android.util.Log.d("AiChatBottomSheet", "Line " + i + ": [" + lines[i] + "]");
+        }
+        
+        // Process each line separately
+        for (String line : lines) {
+            line = line.trim();
+            if (line.isEmpty()) continue;
+            
+            android.util.Log.d("AiChatBottomSheet", "Processing line: [" + line + "]");
+            
+            // Extract date from this line (each line can have its own date)
+            Date expenseDate = extractDateFromText(line);
+            android.util.Log.d("AiChatBottomSheet", "Extracted date: " + expenseDate);
+            
+            // Split each line by common separators (và, ,, ;)
+            String[] segments = line.split("\\s+(và|,|;)\\s+");
+            
+            android.util.Log.d("AiChatBottomSheet", "Number of segments in this line: " + segments.length);
+            for (int i = 0; i < segments.length; i++) {
+                android.util.Log.d("AiChatBottomSheet", "  Segment " + i + ": [" + segments[i] + "]");
+            }
+            
+            for (String segment : segments) {
+                segment = segment.trim();
+                if (segment.isEmpty()) continue;
+                
+                android.util.Log.d("AiChatBottomSheet", "  Processing segment: [" + segment + "]");
+                
+                // Try to extract: description, amount, and category
+                String description = "";
+                String category = "Khác"; // default
+                long amount = 0;
+                
+                // Extract amount
+                amount = extractBudgetAmount(segment);
+                android.util.Log.d("AiChatBottomSheet", "    Extracted amount: " + amount);
+                
+                if (amount <= 0) {
+                    android.util.Log.d("AiChatBottomSheet", "    Skipping - no valid amount");
+                    continue; // Skip if no valid amount
+                }
+                
+                // Try to match category
+                String matchedCategory = null;
+                
+                // First try full category names
+                for (String cat : allCategories) {
+                    if (segment.toLowerCase().contains(cat.toLowerCase())) {
+                        matchedCategory = cat;
+                        break;
+                    }
+                }
+                
+                // If no match, try aliases
+                if (matchedCategory == null) {
+                    for (java.util.Map.Entry<String, String> alias : categoryAliases.entrySet()) {
+                        if (segment.toLowerCase().contains(alias.getKey())) {
+                            matchedCategory = alias.getValue();
+                            break;
+                        }
+                    }
+                }
+                
+                if (matchedCategory != null) {
+                    category = matchedCategory;
+                }
+                
+                android.util.Log.d("AiChatBottomSheet", "    Matched category: " + category);
+                
+                // Extract description (everything except amount and category keywords)
+                description = extractDescription(segment, category, amount);
+                
+                if (description.isEmpty()) {
+                    description = category; // Use category as description if no description found
+                }
+                
+                android.util.Log.d("AiChatBottomSheet", "    Final description: " + description);
+                android.util.Log.d("AiChatBottomSheet", "    Creating expense: " + description + " - " + amount + " - " + category + " - " + expenseDate);
+                
+                operations.add(new ExpenseOperation("add", description, category, amount, expenseDate));
+            }
+        }
+        
+        android.util.Log.d("AiChatBottomSheet", "Total operations created: " + operations.size());
+        android.util.Log.d("AiChatBottomSheet", "=== parseExpensesFromText END ===");
+        
+        return operations;
+    }
+    
+    private String extractDescription(String text, String category, long amount) {
+        String result = text;
+        
+        // Remove category
+        result = result.replaceAll("(?i)" + Pattern.quote(category), "").trim();
+        
+        // Remove amount patterns
+        result = result.replaceAll("\\d+[\\s]*(triệu|tr|ngàn|k|nghìn|n|đ|vnd)", "").trim();
+        result = result.replaceAll("\\d+", "").trim();
+        
+        // Remove common keywords
+        result = result.replaceAll("(?i)(chi tiêu|thêm|mua|đi|về)", "").trim();
+        
+        // Clean up extra spaces
+        result = result.replaceAll("\\s+", " ").trim();
+        
+        return result;
+    }
+    
+    private Date extractDateFromText(String text) {
+        String lowerText = text.toLowerCase();
+        Calendar cal = Calendar.getInstance();
+        
+        // Check for specific date patterns
+        if (lowerText.contains("hôm qua") || lowerText.contains("yesterday")) {
+            cal.add(Calendar.DAY_OF_MONTH, -1);
+        } else if (lowerText.contains("hôm kia") || lowerText.contains("2 ngày trước")) {
+            cal.add(Calendar.DAY_OF_MONTH, -2);
+        } else if (lowerText.contains("tuần trước") || lowerText.contains("last week")) {
+            cal.add(Calendar.DAY_OF_MONTH, -7);
+        } else {
+            // Try to find date pattern: "ngày 10/11" or "10/11" or "10-11"
+            Pattern datePattern = Pattern.compile("(?:ngày\\s+)?(\\d{1,2})[/-](\\d{1,2})(?:[/-](\\d{2,4}))?");
+            Matcher matcher = datePattern.matcher(lowerText);
+            
+            if (matcher.find()) {
+                int day = Integer.parseInt(matcher.group(1));
+                int month = Integer.parseInt(matcher.group(2));
+                int year = cal.get(Calendar.YEAR);
+                
+                if (matcher.group(3) != null) {
+                    year = Integer.parseInt(matcher.group(3));
+                    if (year < 100) {
+                        year += 2000;
+                    }
+                }
+                
+                cal.set(Calendar.YEAR, year);
+                cal.set(Calendar.MONTH, month - 1);
+                cal.set(Calendar.DAY_OF_MONTH, day);
+            }
+            // Default: today (no changes to cal)
+        }
+        
+        // Set time to current time
+        return cal.getTime();
+    }
+    
+    private void processExpenseOperations(List<ExpenseOperation> operations, int analyzingIndex) {
+        Executors.newSingleThreadExecutor().execute(() -> {
+            try {
+                StringBuilder resultMessage = new StringBuilder();
+                int[] counts = {0, 0}; // success, failure
+                
+                for (ExpenseOperation op : operations) {
+                    try {
+                        if (op.type.equals("delete")) {
+                            // Delete transaction
+                            TransactionEntity transaction = AppDatabase.getInstance(getContext())
+                                    .transactionDao()
+                                    .getTransactionById(op.transactionId);
+                            
+                            if (transaction != null) {
+                                AppDatabase.getInstance(getContext()).transactionDao().delete(transaction);
+                                resultMessage.append("✅ Xóa: ").append(transaction.description)
+                                        .append(" (").append(String.format("%,d", Math.abs(transaction.amount)))
+                                        .append(" VND)\n");
+                                counts[0]++;
+                            } else {
+                                resultMessage.append("⚠️ Không tìm thấy chi tiêu #").append(op.transactionId).append("\n");
+                                counts[1]++;
+                            }
+                            
+                        } else if (op.type.equals("edit")) {
+                            // Edit transaction (not fully implemented in parse, just delete for now)
+                            resultMessage.append("⚠️ Chức năng sửa chưa được hỗ trợ. Vui lòng xóa và thêm lại.\n");
+                            counts[1]++;
+                            
+                        } else if (op.type.equals("add")) {
+                            // Add new transaction
+                            TransactionEntity newTransaction = new TransactionEntity(
+                                    op.description,
+                                    op.category,
+                                    -Math.abs(op.amount), // Expense is negative
+                                    op.date,
+                                    "expense"
+                            );
+                            
+                            AppDatabase.getInstance(getContext()).transactionDao().insert(newTransaction);
+                            
+                            String icon = getIconEmoji(op.category);
+                            resultMessage.append("✅ Thêm ").append(icon).append(" ")
+                                    .append(op.description).append(": ")
+                                    .append(String.format("%,d", op.amount)).append(" VND")
+                                    .append(" (").append(op.category).append(")\n");
+                            counts[0]++;
+                        }
+                    } catch (Exception e) {
+                        android.util.Log.e("AiChatBottomSheet", "Error processing expense operation", e);
+                        resultMessage.append("❌ Lỗi xử lý: ").append(op.description).append("\n");
+                        counts[1]++;
+                    }
+                }
+                
+                // Add summary
+                resultMessage.append("\n📊 Kết quả: ")
+                        .append(counts[0]).append(" thành công");
+                if (counts[1] > 0) {
+                    resultMessage.append(", ").append(counts[1]).append(" thất bại");
+                }
+                
+                String finalMessage = resultMessage.toString();
+                
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(() -> {
+                        messages.set(analyzingIndex, new ChatMessage(finalMessage, false, "Bây giờ"));
+                        chatAdapter.notifyItemChanged(analyzingIndex);
+                        
+                        // Show toast based on result
+                        if (counts[1] > 0) {
+                            if (counts[0] > 0) {
+                                showErrorToast("⚠️ " + counts[0] + " thành công, " + counts[1] + " thất bại");
+                            } else {
+                                showErrorToast("❌ Thất bại: " + counts[1] + " giao dịch");
+                            }
+                        } else {
+                            showToastOnTop("✅ Thêm " + counts[0] + " chi tiêu");
+                        }
+                        
+                        refreshHomeFragment();
+                        
+                        // Refresh welcome message with updated data
+                        refreshExpenseWelcomeMessage();
+                    });
+                }
+                
+            } catch (Exception e) {
+                android.util.Log.e("AiChatBottomSheet", "Error processing expense operations", e);
+                
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(() -> {
+                        messages.set(analyzingIndex, new ChatMessage(
+                                "❌ Có lỗi xảy ra khi xử lý yêu cầu!", 
+                                false, "Bây giờ"));
+                        chatAdapter.notifyItemChanged(analyzingIndex);
+                    });
+                }
+            }
+        });
+    }
+    
+    private void refreshExpenseWelcomeMessage() {
+        // Reload recent transactions and update the first message (welcome message)
+        Executors.newSingleThreadExecutor().execute(() -> {
+            try {
+                List<TransactionEntity> recentTransactions = AppDatabase.getInstance(getContext())
+                        .transactionDao()
+                        .getRecentTransactions(5); // Show 5 recent transactions
+                
+                // Build updated welcome message
+                StringBuilder welcomeMessage = new StringBuilder();
+                welcomeMessage.append("📋 Quản lý chi tiêu hàng loạt\n\n");
+                
+                if (!recentTransactions.isEmpty()) {
+                    welcomeMessage.append("💳 Chi tiêu gần đây:\n\n");
+                    
+                    SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM", new Locale("vi", "VN"));
+                    
+                    for (TransactionEntity transaction : recentTransactions) {
+                        String emoji = getIconEmoji(transaction.category);
+                        String formattedAmount = String.format("%,d", Math.abs(transaction.amount));
+                        String dateStr = dateFormat.format(transaction.date);
+                        
+                        welcomeMessage.append(emoji).append(" ")
+                                .append(transaction.description)
+                                .append(": ").append(formattedAmount).append(" VND")
+                                .append(" - ").append(dateStr)
+                                .append("\n");
+                    }
+                    welcomeMessage.append("\n");
+                }
+                
+                welcomeMessage.append("💡 Hướng dẫn:\n");
+                welcomeMessage.append("• Thêm: 'Hôm qua ăn sáng 25k và cafe 30k'\n");
+                welcomeMessage.append("• Xóa: 'Xóa chi tiêu #123' (tìm ID ở trang Lịch sử)");
+                
+                String finalMessage = welcomeMessage.toString();
+                
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(() -> {
+                        if (!messages.isEmpty()) {
+                            messages.set(0, new ChatMessage(finalMessage, false, "Bây giờ"));
+                            chatAdapter.notifyItemChanged(0);
+                        }
+                    });
+                }
+                
+            } catch (Exception e) {
+                android.util.Log.e("AiChatBottomSheet", "Error refreshing expense welcome message", e);
+            }
+        });
     }
 }
