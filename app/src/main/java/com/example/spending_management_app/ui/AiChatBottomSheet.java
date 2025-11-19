@@ -2122,6 +2122,17 @@ public class AiChatBottomSheet extends DialogFragment {
         List<CategoryBudgetOperation> operations = new ArrayList<>();
         String lowerText = text.toLowerCase();
         
+        // Check if user wants to delete ALL category budgets
+        if ((lowerText.contains("xóa") || lowerText.contains("xoá") || 
+             lowerText.contains("thiết lập lại") || lowerText.contains("đặt lại") ||
+             lowerText.contains("reset")) && 
+            (lowerText.contains("tất cả") || lowerText.contains("hết"))) {
+            
+            // Special operation: delete all categories
+            operations.add(new CategoryBudgetOperation("delete_all", "ALL", 0));
+            return operations;
+        }
+        
         // Determine operation type
         String operationType = "edit"; // default
         if (lowerText.contains("xóa") || lowerText.contains("xoá")) {
@@ -2132,7 +2143,10 @@ public class AiChatBottomSheet extends DialogFragment {
             operationType = "edit";
         }
         
-        // List of all categories
+        // List of all categories with their aliases (shortened names)
+        java.util.Map<String, String> categoryAliases = new java.util.HashMap<>();
+        
+        // Full category names
         String[] allCategories = {
             "Ăn uống", "Di chuyển", "Tiện ích", "Y tế", "Nhà ở",
             "Mua sắm", "Giáo dục", "Sách & Học tập", "Thể thao", "Sức khỏe & Làm đẹp",
@@ -2143,24 +2157,107 @@ public class AiChatBottomSheet extends DialogFragment {
             "Khác"
         };
         
-        // Parse each category and amount from text
-        for (String category : allCategories) {
-            if (lowerText.contains(category.toLowerCase())) {
+        // Add aliases for categories with "&" (accept first part only)
+        categoryAliases.put("sức khỏe", "Sức khỏe & Làm đẹp");
+        categoryAliases.put("làm đẹp", "Sức khỏe & Làm đẹp");
+        categoryAliases.put("ăn ngoài", "Ăn ngoài & Cafe");
+        categoryAliases.put("cafe", "Ăn ngoài & Cafe");
+        categoryAliases.put("cà phê", "Ăn ngoài & Cafe");
+        categoryAliases.put("quà tặng", "Quà tặng & Từ thiện");
+        categoryAliases.put("từ thiện", "Quà tặng & Từ thiện");
+        categoryAliases.put("hội họp", "Hội họp & Tiệc tụng");
+        categoryAliases.put("tiệc tụng", "Hội họp & Tiệc tụng");
+        categoryAliases.put("điện thoại", "Điện thoại & Internet");
+        categoryAliases.put("internet", "Điện thoại & Internet");
+        categoryAliases.put("đăng ký", "Đăng ký & Dịch vụ");
+        categoryAliases.put("dịch vụ", "Đăng ký & Dịch vụ");
+        categoryAliases.put("phần mềm", "Phần mềm & Apps");
+        categoryAliases.put("apps", "Phần mềm & Apps");
+        categoryAliases.put("ngân hàng", "Ngân hàng & Phí");
+        categoryAliases.put("phí", "Ngân hàng & Phí");
+        categoryAliases.put("sách", "Sách & Học tập");
+        categoryAliases.put("học tập", "Sách & Học tập");
+        
+        // Parse text more carefully by looking for explicit "category + amount" pairs
+        // Split text by common separators
+        String[] segments = lowerText.split("[,;]");
+        
+        for (String segment : segments) {
+            segment = segment.trim();
+            if (segment.isEmpty()) continue;
+            
+            // Try to find a category in this segment
+            String matchedCategory = null;
+            int matchedLength = 0;
+            
+            // First, try to match full category names (prefer longer matches)
+            for (String category : allCategories) {
+                String categoryLower = category.toLowerCase();
+                
+                // Check if this segment contains this category
+                if (segment.contains(categoryLower)) {
+                    // Prefer longer matches (e.g., "Đăng ký & Dịch vụ" over "Dịch vụ")
+                    if (matchedCategory == null || categoryLower.length() > matchedLength) {
+                        // Verify this is a standalone mention, not part of another word
+                        int pos = segment.indexOf(categoryLower);
+                        boolean validStart = (pos == 0 || !Character.isLetterOrDigit(segment.charAt(pos - 1)));
+                        boolean validEnd = (pos + categoryLower.length() >= segment.length() || 
+                                          !Character.isLetterOrDigit(segment.charAt(pos + categoryLower.length())));
+                        
+                        if (validStart && validEnd) {
+                            matchedCategory = category;
+                            matchedLength = categoryLower.length();
+                        }
+                    }
+                }
+            }
+            
+            // If no full match, try aliases
+            if (matchedCategory == null) {
+                for (java.util.Map.Entry<String, String> alias : categoryAliases.entrySet()) {
+                    String aliasKey = alias.getKey();
+                    
+                    if (segment.contains(aliasKey)) {
+                        // Verify this is a standalone mention
+                        int pos = segment.indexOf(aliasKey);
+                        boolean validStart = (pos == 0 || !Character.isLetterOrDigit(segment.charAt(pos - 1)));
+                        boolean validEnd = (pos + aliasKey.length() >= segment.length() || 
+                                          !Character.isLetterOrDigit(segment.charAt(pos + aliasKey.length())));
+                        
+                        if (validStart && validEnd) {
+                            matchedCategory = alias.getValue();
+                            matchedLength = aliasKey.length();
+                        }
+                    }
+                }
+            }
+            
+            if (matchedCategory != null) {
                 long amount = 0;
                 
                 if (!operationType.equals("delete")) {
-                    // Extract amount near this category
-                    amount = extractAmountNearCategory(text, category);
+                    // Extract amount from this segment only
+                    amount = extractBudgetAmount(segment);
+                    
                     if (amount <= 0) {
                         continue; // Skip if no valid amount found for add/edit
                     }
                 }
                 
-                operations.add(new CategoryBudgetOperation(operationType, category, amount));
+                operations.add(new CategoryBudgetOperation(operationType, matchedCategory, amount));
             }
         }
         
         return operations;
+    }
+    
+    private long extractAmountNearCategoryPosition(String text, int categoryStart, int categoryEnd) {
+        // Look for amount before and after category position (within 50 characters)
+        int searchStart = Math.max(0, categoryStart - 50);
+        int searchEnd = Math.min(text.length(), categoryEnd + 50);
+        String searchArea = text.substring(searchStart, searchEnd);
+        
+        return extractBudgetAmount(searchArea);
     }
     
     private long extractAmountNearCategory(String text, String category) {
@@ -2168,12 +2265,7 @@ public class AiChatBottomSheet extends DialogFragment {
         int categoryPos = text.toLowerCase().indexOf(category.toLowerCase());
         if (categoryPos == -1) return 0;
         
-        // Look for amount before and after category (within 50 characters)
-        int searchStart = Math.max(0, categoryPos - 50);
-        int searchEnd = Math.min(text.length(), categoryPos + category.length() + 50);
-        String searchArea = text.substring(searchStart, searchEnd);
-        
-        return extractBudgetAmount(searchArea);
+        return extractAmountNearCategoryPosition(text, categoryPos, categoryPos + category.length());
     }
     
     private void processCategoryBudgetOperations(List<CategoryBudgetOperation> operations, int analyzingIndex) {
@@ -2195,8 +2287,71 @@ public class AiChatBottomSheet extends DialogFragment {
                 cal.set(Calendar.MILLISECOND, 999);
                 Date endOfMonth = cal.getTime();
                 
+                // Get monthly budget to check limit
+                List<com.example.spending_management_app.database.BudgetEntity> monthlyBudgets = 
+                        AppDatabase.getInstance(getContext()).budgetDao()
+                                .getBudgetsByDateRange(startOfMonth, endOfMonth);
+                long monthlyBudgetLimit = (monthlyBudgets != null && !monthlyBudgets.isEmpty()) 
+                        ? monthlyBudgets.get(0).getMonthlyLimit() : 0;
+                
                 StringBuilder resultMessage = new StringBuilder();
                 final int[] counts = new int[]{0, 0}; // [0] = successCount, [1] = failCount
+                
+                // Check if this is a "delete all" operation
+                if (!operations.isEmpty() && operations.get(0).type.equals("delete_all")) {
+                    try {
+                        // Get all category budgets for current month
+                        List<com.example.spending_management_app.database.CategoryBudgetEntity> allBudgets = 
+                                AppDatabase.getInstance(getContext()).categoryBudgetDao()
+                                        .getAllCategoryBudgetsForMonth(startOfMonth, endOfMonth);
+                        
+                        if (allBudgets != null && !allBudgets.isEmpty()) {
+                            // Delete all category budgets
+                            for (com.example.spending_management_app.database.CategoryBudgetEntity budget : allBudgets) {
+                                AppDatabase.getInstance(getContext()).categoryBudgetDao().delete(budget);
+                                counts[0]++;
+                            }
+                            
+                            resultMessage.append("✅ Đã xóa tất cả ngân sách danh mục (")
+                                    .append(counts[0]).append(" danh mục)\n\n");
+                            resultMessage.append("💡 Tất cả danh mục đã được đặt lại về trạng thái 'Chưa thiết lập'");
+                        } else {
+                            resultMessage.append("⚠️ Không có ngân sách danh mục nào để xóa!");
+                            counts[1]++;
+                        }
+                        
+                        String finalMessage = resultMessage.toString();
+                        
+                        if (getActivity() != null) {
+                            getActivity().runOnUiThread(() -> {
+                                messages.set(analyzingIndex, new ChatMessage(finalMessage, false, "Bây giờ"));
+                                chatAdapter.notifyItemChanged(analyzingIndex);
+                                
+                                if (counts[0] > 0) {
+                                    showToastOnTop("✅ Đã xóa tất cả ngân sách danh mục");
+                                    refreshHomeFragment();
+                                    refreshCategoryBudgetWelcomeMessage();
+                                } else {
+                                    showErrorToast("⚠️ Không có ngân sách nào để xóa");
+                                }
+                            });
+                        }
+                        
+                    } catch (Exception e) {
+                        android.util.Log.e("AiChatBottomSheet", "Error deleting all category budgets", e);
+                        
+                        if (getActivity() != null) {
+                            getActivity().runOnUiThread(() -> {
+                                messages.set(analyzingIndex, new ChatMessage(
+                                        "❌ Có lỗi xảy ra khi xóa tất cả ngân sách danh mục!", 
+                                        false, "Bây giờ"));
+                                chatAdapter.notifyItemChanged(analyzingIndex);
+                                showErrorToast("Lỗi xóa ngân sách");
+                            });
+                        }
+                    }
+                    return; // Exit early, don't process other operations
+                }
                 
                 for (CategoryBudgetOperation op : operations) {
                     try {
@@ -2224,6 +2379,31 @@ public class AiChatBottomSheet extends DialogFragment {
                                             .getCategoryBudgetForMonth(op.category, startOfMonth, endOfMonth);
                             
                             boolean isUpdate = (existing != null);
+                            
+                            // Check if adding/updating will exceed monthly budget
+                            if (monthlyBudgetLimit > 0) {
+                                List<com.example.spending_management_app.database.CategoryBudgetEntity> allCategoryBudgets = 
+                                        AppDatabase.getInstance(getContext()).categoryBudgetDao()
+                                                .getAllCategoryBudgetsForMonth(startOfMonth, endOfMonth);
+                                
+                                long currentTotal = 0;
+                                for (com.example.spending_management_app.database.CategoryBudgetEntity cb : allCategoryBudgets) {
+                                    if (!cb.getCategory().equals(op.category)) {
+                                        currentTotal += cb.getBudgetAmount();
+                                    }
+                                }
+                                
+                                long newTotal = currentTotal + op.amount;
+                                
+                                if (newTotal > monthlyBudgetLimit) {
+                                    String icon = getIconEmoji(op.category);
+                                    long available = monthlyBudgetLimit - currentTotal;
+                                    resultMessage.append(String.format("⚠️ %s %s: Vượt ngân sách tháng %,d VND (Ngân sách còn lại: %,d VND)\n", 
+                                            icon, op.category, monthlyBudgetLimit, available));
+                                    counts[1]++;
+                                    continue;
+                                }
+                            }
                             
                             if (isUpdate) {
                                 existing.budgetAmount = op.amount;
@@ -2256,6 +2436,29 @@ public class AiChatBottomSheet extends DialogFragment {
                     resultMessage.append(", ").append(counts[1]).append(" thất bại");
                 }
                 
+                // If there are successful operations, show remaining budget info
+                if (counts[0] > 0 && monthlyBudgetLimit > 0) {
+                    // Recalculate total after all operations
+                    List<com.example.spending_management_app.database.CategoryBudgetEntity> updatedBudgets = 
+                            AppDatabase.getInstance(getContext()).categoryBudgetDao()
+                                    .getAllCategoryBudgetsForMonth(startOfMonth, endOfMonth);
+                    
+                    long totalUsed = 0;
+                    for (com.example.spending_management_app.database.CategoryBudgetEntity cb : updatedBudgets) {
+                        totalUsed += cb.getBudgetAmount();
+                    }
+                    
+                    long remaining = monthlyBudgetLimit - totalUsed;
+                    resultMessage.append("\n\n💰 Ngân sách tháng: ").append(String.format("%,d", monthlyBudgetLimit)).append(" VND");
+                    resultMessage.append("\n📈 Đã phân bổ: ").append(String.format("%,d", totalUsed)).append(" VND");
+                    
+                    if (remaining >= 0) {
+                        resultMessage.append("\n✅ Còn lại: ").append(String.format("%,d", remaining)).append(" VND");
+                    } else {
+                        resultMessage.append("\n⚠️ Vượt quá: ").append(String.format("%,d", Math.abs(remaining))).append(" VND");
+                    }
+                }
+                
                 String finalMessage = resultMessage.toString();
                 
                 if (getActivity() != null) {
@@ -2263,7 +2466,21 @@ public class AiChatBottomSheet extends DialogFragment {
                         messages.set(analyzingIndex, new ChatMessage(finalMessage, false, "Bây giờ"));
                         chatAdapter.notifyItemChanged(analyzingIndex);
                         
-                        showToastOnTop("✅ Cập nhật " + counts[0] + " danh mục");
+                        // Show toast based on result
+                        if (counts[1] > 0) {
+                            // Has failures - show error toast in red
+                            if (counts[0] > 0) {
+                                // Mixed results
+                                showErrorToast("⚠️ " + counts[0] + " thành công, " + counts[1] + " thất bại");
+                            } else {
+                                // All failed
+                                showErrorToast("❌ Thất bại: " + counts[1] + " danh mục");
+                            }
+                        } else {
+                            // All success - show success toast in green
+                            showToastOnTop("✅ Cập nhật " + counts[0] + " danh mục");
+                        }
+                        
                         refreshHomeFragment();
                         
                         // Refresh welcome message with updated data
@@ -2306,6 +2523,13 @@ public class AiChatBottomSheet extends DialogFragment {
                 cal.set(Calendar.MILLISECOND, 999);
                 Date endOfMonth = cal.getTime();
                 
+                // Get monthly budget for current month
+                List<com.example.spending_management_app.database.BudgetEntity> monthlyBudgets = 
+                        AppDatabase.getInstance(getContext()).budgetDao()
+                                .getBudgetsByDateRange(startOfMonth, endOfMonth);
+                long monthlyBudget = (monthlyBudgets != null && !monthlyBudgets.isEmpty()) 
+                        ? monthlyBudgets.get(0).getMonthlyLimit() : 0;
+                
                 // Get all category budgets for current month
                 List<com.example.spending_management_app.database.CategoryBudgetEntity> categoryBudgets = 
                         AppDatabase.getInstance(getContext())
@@ -2325,9 +2549,11 @@ public class AiChatBottomSheet extends DialogFragment {
                 
                 // Create map of existing budgets
                 java.util.Map<String, Long> budgetMap = new java.util.HashMap<>();
+                long totalCategoryBudget = 0;
                 if (categoryBudgets != null) {
                     for (com.example.spending_management_app.database.CategoryBudgetEntity budget : categoryBudgets) {
                         budgetMap.put(budget.getCategory(), budget.getBudgetAmount());
+                        totalCategoryBudget += budget.getBudgetAmount();
                     }
                 }
                 
@@ -2359,6 +2585,22 @@ public class AiChatBottomSheet extends DialogFragment {
                 StringBuilder message = new StringBuilder();
                 message.append("📊 Ngân sách theo danh mục hiện tại:\n\n");
                 
+                // Show monthly budget info
+                if (monthlyBudget > 0) {
+                    message.append(String.format("💰 Ngân sách tháng: %,d VND\n", monthlyBudget));
+                    message.append(String.format("📈 Tổng ngân sách danh mục: %,d VND\n", totalCategoryBudget));
+                    
+                    long remaining = monthlyBudget - totalCategoryBudget;
+                    if (remaining >= 0) {
+                        message.append(String.format("✅ Còn lại: %,d VND\n\n", remaining));
+                    } else {
+                        message.append(String.format("⚠️ Vượt quá: %,d VND\n\n", Math.abs(remaining)));
+                    }
+                } else {
+                    message.append("⚠️ Chưa thiết lập ngân sách tháng\n");
+                    message.append("💡 Hãy thêm ngân sách tháng trước!\n\n");
+                }
+                
                 for (CategoryInfo info : allCategoryInfo) {
                     String icon = getIconEmoji(info.category);
                     if (info.amount > 0) {
@@ -2371,9 +2613,11 @@ public class AiChatBottomSheet extends DialogFragment {
                 }
                 
                 message.append("\n💡 Hướng dẫn:\n");
-                message.append("• Thêm: 'Thêm 500 ngàn ăn uống và 300 ngàn di chuyển'\n");
-                message.append("• Sửa: 'Sửa ăn uống 700 ngàn, mua sắm 400 ngàn'\n");
-                message.append("• Xóa: 'Xóa ngân sách ăn uống và di chuyển'");
+                message.append("        • Thêm: 'Thêm 500 ngàn ăn uống và 300 ngàn di chuyển'\n");
+                message.append("        • Sửa: 'Sửa ăn uống 700 ngàn, mua sắm 400 ngàn'\n");
+                message.append("        • Xóa: 'Xóa ngân sách ăn uống và di chuyển'\n");
+                message.append("\n⚠️ Lưu ý: Tổng ngân sách danh mục không vượt quá ngân sách tháng");
+
                 
                 String finalMessage = message.toString();
                 

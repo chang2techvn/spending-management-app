@@ -126,6 +126,14 @@ public class BudgetManagementDialog extends DialogFragment {
                 
                 android.util.Log.d("BudgetDialog", "Date range: " + startOfMonth + " to " + endOfMonth);
                 
+                // Get monthly budget for current month
+                List<BudgetEntity> monthlyBudgets = db.budgetDao()
+                        .getBudgetsByDateRange(startOfMonth, endOfMonth);
+                long monthlyBudget = (monthlyBudgets != null && !monthlyBudgets.isEmpty()) 
+                        ? monthlyBudgets.get(0).getMonthlyLimit() : 0;
+                
+                android.util.Log.d("BudgetDialog", "Monthly budget: " + monthlyBudget);
+                
                 // Get all category budgets for current month
                 List<CategoryBudgetEntity> categoryBudgets = db.categoryBudgetDao()
                         .getAllCategoryBudgetsForMonth(startOfMonth, endOfMonth);
@@ -145,9 +153,11 @@ public class BudgetManagementDialog extends DialogFragment {
                 
                 // Create map of existing budgets for quick lookup
                 java.util.Map<String, Long> budgetMap = new java.util.HashMap<>();
+                long totalCategoryBudget = 0;
                 if (categoryBudgets != null) {
                     for (CategoryBudgetEntity budget : categoryBudgets) {
                         budgetMap.put(budget.getCategory(), budget.getBudgetAmount());
+                        totalCategoryBudget += budget.getBudgetAmount();
                     }
                 }
                 
@@ -170,6 +180,22 @@ public class BudgetManagementDialog extends DialogFragment {
                 StringBuilder message = new StringBuilder();
                 message.append("📊 Ngân sách theo danh mục hiện tại:\n\n");
                 
+                // Show monthly budget info
+                if (monthlyBudget > 0) {
+                    message.append(String.format("💰 Ngân sách tháng: %,d VND\n", monthlyBudget));
+                    message.append(String.format("📈 Tổng ngân sách danh mục: %,d VND\n", totalCategoryBudget));
+                    
+                    long remaining = monthlyBudget - totalCategoryBudget;
+                    if (remaining >= 0) {
+                        message.append(String.format("✅ Còn lại: %,d VND\n\n", remaining));
+                    } else {
+                        message.append(String.format("⚠️ Vượt quá: %,d VND\n\n", Math.abs(remaining)));
+                    }
+                } else {
+                    message.append("⚠️ Chưa thiết lập ngân sách tháng\n");
+                    message.append("💡 Hãy thêm ngân sách tháng trước!\n\n");
+                }
+                
                 for (CategoryBudgetInfo info : allCategoryInfo) {
                     String icon = getIconEmoji(info.category);
                     if (info.amount > 0) {
@@ -182,9 +208,10 @@ public class BudgetManagementDialog extends DialogFragment {
                 }
                 
                 message.append("\n💡 Hướng dẫn:\n");
-                message.append("• Thêm: 'Thêm 500 ngàn cho danh mục ăn uống'\n");
-                message.append("• Sửa: 'Sửa ăn uống 700 ngàn'\n");
-                message.append("• Xóa: 'Xóa ngân sách danh mục ăn uống'");
+                message.append("        • Thêm: 'Thêm 500 ngàn ăn uống và 300 ngàn di chuyển'\n");
+                message.append("        • Sửa: 'Sửa ăn uống 700 ngàn, mua sắm 400 ngàn'\n");
+                message.append("        • Xóa: 'Xóa ngân sách ăn uống và di chuyển'\n");
+                message.append("\n⚠️ Lưu ý: Tổng ngân sách danh mục không vượt quá ngân sách tháng");
                 
                 String finalMessage = message.toString();
                 
