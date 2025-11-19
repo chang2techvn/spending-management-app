@@ -130,7 +130,7 @@
                         android:layout_width="24dp"
                         android:layout_height="24dp"
                         android:src="@drawable/ic_launcher_foreground"
-                        android:tint="#757575" />
+                        app:tint="#757575" />
 
                     <TextView
                         android:layout_width="0dp"
@@ -145,7 +145,7 @@
                         android:layout_width="16dp"
                         android:layout_height="16dp"
                         android:src="@drawable/ic_launcher_foreground"
-                        android:tint="#BDBDBD"
+                        app:tint="#BDBDBD"
                         android:rotation="180" />
 
                 </LinearLayout>
@@ -170,7 +170,7 @@
                         android:layout_width="24dp"
                         android:layout_height="24dp"
                         android:src="@drawable/ic_launcher_foreground"
-                        android:tint="#757575" />
+                        app:tint="#757575" />
 
                     <TextView
                         android:layout_width="0dp"
@@ -185,8 +185,8 @@
                         android:layout_width="16dp"
                         android:layout_height="16dp"
                         android:src="@drawable/ic_launcher_foreground"
-                        android:tint="#BDBDBD"
-                        android:rotation="180" />
+                        android:rotation="180"
+                        app:tint="#BDBDBD" />
 
                 </LinearLayout>
 
@@ -210,7 +210,7 @@
                         android:layout_width="24dp"
                         android:layout_height="24dp"
                         android:src="@drawable/ic_launcher_foreground"
-                        android:tint="#757575" />
+                        app:tint="#757575" />
 
                     <TextView
                         android:layout_width="0dp"
@@ -225,8 +225,8 @@
                         android:layout_width="16dp"
                         android:layout_height="16dp"
                         android:src="@drawable/ic_launcher_foreground"
-                        android:tint="#BDBDBD"
-                        android:rotation="180" />
+                        android:rotation="180"
+                        app:tint="#BDBDBD" />
 
                 </LinearLayout>
 
@@ -250,7 +250,7 @@
                         android:layout_width="24dp"
                         android:layout_height="24dp"
                         android:src="@drawable/ic_launcher_foreground"
-                        android:tint="#757575" />
+                        app:tint="#757575" />
 
                     <TextView
                         android:layout_width="0dp"
@@ -265,8 +265,8 @@
                         android:layout_width="16dp"
                         android:layout_height="16dp"
                         android:src="@drawable/ic_launcher_foreground"
-                        android:tint="#BDBDBD"
-                        android:rotation="180" />
+                        android:rotation="180"
+                        app:tint="#BDBDBD" />
 
                 </LinearLayout>
 
@@ -294,12 +294,12 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:backgroundTint="@color/primaryBlue"
+                    android:fontFamily="@font/rubik_semibold"
                     android:padding="12dp"
                     android:text="@string/title_signout"
                     android:textAllCaps="false"
                     android:textColor="@android:color/white"
                     android:textSize="20sp"
-                    android:textStyle="bold"
                     app:cornerRadius="12dp" />
 
             </LinearLayout>

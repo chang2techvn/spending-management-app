@@ -201,11 +201,13 @@ public class AccountFragment extends Fragment {
                 .setTitle("Xác nhận đăng xuất")
                 .setMessage("Bạn có chắc chắn muốn đăng xuất?")
                 .setPositiveButton("Đăng xuất", (dialog, which) -> {
+                    sharedPreferences.edit().remove(LoginActivity.KEY_REMEMBER).apply();
                     sharedPreferences.edit().remove(LoginActivity.KEY_USER_ID).apply();
                     Intent intent = new Intent(getActivity(), LoginActivity.class);
                     intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                     startActivity(intent);
                     if (getActivity() != null) {
+                        getActivity().overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
                         getActivity().finish();
                     }
                     Toast.makeText(getContext(), "Đã đăng xuất", Toast.LENGTH_SHORT).show();

@@ -77,7 +77,11 @@ public class RegisterActivity extends AppCompatActivity {
         setupPasswordVisibilityToggle(confirmPasswordVisibilityToggle, editTextConfirmPassword);
 
         buttonRegister.setOnClickListener(v -> registerUser());
-        textViewLogin.setOnClickListener(v -> finish());
+        textViewLogin.setOnClickListener(v -> {
+            Intent intent = new Intent(RegisterActivity.this, LoginActivity.class);
+            startActivity(intent);
+            finish();
+        });
     }
 
     private void addTextWatcher(EditText editText, View underline) {

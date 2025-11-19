@@ -11,6 +11,7 @@ import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -35,8 +36,10 @@ public class LoginActivity extends AppCompatActivity {
     private Button buttonLogin;
     private TextView textViewRegister;
     private ImageView passwordVisibilityToggle;
+    private CheckBox rememberButton;
     private AppDatabase appDatabase;
     public static final String KEY_USER_ID = "current_user_id";
+    public static final String KEY_REMEMBER = "remember_me";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,6 +59,7 @@ public class LoginActivity extends AppCompatActivity {
         buttonLogin = findViewById(R.id.signinButton);
         textViewRegister = findViewById(R.id.signupText);
         passwordVisibilityToggle = findViewById(R.id.passwordVisibilityToggle);
+        rememberButton = findViewById(R.id.rememberButton);
     }
 
     private void setupListeners() {
@@ -68,6 +72,7 @@ public class LoginActivity extends AppCompatActivity {
         textViewRegister.setOnClickListener(v -> {
             Intent intent = new Intent(LoginActivity.this, RegisterActivity.class);
             startActivity(intent);
+            finish();
         });
     }
 
@@ -130,7 +135,10 @@ public class LoginActivity extends AppCompatActivity {
             runOnUiThread(() -> {
                 if (user != null) {
                     SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-                    prefs.edit().putInt(KEY_USER_ID, user.userId).apply();
+                    prefs.edit()
+                            .putInt(KEY_USER_ID, user.userId)
+                            .putBoolean(KEY_REMEMBER, rememberButton.isChecked())
+                            .apply();
 
                     Toast.makeText(this, "Login successful!", Toast.LENGTH_SHORT).show();
                     Intent intent = new Intent(LoginActivity.this, MainActivity.class);

@@ -7,8 +7,8 @@
     <string name="subtitle_welcome">Managing expenses has never been easier</string>
     <string name="startup_text">Continue</string>
     <string name="signupSuggest_text">Don\'t have an Account?</string>
-    <string name="email_hind">Enter your email address</string>
-    <string name="password_hind">Enter your password</string>
+    <string name="email_hint">Enter your email address</string>
+    <string name="password_hint">Enter your password</string>
     <string name="title_signin">Sign in</string>
     <string name="title_email">Email</string>
     <string name="title_signout">Sign out</string>
