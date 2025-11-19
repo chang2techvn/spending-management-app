@@ -132,22 +132,56 @@ public class BudgetManagementDialog extends DialogFragment {
                 
                 android.util.Log.d("BudgetDialog", "Category budgets loaded: " + (categoryBudgets != null ? categoryBudgets.size() : "null"));
                 
+                // Define all categories in order
+                String[] allCategories = {
+                    "Ăn uống", "Di chuyển", "Tiện ích", "Y tế", "Nhà ở",
+                    "Mua sắm", "Giáo dục", "Sách & Học tập", "Thể thao", "Sức khỏe & Làm đẹp",
+                    "Giải trí", "Du lịch", "Ăn ngoài & Cafe", "Quà tặng & Từ thiện", "Hội họp & Tiệc tụng",
+                    "Điện thoại & Internet", "Đăng ký & Dịch vụ", "Phần mềm & Apps", "Ngân hàng & Phí",
+                    "Con cái", "Thú cưng", "Gia đình",
+                    "Lương", "Đầu tư", "Thu nhập phụ", "Tiết kiệm",
+                    "Khác"
+                };
+                
+                // Create map of existing budgets for quick lookup
+                java.util.Map<String, Long> budgetMap = new java.util.HashMap<>();
+                if (categoryBudgets != null) {
+                    for (CategoryBudgetEntity budget : categoryBudgets) {
+                        budgetMap.put(budget.getCategory(), budget.getBudgetAmount());
+                    }
+                }
+                
+                // Create list with budgets and amounts (0 for not set)
+                List<CategoryBudgetInfo> allCategoryInfo = new java.util.ArrayList<>();
+                for (String category : allCategories) {
+                    long amount = budgetMap.getOrDefault(category, 0L);
+                    allCategoryInfo.add(new CategoryBudgetInfo(category, amount));
+                }
+                
+                // Sort: budgets set (high to low) then unset categories
+                allCategoryInfo.sort((a, b) -> {
+                    if (a.amount > 0 && b.amount == 0) return -1; // a has budget, b doesn't
+                    if (a.amount == 0 && b.amount > 0) return 1;  // b has budget, a doesn't
+                    if (a.amount > 0 && b.amount > 0) return Long.compare(b.amount, a.amount); // both have, sort high to low
+                    return 0; // both unset, keep order
+                });
+                
                 // Build message to display
                 StringBuilder message = new StringBuilder();
                 message.append("📊 Ngân sách theo danh mục hiện tại:\n\n");
                 
-                if (categoryBudgets.isEmpty()) {
-                    message.append("Chưa có ngân sách nào được thiết lập.\n\n");
-                } else {
-                    for (CategoryBudgetEntity budget : categoryBudgets) {
-                        String icon = getIconEmoji(budget.getCategory());
+                for (CategoryBudgetInfo info : allCategoryInfo) {
+                    String icon = getIconEmoji(info.category);
+                    if (info.amount > 0) {
                         message.append(String.format("%s %s: %,d VND\n", 
-                                icon, budget.getCategory(), budget.getBudgetAmount()));
+                                icon, info.category, info.amount));
+                    } else {
+                        message.append(String.format("%s %s: Chưa thiết lập\n", 
+                                icon, info.category));
                     }
-                    message.append("\n");
                 }
                 
-                message.append("💡 Hướng dẫn:\n");
+                message.append("\n💡 Hướng dẫn:\n");
                 message.append("• Thêm: 'Thêm 500 ngàn cho danh mục ăn uống'\n");
                 message.append("• Sửa: 'Sửa ăn uống 700 ngàn'\n");
                 message.append("• Xóa: 'Xóa ngân sách danh mục ăn uống'");
@@ -282,6 +316,17 @@ public class BudgetManagementDialog extends DialogFragment {
                 return "📌";
             default:
                 return "💳";
+        }
+    }
+    
+    // Helper class to hold category budget information
+    private static class CategoryBudgetInfo {
+        String category;
+        long amount;
+        
+        CategoryBudgetInfo(String category, long amount) {
+            this.category = category;
+            this.amount = amount;
         }
     }
 }
