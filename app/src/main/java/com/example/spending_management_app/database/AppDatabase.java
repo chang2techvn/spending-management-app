@@ -7,7 +7,7 @@ import androidx.room.Room;
 import androidx.room.RoomDatabase;
 import androidx.room.TypeConverters;
 
-@Database(entities = {TransactionEntity.class, BudgetEntity.class, RecurringExpenseEntity.class, CategoryBudgetEntity.class}, version = 3)
+@Database(entities = {TransactionEntity.class, BudgetEntity.class, RecurringExpenseEntity.class, CategoryBudgetEntity.class, BudgetHistoryEntity.class}, version = 4)
 @TypeConverters(DateConverter.class)
 public abstract class AppDatabase extends RoomDatabase {
     private static AppDatabase instance;
@@ -26,4 +26,5 @@ public abstract class AppDatabase extends RoomDatabase {
     public abstract BudgetDao budgetDao();
     public abstract RecurringExpenseDao recurringExpenseDao();
     public abstract CategoryBudgetDao categoryBudgetDao();
+    public abstract BudgetHistoryDao budgetHistoryDao();
 }

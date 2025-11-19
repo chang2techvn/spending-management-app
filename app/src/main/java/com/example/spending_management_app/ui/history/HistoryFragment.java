@@ -73,6 +73,12 @@ public class HistoryFragment extends Fragment implements DateRangePickerDialog.D
                         .transactionDao()
                         .getAllTransactions();
                 
+                // Get all budget history from database
+                List<com.example.spending_management_app.database.BudgetHistoryEntity> budgetHistoryEntities = 
+                        AppDatabase.getInstance(getContext())
+                                .budgetHistoryDao()
+                                .getAllBudgetHistory();
+                
                 // Convert TransactionEntity to Transaction objects
                 List<Transaction> transactions = new ArrayList<>();
                 for (TransactionEntity entity : transactionEntities) {
@@ -90,6 +96,35 @@ public class HistoryFragment extends Fragment implements DateRangePickerDialog.D
                     transactions.add(transaction);
                 }
                 
+                // Convert BudgetHistoryEntity to Transaction objects
+                for (com.example.spending_management_app.database.BudgetHistoryEntity entity : budgetHistoryEntities) {
+                    String category = entity.getBudgetType().equals("monthly") ? "Ngân sách tháng" : entity.getCategory();
+                    String iconName = "ic_account_balance_wallet";
+                    
+                    // Determine amount sign based on action
+                    long displayAmount;
+                    if ("delete".equals(entity.getAction())) {
+                        // Delete action: show negative amount (red color)
+                        displayAmount = -Math.abs(entity.getAmount());
+                    } else {
+                        // Create or Update action: show positive amount (green color)
+                        displayAmount = Math.abs(entity.getAmount());
+                    }
+                    
+                    Transaction transaction = new Transaction(
+                            entity.getDescription(),
+                            category,
+                            displayAmount,
+                            iconName,
+                            entity.getDate(),
+                            "budget" // New type for budget history
+                    );
+                    transactions.add(transaction);
+                }
+                
+                // Sort all transactions by date (newest first)
+                transactions.sort((t1, t2) -> t2.getDate().compareTo(t1.getDate()));
+                
                 // Update UI on main thread
                 if (getActivity() != null) {
                     getActivity().runOnUiThread(() -> {
@@ -105,12 +140,12 @@ public class HistoryFragment extends Fragment implements DateRangePickerDialog.D
                         }
                         updateEmptyState();
                         
-                        android.util.Log.d("HistoryFragment", "Loaded " + transactions.size() + " transactions from database");
+                        android.util.Log.d("HistoryFragment", "Loaded " + transactions.size() + " items (transactions + budget history) from database");
                     });
                 }
                 
             } catch (Exception e) {
-                android.util.Log.e("HistoryFragment", "Error loading transactions from database", e);
+                android.util.Log.e("HistoryFragment", "Error loading data from database", e);
                 
                 // Fallback to sample data on error
                 if (getActivity() != null) {
@@ -252,12 +287,12 @@ public class HistoryFragment extends Fragment implements DateRangePickerDialog.D
                 break;
             case 1: // Ngân sách
                 filteredTransactions.addAll(searchResults.stream()
-                    .filter(t -> t.getAmount() > 0)
+                    .filter(t -> "budget".equals(t.getType()))
                     .collect(Collectors.toList()));
                 break;
             case 2: // Chi tiêu
                 filteredTransactions.addAll(searchResults.stream()
-                    .filter(t -> t.getAmount() < 0)
+                    .filter(t -> "expense".equals(t.getType()))
                     .collect(Collectors.toList()));
                 break;
         }

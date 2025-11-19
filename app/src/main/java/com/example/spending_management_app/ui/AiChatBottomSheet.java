@@ -679,14 +679,23 @@ public class AiChatBottomSheet extends DialogFragment {
                         // Update existing budget
                         BudgetEntity existing = existingBudgets.get(0);
                         android.util.Log.d("AiChatBottomSheet", "Updating existing budget, old date: " + existing.date + ", new date: " + budgetDate);
+                        long oldAmount = existing.monthlyLimit;
                         existing.monthlyLimit = amount;
                         existing.date = budgetDate;
                         AppDatabase.getInstance(getContext()).budgetDao().update(existing);
+                        
+                        // Log budget history
+                        com.example.spending_management_app.utils.BudgetHistoryLogger.logMonthlyBudgetUpdated(
+                                getContext(), oldAmount, amount, budgetDate);
                     } else {
                         // Insert new budget
                         BudgetEntity budget = new BudgetEntity("Ngân sách tháng", amount, 0L, budgetDate);
                         android.util.Log.d("AiChatBottomSheet", "Inserting new budget: " + budget.date);
                         AppDatabase.getInstance(getContext()).budgetDao().insert(budget);
+                        
+                        // Log budget history
+                        com.example.spending_management_app.utils.BudgetHistoryLogger.logMonthlyBudgetCreated(
+                                getContext(), amount, budgetDate);
                     }
                     
                     String formattedAmount = String.format("%,d", amount);
@@ -1371,16 +1380,26 @@ public class AiChatBottomSheet extends DialogFragment {
                         // Save budget to DB (update if exists, else insert)
                         Executors.newSingleThreadExecutor().execute(() -> {
                             List<BudgetEntity> existingBudgets = AppDatabase.getInstance(getContext()).budgetDao().getBudgetsByDateRange(startOfMonth, endOfMonth);
+                            Date budgetDate = new Date();
                             if (existingBudgets != null && !existingBudgets.isEmpty()) {
                                 // Update existing
                                 BudgetEntity existing = existingBudgets.get(0);
+                                long oldAmount = existing.monthlyLimit;
                                 existing.setMonthlyLimit(amt);
-                                existing.setDate(new Date());
+                                existing.setDate(budgetDate);
                                 AppDatabase.getInstance(getContext()).budgetDao().update(existing);
+                                
+                                // Log budget history
+                                com.example.spending_management_app.utils.BudgetHistoryLogger.logMonthlyBudgetUpdated(
+                                        getContext(), oldAmount, amt, budgetDate);
                             } else {
                                 // Insert new
-                                BudgetEntity budget = new BudgetEntity("Ngân sách tháng", amt, 0L, new Date());
+                                BudgetEntity budget = new BudgetEntity("Ngân sách tháng", amt, 0L, budgetDate);
                                 AppDatabase.getInstance(getContext()).budgetDao().insert(budget);
+                                
+                                // Log budget history
+                                com.example.spending_management_app.utils.BudgetHistoryLogger.logMonthlyBudgetCreated(
+                                        getContext(), amt, budgetDate);
                             }
                             getActivity().runOnUiThread(() -> {
                                 Toast.makeText(getContext(), "Ngân sách đã được cập nhật: " + String.format(Locale.getDefault(), "%,d", amt) + " " + currency, Toast.LENGTH_SHORT).show();
@@ -2021,10 +2040,17 @@ public class AiChatBottomSheet extends DialogFragment {
                         .getBudgetsByDateRangeOrdered(startOfMonth, endOfMonth);
                 
                 if (existingBudgets != null && !existingBudgets.isEmpty()) {
+                    // Get the budget amount before deleting
+                    long budgetAmount = existingBudgets.get(0).monthlyLimit;
+                    
                     // Delete budget
                     AppDatabase.getInstance(getContext())
                             .budgetDao()
                             .deleteBudgetsByDateRange(startOfMonth, endOfMonth);
+                    
+                    // Log budget history
+                    com.example.spending_management_app.utils.BudgetHistoryLogger.logMonthlyBudgetDeleted(
+                            getContext(), budgetAmount, startOfMonth);
                     
                     SimpleDateFormat monthYearFormat = new SimpleDateFormat("MM/yyyy", new Locale("vi", "VN"));
                     String monthYearStr = monthYearFormat.format(startOfMonth);
@@ -2312,6 +2338,10 @@ public class AiChatBottomSheet extends DialogFragment {
                                 counts[0]++;
                             }
                             
+                            // Log budget history for delete all
+                            com.example.spending_management_app.utils.BudgetHistoryLogger.logAllCategoryBudgetsDeleted(
+                                    getContext());
+                            
                             resultMessage.append("✅ Đã xóa tất cả ngân sách danh mục (")
                                     .append(counts[0]).append(" danh mục)\n\n");
                             resultMessage.append("💡 Tất cả danh mục đã được đặt lại về trạng thái 'Chưa thiết lập'");
@@ -2363,7 +2393,13 @@ public class AiChatBottomSheet extends DialogFragment {
                                             .getCategoryBudgetForMonth(op.category, startOfMonth, endOfMonth);
                             
                             if (existing != null) {
+                                long deletedAmount = existing.budgetAmount;
                                 AppDatabase.getInstance(getContext()).categoryBudgetDao().delete(existing);
+                                
+                                // Log budget history
+                                com.example.spending_management_app.utils.BudgetHistoryLogger.logCategoryBudgetDeleted(
+                                        getContext(), op.category, deletedAmount);
+                                
                                 String icon = getIconEmoji(op.category);
                                 resultMessage.append("✅ Xóa ").append(icon).append(" ").append(op.category).append("\n");
                                 counts[0]++;
@@ -2406,13 +2442,22 @@ public class AiChatBottomSheet extends DialogFragment {
                             }
                             
                             if (isUpdate) {
+                                long oldAmount = existing.budgetAmount;
                                 existing.budgetAmount = op.amount;
                                 AppDatabase.getInstance(getContext()).categoryBudgetDao().update(existing);
+                                
+                                // Log budget history
+                                com.example.spending_management_app.utils.BudgetHistoryLogger.logCategoryBudgetUpdated(
+                                        getContext(), op.category, oldAmount, op.amount);
                             } else {
                                 com.example.spending_management_app.database.CategoryBudgetEntity newBudget = 
                                         new com.example.spending_management_app.database.CategoryBudgetEntity(
                                                 op.category, op.amount, startOfMonth);
                                 AppDatabase.getInstance(getContext()).categoryBudgetDao().insert(newBudget);
+                                
+                                // Log budget history
+                                com.example.spending_management_app.utils.BudgetHistoryLogger.logCategoryBudgetCreated(
+                                        getContext(), op.category, op.amount);
                             }
                             
                             String icon = getIconEmoji(op.category);

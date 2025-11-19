@@ -358,12 +358,12 @@ public class StatisticsFragment extends Fragment {
             // Nghìn (thousand)
             double thousands = amount / 1_000.0;
             if (thousands >= 10) {
-                return String.format(java.util.Locale.getDefault(), "%.0fngàn", thousands);
+                return String.format(java.util.Locale.getDefault(), "%.0fn", thousands);
             } else {
-                return String.format(java.util.Locale.getDefault(), "%.1fngàn", thousands);
+                return String.format(java.util.Locale.getDefault(), "%.1fn", thousands);
             }
         } else {
-            return String.format(java.util.Locale.getDefault(), "%đồng", amount);
+            return String.format(java.util.Locale.getDefault(), "%d", amount);
         }
     }
     
