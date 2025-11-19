@@ -35,4 +35,8 @@ public interface BudgetDao {
     // Get total budget of all months (LiveData for real-time updates)
     @Query("SELECT SUM(monthlyLimit) FROM budgets")
     LiveData<Long> getTotalBudgetLive();
+    
+    // Get total budget by date range
+    @Query("SELECT SUM(monthlyLimit) FROM budgets WHERE date >= :startDate AND date <= :endDate")
+    Long getTotalBudgetByDateRange(java.util.Date startDate, java.util.Date endDate);
 }

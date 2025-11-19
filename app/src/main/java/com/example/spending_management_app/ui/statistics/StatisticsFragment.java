@@ -63,6 +63,15 @@ public class StatisticsFragment extends Fragment {
         
         // Setup monthly spending chart (will be called after year is selected)
         // setupMonthlySpendingChart() is now called from year spinner
+        
+        // Setup category spending (will be updated when year changes)
+        loadCategorySpendingForYear(selectedYear);
+        
+        // Setup month comparison
+        loadMonthComparison();
+        
+        // Load year statistics (will be updated when year changes)
+        loadYearStatistics(selectedYear);
 
         return root;
     }
@@ -112,6 +121,12 @@ public class StatisticsFragment extends Fragment {
                         // Reload chart with selected year
                         setupMonthlySpendingChart(selectedYear);
                         
+                        // Reload category spending with selected year
+                        loadCategorySpendingForYear(selectedYear);
+                        
+                        // Reload year statistics with selected year
+                        loadYearStatistics(selectedYear);
+                        
                         return true;
                     });
                     
@@ -131,16 +146,52 @@ public class StatisticsFragment extends Fragment {
     }
 
     private void setupStatisticsData() {
-        // Observe total budget LiveData (sum of all months)
-        budgetDao.getTotalBudgetLive().observe(getViewLifecycleOwner(), totalBudget -> {
-            if (totalBudget == null) totalBudget = 0L;
-            binding.totalIncome.setText(formatCurrency(totalBudget));
-        });
-        
-        // Observe total expense LiveData
-        transactionDao.getTotalExpenseLive().observe(getViewLifecycleOwner(), totalExpense -> {
-            if (totalExpense == null) totalExpense = 0L;
-            binding.totalExpense.setText(formatCurrency(Math.abs(totalExpense)));
+        // Will be loaded by year in loadYearStatistics()
+    }
+    
+    private void loadYearStatistics(String year) {
+        Executors.newSingleThreadExecutor().execute(() -> {
+            try {
+                // Calculate year range
+                Calendar cal = Calendar.getInstance();
+                cal.set(Calendar.YEAR, Integer.parseInt(year));
+                cal.set(Calendar.MONTH, Calendar.JANUARY);
+                cal.set(Calendar.DAY_OF_MONTH, 1);
+                cal.set(Calendar.HOUR_OF_DAY, 0);
+                cal.set(Calendar.MINUTE, 0);
+                cal.set(Calendar.SECOND, 0);
+                cal.set(Calendar.MILLISECOND, 0);
+                java.util.Date startOfYear = cal.getTime();
+                
+                cal.set(Calendar.MONTH, Calendar.DECEMBER);
+                cal.set(Calendar.DAY_OF_MONTH, 31);
+                cal.set(Calendar.HOUR_OF_DAY, 23);
+                cal.set(Calendar.MINUTE, 59);
+                cal.set(Calendar.SECOND, 59);
+                cal.set(Calendar.MILLISECOND, 999);
+                java.util.Date endOfYear = cal.getTime();
+                
+                // Get total budget for the year
+                Long totalBudgetLong = budgetDao.getTotalBudgetByDateRange(startOfYear, endOfYear);
+                long totalBudget = (totalBudgetLong != null) ? totalBudgetLong : 0;
+                
+                // Get total expense for the year
+                Long totalExpenseLong = transactionDao.getTotalExpenseByDateRange(startOfYear, endOfYear);
+                long totalExpense = (totalExpenseLong != null) ? Math.abs(totalExpenseLong) : 0;
+                
+                android.util.Log.d("StatisticsFragment", "Year " + year + " - Budget: " + totalBudget + ", Expense: " + totalExpense);
+                
+                // Update UI on main thread
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(() -> {
+                        binding.totalIncome.setText(formatCurrency(totalBudget));
+                        binding.totalExpense.setText(formatCurrency(totalExpense));
+                    });
+                }
+                
+            } catch (Exception e) {
+                android.util.Log.e("StatisticsFragment", "Error loading year statistics", e);
+            }
         });
     }
     
@@ -283,7 +334,400 @@ public class StatisticsFragment extends Fragment {
         }
         return formatted.toString() + " VND";
     }
+    
+    private String formatCurrencyShort(long amount) {
+        amount = Math.abs(amount);
+        
+        if (amount >= 1_000_000_000) {
+            // Tỷ (billion)
+            double billions = amount / 1_000_000_000.0;
+            if (billions >= 10) {
+                return String.format(java.util.Locale.getDefault(), "%.0ftỷ", billions);
+            } else {
+                return String.format(java.util.Locale.getDefault(), "%.1ftỷ", billions);
+            }
+        } else if (amount >= 1_000_000) {
+            // Triệu (million)
+            double millions = amount / 1_000_000.0;
+            if (millions >= 10) {
+                return String.format(java.util.Locale.getDefault(), "%.0ftriệu", millions);
+            } else {
+                return String.format(java.util.Locale.getDefault(), "%.1ftriệu", millions);
+            }
+        } else if (amount >= 1_000) {
+            // Nghìn (thousand)
+            double thousands = amount / 1_000.0;
+            if (thousands >= 10) {
+                return String.format(java.util.Locale.getDefault(), "%.0fngàn", thousands);
+            } else {
+                return String.format(java.util.Locale.getDefault(), "%.1fngàn", thousands);
+            }
+        } else {
+            return String.format(java.util.Locale.getDefault(), "%đồng", amount);
+        }
+    }
+    
+    private void loadCategorySpendingForYear(String year) {
+        Executors.newSingleThreadExecutor().execute(() -> {
+            try {
+                // Calculate year range
+                Calendar cal = Calendar.getInstance();
+                cal.set(Calendar.YEAR, Integer.parseInt(year));
+                cal.set(Calendar.MONTH, Calendar.JANUARY);
+                cal.set(Calendar.DAY_OF_MONTH, 1);
+                cal.set(Calendar.HOUR_OF_DAY, 0);
+                cal.set(Calendar.MINUTE, 0);
+                cal.set(Calendar.SECOND, 0);
+                cal.set(Calendar.MILLISECOND, 0);
+                java.util.Date startOfYear = cal.getTime();
+                
+                cal.set(Calendar.MONTH, Calendar.DECEMBER);
+                cal.set(Calendar.DAY_OF_MONTH, 31);
+                cal.set(Calendar.HOUR_OF_DAY, 23);
+                cal.set(Calendar.MINUTE, 59);
+                cal.set(Calendar.SECOND, 59);
+                cal.set(Calendar.MILLISECOND, 999);
+                java.util.Date endOfYear = cal.getTime();
+                
+                // Get all transactions for this year by category
+                List<com.example.spending_management_app.database.TransactionEntity> allTransactions = 
+                        transactionDao.getTransactionsByDateRange(startOfYear, endOfYear);
+                
+                // Calculate spending by category
+                java.util.Map<String, Long> categorySpending = new java.util.HashMap<>();
+                long totalYearSpending = 0;
+                
+                for (com.example.spending_management_app.database.TransactionEntity transaction : allTransactions) {
+                    if ("expense".equals(transaction.type)) {
+                        long amount = Math.abs(transaction.amount);
+                        categorySpending.put(transaction.category, 
+                                categorySpending.getOrDefault(transaction.category, 0L) + amount);
+                        totalYearSpending += amount;
+                    }
+                }
+                
+                // Create list of category data (using public fields to avoid reflection issues)
+                class CategoryData {
+                    public String category;
+                    public long spending;
+                    
+                    CategoryData(String category, long spending) {
+                        this.category = category;
+                        this.spending = spending;
+                    }
+                }
+                
+                List<CategoryData> categoryDataList = new ArrayList<>();
+                for (String category : categorySpending.keySet()) {
+                    long spending = categorySpending.get(category);
+                    categoryDataList.add(new CategoryData(category, spending));
+                }
+                
+                // Sort by spending (highest to lowest)
+                categoryDataList.sort((a, b) -> Long.compare(b.spending, a.spending));
+                
+                android.util.Log.d("StatisticsFragment", "Year " + year + " - Total categories: " + categoryDataList.size());
+                android.util.Log.d("StatisticsFragment", "Total year spending: " + totalYearSpending);
+                
+                long finalTotalYearSpending = totalYearSpending;
+                
+                // Update UI on main thread
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(() -> {
+                        updateCategorySpendingUI(categoryDataList, finalTotalYearSpending);
+                    });
+                }
+                
+            } catch (Exception e) {
+                android.util.Log.e("StatisticsFragment", "Error loading category spending for year", e);
+            }
+        });
+    }
+    
+    private void updateCategorySpendingUI(List<?> categories, long totalSpending) {
+        android.util.Log.d("StatisticsFragment", "updateCategorySpendingUI called with " + categories.size() + " categories");
+        
+        ViewGroup container = binding.categorySpendingContainer;
+        
+        if (container == null) {
+            android.util.Log.e("StatisticsFragment", "categorySpendingContainer is NULL!");
+            return;
+        }
+        
+        // Remove all views except the first one (title)
+        int childCount = container.getChildCount();
+        if (childCount > 1) {
+            container.removeViews(1, childCount - 1);
+        }
+        
+        // If no spending data, show message
+        if (categories.isEmpty() || totalSpending == 0) {
+            android.widget.TextView noDataText = new android.widget.TextView(getContext());
+            android.widget.LinearLayout.LayoutParams params = new android.widget.LinearLayout.LayoutParams(
+                    android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
+                    android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+            );
+            params.topMargin = (int) (16 * getResources().getDisplayMetrics().density);
+            noDataText.setLayoutParams(params);
+            noDataText.setText("Chưa có dữ liệu chi tiêu trong năm này");
+            noDataText.setTextColor(0xFF757575);
+            noDataText.setTextSize(14);
+            container.addView(noDataText);
+            return;
+        }
+        
+        // Add each category dynamically
+        for (int i = 0; i < categories.size(); i++) {
+            Object obj = categories.get(i);
+            
+            try {
+                String category = (String) obj.getClass().getField("category").get(obj);
+                long spending = (Long) obj.getClass().getField("spending").get(obj);
+                
+                android.util.Log.d("StatisticsFragment", "Adding category: " + category + 
+                        ", spending=" + spending);
+                
+                // Create category view
+                View categoryView = createCategorySpendingView(category, spending, totalSpending);
+                container.addView(categoryView);
+                
+            } catch (Exception e) {
+                android.util.Log.e("StatisticsFragment", "Error creating category view", e);
+                e.printStackTrace();
+            }
+        }
+        
+        android.util.Log.d("StatisticsFragment", "Total views in container: " + container.getChildCount());
+    }
+    
+    private View createCategorySpendingView(String category, long spending, long totalSpending) {
+        // Create container
+        android.widget.LinearLayout container = new android.widget.LinearLayout(getContext());
+        container.setOrientation(android.widget.LinearLayout.VERTICAL);
+        android.widget.LinearLayout.LayoutParams containerParams = new android.widget.LinearLayout.LayoutParams(
+                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        containerParams.topMargin = (int) (16 * getResources().getDisplayMetrics().density);
+        container.setLayoutParams(containerParams);
+        
+        // Create header (name + percentage)
+        android.widget.LinearLayout header = new android.widget.LinearLayout(getContext());
+        header.setOrientation(android.widget.LinearLayout.HORIZONTAL);
+        android.widget.LinearLayout.LayoutParams headerParams = new android.widget.LinearLayout.LayoutParams(
+                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        headerParams.bottomMargin = (int) (8 * getResources().getDisplayMetrics().density);
+        header.setLayoutParams(headerParams);
+        
+        // Category name
+        android.widget.TextView nameView = new android.widget.TextView(getContext());
+        android.widget.LinearLayout.LayoutParams nameParams = new android.widget.LinearLayout.LayoutParams(
+                0,
+                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
+                1.0f
+        );
+        nameView.setLayoutParams(nameParams);
+        String icon = getIconEmojiForCategory(category);
+        nameView.setText(icon + " " + category);
+        nameView.setTextColor(0xFF212121);
+        nameView.setTextSize(14);
+        nameView.setTypeface(null, android.graphics.Typeface.BOLD);
+        
+        // Percentage with 1 decimal place for accuracy
+        android.widget.TextView percentageView = new android.widget.TextView(getContext());
+        percentageView.setLayoutParams(new android.widget.LinearLayout.LayoutParams(
+                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
+                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+        ));
+        double percentageDouble = (totalSpending > 0) ? (spending * 100.0) / totalSpending : 0;
+        String percentageText;
+        if (percentageDouble >= 0.1) {
+            // Show 1 decimal place (e.g., "0.5%", "10.2%", "91.3%")
+            percentageText = String.format(java.util.Locale.getDefault(), "%.1f%%", percentageDouble);
+        } else if (percentageDouble > 0) {
+            // Very small percentages, show 2 decimal places
+            percentageText = String.format(java.util.Locale.getDefault(), "%.2f%%", percentageDouble);
+        } else {
+            percentageText = "0%";
+        }
+        percentageView.setText(percentageText);
+        percentageView.setTextColor(0xFFF44336);
+        percentageView.setTextSize(14);
+        percentageView.setTypeface(null, android.graphics.Typeface.BOLD);
+        
+        header.addView(nameView);
+        header.addView(percentageView);
+        
+        // Progress bar (just visual, showing percentage)
+        android.widget.ProgressBar progressBar = new android.widget.ProgressBar(
+                getContext(), null, android.R.attr.progressBarStyleHorizontal);
+        android.widget.LinearLayout.LayoutParams progressParams = new android.widget.LinearLayout.LayoutParams(
+                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                (int) (8 * getResources().getDisplayMetrics().density)
+        );
+        progressParams.bottomMargin = (int) (4 * getResources().getDisplayMetrics().density);
+        progressBar.setLayoutParams(progressParams);
+        
+        // Set rounded progress bar drawable
+        progressBar.setProgressDrawable(getResources().getDrawable(com.example.spending_management_app.R.drawable.rounded_progress_bar, null));
+        
+        // Set progress (convert double to int for progress bar)
+        int progressValue = (int)Math.round(percentageDouble);
+        progressBar.setProgress(progressValue);
+        progressBar.setMax(100);
+        progressBar.setProgressTintList(android.content.res.ColorStateList.valueOf(0xFFF44336));
+        progressBar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFE0E0E0));
+        
+        // Amount text (only spending, no budget)
+        android.widget.TextView amountView = new android.widget.TextView(getContext());
+        android.widget.LinearLayout.LayoutParams amountParams = new android.widget.LinearLayout.LayoutParams(
+                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
+                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        amountParams.topMargin = (int) (4 * getResources().getDisplayMetrics().density);
+        amountView.setLayoutParams(amountParams);
+        amountView.setText(String.format(java.util.Locale.getDefault(), "%,d VND", spending));
+        amountView.setTextColor(0xFF757575);
+        amountView.setTextSize(12);
+        
+        // Add all views to container
+        container.addView(header);
+        container.addView(progressBar);
+        container.addView(amountView);
+        
+        return container;
+    }
+    
+    private String getIconEmojiForCategory(String category) {
+        switch (category) {
+            case "Ăn uống": return "🍽️";
+            case "Di chuyển": return "🚗";
+            case "Tiện ích": return "⚡";
+            case "Y tế": return "🏥";
+            case "Nhà ở": return "🏠";
+            case "Mua sắm": return "🛍️";
+            case "Giáo dục": return "📚";
+            case "Giải trí": return "🎮";
+            case "Quần áo": return "👕";
+            case "Sức khỏe & Làm đẹp": return "💄";
+            case "Gia đình": return "👨‍👩‍👧‍👦";
+            case "Bạn bè": return "👥";
+            case "Con cái": return "👶";
+            case "Phương tiện": return "🚙";
+            case "Điện thoại & Internet": return "📱";
+            case "Phần mềm & Apps": return "💻";
+            case "Đầu tư": return "📈";
+            case "Tiết kiệm": return "🏦";
+            case "Từ thiện": return "❤️";
+            case "Du lịch": return "✈️";
+            case "Thể thao": return "⚽";
+            case "Thú cưng": return "🐶";
+            case "Đăng ký & Dịch vụ": return "📝";
+            case "Hội họp & Tiệc tụng": return "🎉";
+            case "Ăn ngoài & Cafe": return "☕";
+            case "Lương": return "💰";
+            case "Khác": return "📦";
+            default: return "📦";
+        }
+    }
 
+    private void loadMonthComparison() {
+        Executors.newSingleThreadExecutor().execute(() -> {
+            try {
+                Calendar cal = Calendar.getInstance();
+                
+                // Calculate THIS MONTH range
+                cal.set(Calendar.DAY_OF_MONTH, 1);
+                cal.set(Calendar.HOUR_OF_DAY, 0);
+                cal.set(Calendar.MINUTE, 0);
+                cal.set(Calendar.SECOND, 0);
+                cal.set(Calendar.MILLISECOND, 0);
+                java.util.Date startOfThisMonth = cal.getTime();
+                
+                cal.set(Calendar.DAY_OF_MONTH, cal.getActualMaximum(Calendar.DAY_OF_MONTH));
+                cal.set(Calendar.HOUR_OF_DAY, 23);
+                cal.set(Calendar.MINUTE, 59);
+                cal.set(Calendar.SECOND, 59);
+                cal.set(Calendar.MILLISECOND, 999);
+                java.util.Date endOfThisMonth = cal.getTime();
+                
+                // Calculate LAST MONTH range
+                cal.set(Calendar.DAY_OF_MONTH, 1);
+                cal.set(Calendar.HOUR_OF_DAY, 0);
+                cal.set(Calendar.MINUTE, 0);
+                cal.set(Calendar.SECOND, 0);
+                cal.set(Calendar.MILLISECOND, 0);
+                cal.add(Calendar.MONTH, -1); // Go back 1 month
+                java.util.Date startOfLastMonth = cal.getTime();
+                
+                cal.set(Calendar.DAY_OF_MONTH, cal.getActualMaximum(Calendar.DAY_OF_MONTH));
+                cal.set(Calendar.HOUR_OF_DAY, 23);
+                cal.set(Calendar.MINUTE, 59);
+                cal.set(Calendar.SECOND, 59);
+                cal.set(Calendar.MILLISECOND, 999);
+                java.util.Date endOfLastMonth = cal.getTime();
+                
+                // Get this month spending
+                Long thisMonthSpendingLong = transactionDao.getTotalExpenseByDateRange(startOfThisMonth, endOfThisMonth);
+                long thisMonthSpending = (thisMonthSpendingLong != null) ? Math.abs(thisMonthSpendingLong) : 0;
+                
+                // Get last month spending
+                Long lastMonthSpendingLong = transactionDao.getTotalExpenseByDateRange(startOfLastMonth, endOfLastMonth);
+                long lastMonthSpending = (lastMonthSpendingLong != null) ? Math.abs(lastMonthSpendingLong) : 0;
+                
+                // Calculate difference
+                long difference = thisMonthSpending - lastMonthSpending;
+                
+                android.util.Log.d("StatisticsFragment", "This month spending: " + thisMonthSpending);
+                android.util.Log.d("StatisticsFragment", "Last month spending: " + lastMonthSpending);
+                android.util.Log.d("StatisticsFragment", "Difference: " + difference);
+                
+                // Update UI on main thread
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(() -> {
+                        updateMonthComparisonUI(lastMonthSpending, thisMonthSpending, difference);
+                    });
+                }
+                
+            } catch (Exception e) {
+                android.util.Log.e("StatisticsFragment", "Error loading month comparison", e);
+            }
+        });
+    }
+    
+    private void updateMonthComparisonUI(long lastMonthSpending, long thisMonthSpending, long difference) {
+        // Update last month spending
+        binding.lastMonthSpending.setText(formatCurrencyShort(lastMonthSpending));
+        
+        // Update this month spending
+        binding.thisMonthSpending.setText(formatCurrencyShort(thisMonthSpending));
+        
+        // Update difference with color
+        String differenceText;
+        int differenceColor;
+        
+        if (difference > 0) {
+            // Spending increased (bad)
+            differenceText = "+" + formatCurrencyShort(difference);
+            differenceColor = 0xFFF44336; // Red
+        } else if (difference < 0) {
+            // Spending decreased (good)
+            differenceText = "-" + formatCurrencyShort(Math.abs(difference));
+            differenceColor = 0xFF4CAF50; // Green
+        } else {
+            // No change
+            differenceText = "0";
+            differenceColor = 0xFF757575; // Gray
+        }
+        
+        binding.differenceSpending.setText(differenceText);
+        binding.differenceSpending.setTextColor(differenceColor);
+        
+        android.util.Log.d("StatisticsFragment", "Month comparison UI updated");
+    }
+    
     @Override
     public void onDestroyView() {
         super.onDestroyView();

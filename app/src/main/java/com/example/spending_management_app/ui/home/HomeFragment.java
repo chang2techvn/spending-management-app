@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -57,6 +58,9 @@ public class HomeFragment extends Fragment {
     private void setupBalanceData() {
         // Load balance data from database
         loadBalanceDataFromDatabase();
+        
+        // Load category spending data from database
+        loadCategorySpendingFromDatabase();
     }
     
     private void loadBalanceDataFromDatabase() {
@@ -261,6 +265,335 @@ public class HomeFragment extends Fragment {
         android.util.Log.d("HomeFragment", "Sample recent transactions loaded with " + transactions.size() + " items");
     }
 
+    private void loadCategorySpendingFromDatabase() {
+        Executors.newSingleThreadExecutor().execute(() -> {
+            try {
+                // Calculate month range
+                Calendar cal = Calendar.getInstance();
+                cal.set(Calendar.DAY_OF_MONTH, 1);
+                cal.set(Calendar.HOUR_OF_DAY, 0);
+                cal.set(Calendar.MINUTE, 0);
+                cal.set(Calendar.SECOND, 0);
+                cal.set(Calendar.MILLISECOND, 0);
+                Date startOfMonth = cal.getTime();
+                
+                cal.set(Calendar.DAY_OF_MONTH, cal.getActualMaximum(Calendar.DAY_OF_MONTH));
+                cal.set(Calendar.HOUR_OF_DAY, 23);
+                cal.set(Calendar.MINUTE, 59);
+                cal.set(Calendar.SECOND, 59);
+                cal.set(Calendar.MILLISECOND, 999);
+                Date endOfMonth = cal.getTime();
+                
+                // Get all transactions for this month by category
+                List<TransactionEntity> allTransactions = AppDatabase.getInstance(getContext())
+                        .transactionDao()
+                        .getTransactionsByDateRange(startOfMonth, endOfMonth);
+                
+                // Get all category budgets for this month
+                List<com.example.spending_management_app.database.CategoryBudgetEntity> categoryBudgets = 
+                        AppDatabase.getInstance(getContext()).categoryBudgetDao()
+                                .getAllCategoryBudgetsForMonth(startOfMonth, endOfMonth);
+                
+                // Calculate spending by category
+                java.util.Map<String, Long> categorySpending = new java.util.HashMap<>();
+                long totalSpending = 0;
+                
+                for (TransactionEntity transaction : allTransactions) {
+                    if ("expense".equals(transaction.type)) {
+                        long amount = Math.abs(transaction.amount);
+                        categorySpending.put(transaction.category, 
+                                categorySpending.getOrDefault(transaction.category, 0L) + amount);
+                        totalSpending += amount;
+                    }
+                }
+                
+                // Create map of category budgets
+                java.util.Map<String, Long> budgetMap = new java.util.HashMap<>();
+                for (com.example.spending_management_app.database.CategoryBudgetEntity budget : categoryBudgets) {
+                    budgetMap.put(budget.getCategory(), budget.getBudgetAmount());
+                }
+                
+                // Get all categories (with spending OR budget)
+                // Inner class must be static to avoid issues with field access
+                class CategoryData {
+                    public String category;
+                    public long spending;
+                    public long budget;
+                    
+                    CategoryData(String category, long spending, long budget) {
+                        this.category = category;
+                        this.spending = spending;
+                        this.budget = budget;
+                    }
+                }
+                
+                // Collect all unique categories (from spending or budgets)
+                java.util.Set<String> allCategories = new java.util.HashSet<>();
+                allCategories.addAll(categorySpending.keySet()); // Categories with spending
+                allCategories.addAll(budgetMap.keySet()); // Categories with budgets
+                
+                List<CategoryData> categoryDataList = new ArrayList<>();
+                for (String category : allCategories) {
+                    long spending = categorySpending.getOrDefault(category, 0L);
+                    long budget = budgetMap.getOrDefault(category, 0L);
+                    categoryDataList.add(new CategoryData(category, spending, budget));
+                }
+                
+                android.util.Log.d("HomeFragment", "Total categories found: " + categoryDataList.size());
+                
+                // Sort by spending amount (highest to lowest) - this determines the percentage order
+                categoryDataList.sort((a, b) -> {
+                    // Priority 1: Higher spending (determines percentage)
+                    if (a.spending != b.spending) {
+                        return Long.compare(b.spending, a.spending);
+                    }
+                    
+                    // Priority 2: Has budget
+                    if (a.budget > 0 && b.budget == 0) return -1;
+                    if (a.budget == 0 && b.budget > 0) return 1;
+                    
+                    // Priority 3: Higher budget
+                    return Long.compare(b.budget, a.budget);
+                });
+                
+                // Take ALL categories (not just top 3)
+                List<CategoryData> allCategoryData = new ArrayList<>(categoryDataList);
+                
+                // Calculate total spending of displayed categories (for percentage calculation)
+                long totalCategorySpending = 0;
+                for (CategoryData data : allCategoryData) {
+                    totalCategorySpending += data.spending;
+                }
+                
+                for (int i = 0; i < allCategoryData.size(); i++) {
+                    android.util.Log.d("HomeFragment", "Category " + (i+1) + ": " + 
+                            allCategoryData.get(i).category + 
+                            " - Spending: " + allCategoryData.get(i).spending + 
+                            ", Budget: " + allCategoryData.get(i).budget);
+                }
+                
+                android.util.Log.d("HomeFragment", "Total category spending for percentage: " + totalCategorySpending);
+                
+                long finalTotalCategorySpending = totalCategorySpending;
+                
+                // Update UI on main thread
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(() -> {
+                        updateCategoryUI(allCategoryData, finalTotalCategorySpending);
+                    });
+                }
+                
+            } catch (Exception e) {
+                android.util.Log.e("HomeFragment", "Error loading category spending", e);
+            }
+        });
+    }
+    
+    private void updateCategoryUI(List<?> allCategories, long totalSpending) {
+        android.util.Log.d("HomeFragment", "updateCategoryUI called with " + allCategories.size() + " categories");
+        
+        // Clear existing category views (except the title)
+        ViewGroup container = binding.categoriesContainer;
+        
+        if (container == null) {
+            android.util.Log.e("HomeFragment", "categoriesContainer is NULL!");
+            return;
+        }
+        
+        android.util.Log.d("HomeFragment", "Container found, child count: " + container.getChildCount());
+        
+        // Remove all views except the first one (title)
+        int childCount = container.getChildCount();
+        if (childCount > 1) {
+            container.removeViews(1, childCount - 1);
+            android.util.Log.d("HomeFragment", "Removed " + (childCount - 1) + " old views");
+        }
+        
+        // Add each category dynamically
+        for (int i = 0; i < allCategories.size(); i++) {
+            Object obj = allCategories.get(i);
+            
+            try {
+                // Access public fields directly
+                String category = (String) obj.getClass().getField("category").get(obj);
+                Long spendingLong = (Long) obj.getClass().getField("spending").get(obj);
+                Long budgetLong = (Long) obj.getClass().getField("budget").get(obj);
+                
+                long spending = (spendingLong != null) ? spendingLong : 0L;
+                long budget = (budgetLong != null) ? budgetLong : 0L;
+                
+                android.util.Log.d("HomeFragment", "Adding category: " + category + 
+                        ", spending=" + spending + ", budget=" + budget);
+                
+                // Create category view
+                View categoryView = createCategoryView(category, spending, budget, totalSpending);
+                container.addView(categoryView);
+                
+            } catch (Exception e) {
+                android.util.Log.e("HomeFragment", "Error creating category view", e);
+                e.printStackTrace();
+            }
+        }
+        
+        android.util.Log.d("HomeFragment", "Total views in container: " + container.getChildCount());
+    }
+    
+    private View createCategoryView(String category, long spending, long budget, long totalSpending) {
+        // Create container
+        LinearLayout container = new LinearLayout(getContext());
+        container.setOrientation(LinearLayout.VERTICAL);
+        LinearLayout.LayoutParams containerParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        containerParams.topMargin = (int) (16 * getResources().getDisplayMetrics().density);
+        container.setLayoutParams(containerParams);
+        
+        // Create header (name + percentage)
+        LinearLayout header = new LinearLayout(getContext());
+        header.setOrientation(LinearLayout.HORIZONTAL);
+        LinearLayout.LayoutParams headerParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        headerParams.bottomMargin = (int) (8 * getResources().getDisplayMetrics().density);
+        header.setLayoutParams(headerParams);
+        
+        // Category name
+        android.widget.TextView nameView = new android.widget.TextView(getContext());
+        LinearLayout.LayoutParams nameParams = new LinearLayout.LayoutParams(
+                0,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                1.0f
+        );
+        nameView.setLayoutParams(nameParams);
+        String icon = getIconEmojiForCategory(category);
+        nameView.setText(icon + " " + category);
+        nameView.setTextColor(0xFF212121);
+        nameView.setTextSize(14);
+        nameView.setTypeface(null, android.graphics.Typeface.BOLD);
+        
+        // Percentage with 1 decimal place for accuracy
+        android.widget.TextView percentageView = new android.widget.TextView(getContext());
+        percentageView.setLayoutParams(new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        ));
+        double percentageDouble = (totalSpending > 0) ? (spending * 100.0) / totalSpending : 0;
+        String percentageText;
+        if (percentageDouble >= 0.1) {
+            // Show 1 decimal place (e.g., "0.5%", "10.2%", "91.3%")
+            percentageText = String.format(java.util.Locale.getDefault(), "%.1f%%", percentageDouble);
+        } else if (percentageDouble > 0) {
+            // Very small percentages, show 2 decimal places
+            percentageText = String.format(java.util.Locale.getDefault(), "%.2f%%", percentageDouble);
+        } else {
+            percentageText = "0%";
+        }
+        percentageView.setText(percentageText);
+        percentageView.setTextColor(0xFFF44336);
+        percentageView.setTextSize(14);
+        percentageView.setTypeface(null, android.graphics.Typeface.BOLD);
+        
+        header.addView(nameView);
+        header.addView(percentageView);
+        
+        // Progress bar
+        android.widget.ProgressBar progressBar = new android.widget.ProgressBar(
+                getContext(), null, android.R.attr.progressBarStyleHorizontal);
+        LinearLayout.LayoutParams progressParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                (int) (8 * getResources().getDisplayMetrics().density)
+        );
+        progressParams.bottomMargin = (int) (4 * getResources().getDisplayMetrics().density);
+        progressBar.setLayoutParams(progressParams);
+        
+        // Set rounded progress bar drawable
+        progressBar.setProgressDrawable(getResources().getDrawable(R.drawable.rounded_progress_bar, null));
+        
+        // Calculate progress percentage
+        int progress = (budget > 0) ? (int)((spending * 100) / budget) : 0;
+        progress = Math.min(progress, 100);
+        progressBar.setProgress(progress);
+        progressBar.setMax(100);
+        
+        // Set color based on spending percentage
+        int progressColor;
+        if (budget > 0) {
+            if (progress < 70) {
+                progressColor = 0xFF4CAF50; // Green - safe
+            } else if (progress < 90) {
+                progressColor = 0xFFFF9800; // Orange - warning
+            } else {
+                progressColor = 0xFFF44336; // Red - danger
+            }
+        } else {
+            progressColor = 0xFF9E9E9E; // Gray - no budget set
+        }
+        
+        progressBar.setProgressTintList(android.content.res.ColorStateList.valueOf(progressColor));
+        progressBar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFE0E0E0));
+        
+        // Amount text
+        android.widget.TextView amountView = new android.widget.TextView(getContext());
+        LinearLayout.LayoutParams amountParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        amountParams.topMargin = (int) (4 * getResources().getDisplayMetrics().density);
+        amountView.setLayoutParams(amountParams);
+        
+        if (budget > 0) {
+            amountView.setText(String.format(Locale.getDefault(), 
+                    "%,d/%,d VND", spending, budget));
+        } else {
+            amountView.setText(String.format(Locale.getDefault(), 
+                    "%,d VND (Chưa đặt ngân sách)", spending));
+        }
+        amountView.setTextColor(0xFF757575);
+        amountView.setTextSize(12);
+        
+        // Add all views to container
+        container.addView(header);
+        container.addView(progressBar);
+        container.addView(amountView);
+        
+        return container;
+    }
+    
+    private String getIconEmojiForCategory(String category) {
+        switch (category) {
+            case "Ăn uống": return "🍽️";
+            case "Di chuyển": return "🚗";
+            case "Tiện ích": return "⚡";
+            case "Y tế": return "🏥";
+            case "Nhà ở": return "🏠";
+            case "Mua sắm": return "🛍️";
+            case "Giáo dục": return "📚";
+            case "Sách & Học tập": return "📖";
+            case "Thể thao": return "⚽";
+            case "Sức khỏe & Làm đẹp": return "💆";
+            case "Giải trí": return "🎬";
+            case "Du lịch": return "✈️";
+            case "Ăn ngoài & Cafe": return "☕";
+            case "Quà tặng & Từ thiện": return "🎁";
+            case "Hội họp & Tiệc tụng": return "🎉";
+            case "Điện thoại & Internet": return "📱";
+            case "Đăng ký & Dịch vụ": return "💳";
+            case "Phần mềm & Apps": return "💻";
+            case "Ngân hàng & Phí": return "🏦";
+            case "Con cái": return "👶";
+            case "Thú cưng": return "🐕";
+            case "Gia đình": return "👨‍👩‍👧‍👦";
+            case "Lương": return "💰";
+            case "Đầu tư": return "📈";
+            case "Thu nhập phụ": return "💵";
+            case "Tiết kiệm": return "🏦";
+            case "Khác": return "📌";
+            default: return "💳";
+        }
+    }
+
     @Override
     public void onDestroyView() {
         super.onDestroyView();
@@ -271,7 +604,8 @@ public class HomeFragment extends Fragment {
     public void refreshRecentTransactions() {
         if (isAdded() && getContext() != null) {
             loadRecentTransactionsFromDatabase();
-            loadBalanceDataFromDatabase(); // Also refresh balance
+            loadBalanceDataFromDatabase();
+            loadCategorySpendingFromDatabase(); // Also refresh category spending
         }
     }
     
@@ -282,6 +616,7 @@ public class HomeFragment extends Fragment {
         // Refresh data when fragment becomes visible
         loadRecentTransactionsFromDatabase();
         loadBalanceDataFromDatabase();
+        loadCategorySpendingFromDatabase();
     }
     
     // Helper method to get appropriate icon for category
