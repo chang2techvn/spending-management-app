@@ -1379,20 +1379,10 @@ public class AiChatBottomSheet extends DialogFragment {
                                     
                                     for (String jsonPart : allJsonParts) {
                                         try {
-                                            JSONObject parsed = new JSONObject(jsonPart);
-                                            String action = parsed.optString("action", "");
-                                            android.util.Log.d("AiChatBottomSheet", "Processing JSON with action: " + action);
-                                            
-                                            if ("set_budget".equals(action) || "update_budget".equals(action)) {
-                                                android.util.Log.d("AiChatBottomSheet", "Routing to budget dialog");
-                                                showBudgetConfirmationDialog(jsonPart);
-                                            } else {
-                                                android.util.Log.d("AiChatBottomSheet", "Routing to saveExpenseDirectly");
-                                                saveExpenseDirectly(jsonPart);
-                                            }
+                                            android.util.Log.d("AiChatBottomSheet", "Routing to saveExpenseDirectly");
+                                            saveExpenseDirectly(jsonPart);
                                         } catch (Exception e) {
                                             android.util.Log.e("AiChatBottomSheet", "Error processing JSON: " + jsonPart, e);
-                                            saveExpenseDirectly(jsonPart);
                                         }
                                     }
                                 } else {
@@ -1427,32 +1417,7 @@ public class AiChatBottomSheet extends DialogFragment {
         }
     }
 
-    private void showConfirmationDialog(String aiText) {
-        // Create custom dialog
-        Dialog dialog = new Dialog(getContext());
-        dialog.setContentView(R.layout.dialog_confirm_expense);
-        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-        dialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
 
-        TextView message = dialog.findViewById(R.id.dialog_message);
-        TextInputEditText input = dialog.findViewById(R.id.input_description);
-        Button btnCancel = dialog.findViewById(R.id.btn_cancel);
-        Button btnConfirm = dialog.findViewById(R.id.btn_confirm);
-
-        input.setText(aiText);
-
-        btnCancel.setOnClickListener(v -> dialog.dismiss());
-        btnConfirm.setOnClickListener(v -> {
-            String finalText = input.getText().toString().trim();
-            if (!finalText.isEmpty()) {
-                // TODO: Parse and add to database
-                Toast.makeText(getContext(), "Đã thêm: " + finalText, Toast.LENGTH_SHORT).show();
-            }
-            dialog.dismiss();
-        });
-
-        dialog.show();
-    }
 
     private String extractJsonFromText(String text) {
         android.util.Log.d("AiChatBottomSheet", "Extracting JSON from text: " + text);
@@ -1842,101 +1807,7 @@ public class AiChatBottomSheet extends DialogFragment {
         }
     }
 
-    private void showBudgetConfirmationDialog(String jsonString) {
-        try {
-            JSONObject json = new JSONObject(jsonString);
-            double amount = json.optDouble("amount", 0);
-            String currency = json.optString("currency", "VND");
 
-            // Calculate date range
-            Calendar cal = Calendar.getInstance();
-            cal.set(Calendar.DAY_OF_MONTH, 1);
-            Date startOfMonth = cal.getTime();
-            cal.set(Calendar.DAY_OF_MONTH, cal.getActualMaximum(Calendar.DAY_OF_MONTH));
-            Date endOfMonth = cal.getTime();
-
-            // Confirm with user using a simple dialog
-            Dialog dialog = new Dialog(getContext());
-            dialog.setContentView(R.layout.dialog_confirm_budget);
-            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-            dialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-
-            TextView message = dialog.findViewById(R.id.dialog_message);
-            TextView currentBudgetText = dialog.findViewById(R.id.current_budget_text);
-            EditText inputAmount = dialog.findViewById(R.id.input_amount);
-            TextView newBudgetDate = dialog.findViewById(R.id.new_budget_date);
-            Button btnCancel = dialog.findViewById(R.id.btn_cancel);
-            Button btnConfirm = dialog.findViewById(R.id.btn_confirm);
-
-            message.setText("Xác nhận thay đổi ngân sách tháng");
-            inputAmount.setText(NumberFormat.getInstance(Locale.getDefault()).format((long) amount));
-
-            // Set new budget date
-            SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy", new Locale("vi", "VN"));
-            newBudgetDate.setText("Ngày thêm: " + dateFormat.format(new Date()));
-
-            // Load current budget
-            Executors.newSingleThreadExecutor().execute(() -> {
-                List<BudgetEntity> monthlyBudgets = AppDatabase.getInstance(getContext()).budgetDao().getBudgetsByDateRange(startOfMonth, endOfMonth);
-                getActivity().runOnUiThread(() -> {
-                    if (monthlyBudgets != null && !monthlyBudgets.isEmpty()) {
-                        BudgetEntity budget = monthlyBudgets.get(0);
-                        String dateStr = budget.getDate() != null ? dateFormat.format(budget.getDate()) : "(không xác định)";
-                        currentBudgetText.setText("Ngân sách cũ: " + String.format(Locale.getDefault(), "%,d", budget.getMonthlyLimit()) + " VND (thêm ngày " + dateStr + ")");
-                    } else {
-                        currentBudgetText.setText("Ngân sách cũ: Chưa có (thêm ngày -)");
-                    }
-                });
-            });
-
-            btnCancel.setOnClickListener(v -> dialog.dismiss());
-            btnConfirm.setOnClickListener(v -> {
-                String amtStr = inputAmount.getText().toString().trim();
-                if (!amtStr.isEmpty()) {
-                    try {
-                        long amt = Long.parseLong(amtStr.replaceAll("[^0-9]", ""));
-                        // Save budget to DB (update if exists, else insert)
-                        Executors.newSingleThreadExecutor().execute(() -> {
-                            List<BudgetEntity> existingBudgets = AppDatabase.getInstance(getContext()).budgetDao().getBudgetsByDateRange(startOfMonth, endOfMonth);
-                            Date budgetDate = new Date();
-                            if (existingBudgets != null && !existingBudgets.isEmpty()) {
-                                // Update existing
-                                BudgetEntity existing = existingBudgets.get(0);
-                                long oldAmount = existing.monthlyLimit;
-                                existing.setMonthlyLimit(amt);
-                                existing.setDate(budgetDate);
-                                AppDatabase.getInstance(getContext()).budgetDao().update(existing);
-                                
-                                // Log budget history
-                                com.example.spending_management_app.utils.BudgetHistoryLogger.logMonthlyBudgetUpdated(
-                                        getContext(), oldAmount, amt, budgetDate);
-                            } else {
-                                // Insert new
-                                BudgetEntity budget = new BudgetEntity("Ngân sách tháng", amt, 0L, budgetDate);
-                                AppDatabase.getInstance(getContext()).budgetDao().insert(budget);
-                                
-                                // Log budget history
-                                com.example.spending_management_app.utils.BudgetHistoryLogger.logMonthlyBudgetCreated(
-                                        getContext(), amt, budgetDate);
-                            }
-                            getActivity().runOnUiThread(() -> {
-                                Toast.makeText(getContext(), "Ngân sách đã được cập nhật: " + String.format(Locale.getDefault(), "%,d", amt) + " " + currency, Toast.LENGTH_SHORT).show();
-                                dialog.dismiss();
-                            });
-                        });
-                    } catch (NumberFormatException ex) {
-                        Toast.makeText(getContext(), "Số tiền không hợp lệ", Toast.LENGTH_SHORT).show();
-                    }
-                }
-            });
-
-            dialog.show();
-
-        } catch (Exception e) {
-            Log.e("AiChatBottomSheet", "Error parsing budget JSON: " + jsonString, e);
-            Toast.makeText(getContext(), "Lỗi xử lý dữ liệu ngân sách", Toast.LENGTH_SHORT).show();
-        }
-    }
 
     private String createExpenseConfirmationMessage(String name, long amount, String category, int day, int month, int year, String type) {
         // Format amount with thousand separator
