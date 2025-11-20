@@ -69,7 +69,7 @@ public class AccountFragment extends Fragment {
     private void loadUserData() {
         int userId = sharedPreferences.getInt(LoginActivity.KEY_USER_ID, -1);
         if (userId == -1) {
-            Toast.makeText(getContext(), "Error: User not found.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), getString(R.string.error_user_not_found), Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -122,7 +122,7 @@ public class AccountFragment extends Fragment {
         newAvatarPath = null; // Reset temp path each time dialog is opened
 
         AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
-        builder.setTitle("Chỉnh sửa hồ sơ");
+        builder.setTitle(getString(R.string.edit_profile_title));
 
         LinearLayout layout = new LinearLayout(getContext());
         layout.setOrientation(LinearLayout.VERTICAL);
@@ -162,23 +162,23 @@ public class AccountFragment extends Fragment {
         layout.addView(dialogAvatarImageView);
 
         final EditText firstNameInput = new EditText(getContext());
-        firstNameInput.setHint("Tên");
+        firstNameInput.setHint(getString(R.string.first_name_hint));
         firstNameInput.setText(currentUser.firstName != null ? currentUser.firstName : "");
         layout.addView(firstNameInput);
 
         final EditText lastNameInput = new EditText(getContext());
-        lastNameInput.setHint("Họ");
+        lastNameInput.setHint(getString(R.string.last_name_hint));
         lastNameInput.setText(currentUser.lastName != null ? currentUser.lastName : "");
         layout.addView(lastNameInput);
 
         final EditText emailInput = new EditText(getContext());
-        emailInput.setHint("Email");
+        emailInput.setHint(getString(R.string.title_email));
         emailInput.setText(currentUser.email != null ? currentUser.email : "");
         layout.addView(emailInput);
 
         builder.setView(layout);
 
-        builder.setPositiveButton("Lưu", (dialog, which) -> {
+        builder.setPositiveButton(getString(R.string.save_button), (dialog, which) -> {
             String newFirstName = firstNameInput.getText().toString().trim();
             String newLastName = lastNameInput.getText().toString().trim();
             String newEmail = emailInput.getText().toString().trim();
@@ -197,16 +197,16 @@ public class AccountFragment extends Fragment {
                     if (getActivity() != null) {
                         getActivity().runOnUiThread(() -> {
                             updateUI();
-                            Toast.makeText(getContext(), "Hồ sơ đã được cập nhật", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(getContext(), getString(R.string.profile_updated_toast), Toast.LENGTH_SHORT).show();
                         });
                     }
                 });
             } else {
-                Toast.makeText(getContext(), "Vui lòng điền đầy đủ thông tin", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), getString(R.string.fill_all_fields_toast), Toast.LENGTH_SHORT).show();
             }
         });
 
-        builder.setNegativeButton("Hủy", null);
+        builder.setNegativeButton(getString(R.string.cancel_button), null);
         builder.show();
     }
 
@@ -232,7 +232,7 @@ public class AccountFragment extends Fragment {
 
             } catch (Exception e) {
                 e.printStackTrace();
-                Toast.makeText(getContext(), "Lỗi khi tải ảnh", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), getString(R.string.error_loading_image_toast), Toast.LENGTH_SHORT).show();
             }
         }
     }
@@ -240,40 +240,40 @@ public class AccountFragment extends Fragment {
     private void showChangePasswordDialog() {
         if (currentUser == null) return;
         AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
-        builder.setTitle("Đổi mật khẩu");
+        builder.setTitle(getString(R.string.change_password_title));
 
         LinearLayout layout = new LinearLayout(getContext());
         layout.setOrientation(LinearLayout.VERTICAL);
         layout.setPadding(32, 16, 32, 16);
 
         final EditText currentPasswordInput = new EditText(getContext());
-        currentPasswordInput.setHint("Mật khẩu hiện tại");
+        currentPasswordInput.setHint(getString(R.string.current_password_hint));
         currentPasswordInput.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
         layout.addView(currentPasswordInput);
 
         final EditText newPasswordInput = new EditText(getContext());
-        newPasswordInput.setHint("Mật khẩu mới");
+        newPasswordInput.setHint(getString(R.string.new_password_hint));
         newPasswordInput.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
         layout.addView(newPasswordInput);
 
         final EditText confirmPasswordInput = new EditText(getContext());
-        confirmPasswordInput.setHint("Xác nhận mật khẩu mới");
+        confirmPasswordInput.setHint(getString(R.string.confirm_new_password_hint));
         confirmPasswordInput.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
         layout.addView(confirmPasswordInput);
 
         builder.setView(layout);
 
-        builder.setPositiveButton("Đổi mật khẩu", (dialog, which) -> {
+        builder.setPositiveButton(getString(R.string.change_password_button), (dialog, which) -> {
             String currentPassword = currentPasswordInput.getText().toString();
             String newPassword = newPasswordInput.getText().toString();
             String confirmPassword = confirmPasswordInput.getText().toString();
 
             if (currentPassword.isEmpty() || newPassword.isEmpty() || confirmPassword.isEmpty()) {
-                Toast.makeText(getContext(), "Vui lòng điền đầy đủ thông tin", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), getString(R.string.fill_all_fields_toast), Toast.LENGTH_SHORT).show();
                 return;
             }
             if (!newPassword.equals(confirmPassword)) {
-                Toast.makeText(getContext(), "Mật khẩu xác nhận không khớp", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), getString(R.string.passwords_do_not_match_toast), Toast.LENGTH_SHORT).show();
                 return;
             }
 
@@ -282,7 +282,7 @@ public class AccountFragment extends Fragment {
 
                 if (!hashedCurrentPassword.equals(currentUser.password)) {
                     if (getActivity() != null) {
-                        getActivity().runOnUiThread(() -> Toast.makeText(getContext(), "Mật khẩu hiện tại không đúng", Toast.LENGTH_SHORT).show());
+                        getActivity().runOnUiThread(() -> Toast.makeText(getContext(), getString(R.string.incorrect_current_password_toast), Toast.LENGTH_SHORT).show());
                     }
                     return;
                 }
@@ -291,20 +291,20 @@ public class AccountFragment extends Fragment {
                 appDatabase.userDao().update(currentUser);
 
                 if (getActivity() != null) {
-                    getActivity().runOnUiThread(() -> Toast.makeText(getContext(), "Mật khẩu đã được thay đổi", Toast.LENGTH_SHORT).show());
+                    getActivity().runOnUiThread(() -> Toast.makeText(getContext(), getString(R.string.password_changed_toast), Toast.LENGTH_SHORT).show());
                 }
             });
         });
 
-        builder.setNegativeButton("Hủy", null);
+        builder.setNegativeButton(getString(R.string.cancel_button), null);
         builder.show();
     }
 
     private void showLogoutConfirmationDialog() {
         new AlertDialog.Builder(requireContext())
-                .setTitle("Xác nhận đăng xuất")
-                .setMessage("Bạn có chắc chắn muốn đăng xuất?")
-                .setPositiveButton("Đăng xuất", (dialog, which) -> {
+                .setTitle(getString(R.string.logout_confirmation_title))
+                .setMessage(getString(R.string.logout_confirmation_message))
+                .setPositiveButton(getString(R.string.logout_button), (dialog, which) -> {
                     sharedPreferences.edit().remove(LoginActivity.KEY_USER_ID).apply();
                     Intent intent = new Intent(getActivity(), LoginActivity.class);
                     intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
@@ -312,15 +312,15 @@ public class AccountFragment extends Fragment {
                     if (getActivity() != null) {
                         getActivity().finish();
                     }
-                    Toast.makeText(getContext(), "Đã đăng xuất", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), getString(R.string.logged_out_toast), Toast.LENGTH_SHORT).show();
                 })
-                .setNegativeButton("Hủy", null)
+                .setNegativeButton(getString(R.string.cancel_button), null)
                 .show();
     }
 
     private void showSettingsDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
-        builder.setTitle("Cài đặt");
+        builder.setTitle(getString(R.string.settings_title));
 
         // Inflate custom layout
         View dialogView = LayoutInflater.from(getContext()).inflate(R.layout.dialog_settings, null);
@@ -342,7 +342,7 @@ public class AccountFragment extends Fragment {
             boolean newState = !checkboxNotifications.isChecked();
             checkboxNotifications.setChecked(newState);
             sharedPreferences.edit().putBoolean(KEY_NOTIFICATIONS_ENABLED, newState).apply();
-            Toast.makeText(getContext(), newState ? "Thông báo được bật" : "Thông báo được tắt", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), newState ? getString(R.string.notifications_enabled_toast) : getString(R.string.notifications_disabled_toast), Toast.LENGTH_SHORT).show();
         });
 
         layoutLanguage.setOnClickListener(v -> {
@@ -350,7 +350,7 @@ public class AccountFragment extends Fragment {
             showLanguageDialog();
         });
 
-        builder.setPositiveButton("OK", null);
+        builder.setPositiveButton(getString(R.string.ok_button), null);
         builder.show();
     }
 
