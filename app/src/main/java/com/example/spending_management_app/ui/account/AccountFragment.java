@@ -12,6 +12,7 @@ import android.text.InputType;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.Toast;
@@ -43,8 +44,6 @@ public class AccountFragment extends Fragment {
 
     private static final int PICK_IMAGE_REQUEST = 1;
     public static final String KEY_NOTIFICATIONS_ENABLED = "notifications_enabled";
-    public static final String KEY_THEME_ENABLED = "theme_enabled";
-    public static final String KEY_SECURITY_ENABLED = "security_enabled";
 
     private FragmentAccountBinding binding;
     private AppDatabase appDatabase;
@@ -320,40 +319,35 @@ public class AccountFragment extends Fragment {
     }
 
     private void showSettingsDialog() {
-        final String[] items = {
-                getString(R.string.notifications_item),
-                getString(R.string.settings_language),
-                getString(R.string.settings_theme),
-                getString(R.string.settings_security)
-        };
-        boolean notificationsEnabled = sharedPreferences.getBoolean(KEY_NOTIFICATIONS_ENABLED, true);
-        boolean themeEnabled = sharedPreferences.getBoolean(KEY_THEME_ENABLED, false);
-        boolean securityEnabled = sharedPreferences.getBoolean(KEY_SECURITY_ENABLED, false);
-
-        boolean[] checkedItems = {notificationsEnabled, false, themeEnabled, securityEnabled};
-
         AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
         builder.setTitle("Cài đặt");
-        builder.setMultiChoiceItems(items, checkedItems, (dialog, which, isChecked) -> {
-            switch (which) {
-                case 0: // Notifications
-                    sharedPreferences.edit().putBoolean(KEY_NOTIFICATIONS_ENABLED, isChecked).apply();
-                    Toast.makeText(getContext(), isChecked ? "Thông báo được bật" : "Thông báo được tắt", Toast.LENGTH_SHORT).show();
-                    break;
-                case 1: // Language
-                    ((AlertDialog) dialog).getListView().setItemChecked(which, false);
-                    dialog.dismiss();
-                    showLanguageDialog();
-                    break;
-                case 2: // Theme
-                    sharedPreferences.edit().putBoolean(KEY_THEME_ENABLED, isChecked).apply();
-                    Toast.makeText(getContext(), "Chủ đề " + (isChecked ? "đã bật" : "đã tắt"), Toast.LENGTH_SHORT).show();
-                    break;
-                case 3: // Security
-                    sharedPreferences.edit().putBoolean(KEY_SECURITY_ENABLED, isChecked).apply();
-                    Toast.makeText(getContext(), "Bảo mật " + (isChecked ? "đã bật" : "đã tắt"), Toast.LENGTH_SHORT).show();
-                    break;
-            }
+
+        // Inflate custom layout
+        View dialogView = LayoutInflater.from(getContext()).inflate(R.layout.dialog_settings, null);
+        builder.setView(dialogView);
+
+        // Initialize Views
+        LinearLayout layoutNotifications = dialogView.findViewById(R.id.layout_notifications);
+        CheckBox checkboxNotifications = dialogView.findViewById(R.id.checkbox_notifications);
+        LinearLayout layoutLanguage = dialogView.findViewById(R.id.layout_language);
+
+        // Set initial state
+        boolean notificationsEnabled = sharedPreferences.getBoolean(KEY_NOTIFICATIONS_ENABLED, true);
+        checkboxNotifications.setChecked(notificationsEnabled);
+
+        // Setup Listeners
+        final AlertDialog dialog = builder.create();
+
+        layoutNotifications.setOnClickListener(v -> {
+            boolean newState = !checkboxNotifications.isChecked();
+            checkboxNotifications.setChecked(newState);
+            sharedPreferences.edit().putBoolean(KEY_NOTIFICATIONS_ENABLED, newState).apply();
+            Toast.makeText(getContext(), newState ? "Thông báo được bật" : "Thông báo được tắt", Toast.LENGTH_SHORT).show();
+        });
+
+        layoutLanguage.setOnClickListener(v -> {
+            dialog.dismiss();
+            showLanguageDialog();
         });
 
         builder.setPositiveButton("OK", null);

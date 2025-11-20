@@ -1,5 +1,6 @@
 package com.example.spending_management_app.ui.helpcenter;
 
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -33,21 +34,24 @@ public class HelpCenterFragment extends Fragment {
     }
 
     private void setupFaqToggle() {
-        setToggle(binding.faq1Question, binding.faq1Answer);
-        setToggle(binding.faq2Question, binding.faq2Answer);
-        setToggle(binding.faq3Question, binding.faq3Answer);
-        setToggle(binding.faq4Question, binding.faq4Answer);
-        setToggle(binding.faq5Question, binding.faq5Answer);
+        // Pass the specific icon resource for each question to preserve it
+        setToggle(binding.faq1Question, binding.faq1Answer, R.drawable.ic_faq_add);
+        setToggle(binding.faq2Question, binding.faq2Answer, R.drawable.ic_faq_edit);
+        setToggle(binding.faq3Question, binding.faq3Answer, R.drawable.ic_faq_chart);
+        setToggle(binding.faq4Question, binding.faq4Answer, R.drawable.ic_faq_backup);
+        setToggle(binding.faq5Question, binding.faq5Answer, R.drawable.ic_faq_ai);
     }
 
-    private void setToggle(TextView question, TextView answer) {
+    private void setToggle(TextView question, TextView answer, int startIconResId) {
         question.setOnClickListener(v -> {
             if (answer.getVisibility() == View.GONE) {
                 answer.setVisibility(View.VISIBLE);
-                question.setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.ic_arrow_up, 0);
+                // Preserve the start icon, update the end icon to 'up' arrow
+                question.setCompoundDrawablesWithIntrinsicBounds(startIconResId, 0, R.drawable.ic_arrow_up, 0);
             } else {
                 answer.setVisibility(View.GONE);
-                question.setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.ic_arrow_down, 0);
+                // Preserve the start icon, update the end icon to 'down' arrow
+                question.setCompoundDrawablesWithIntrinsicBounds(startIconResId, 0, R.drawable.ic_arrow_down, 0);
             }
         });
     }

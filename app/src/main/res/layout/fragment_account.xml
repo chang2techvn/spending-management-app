@@ -27,15 +27,15 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Tài khoản"
+                android:text="@string/account_header_title"
                 android:textColor="#212121"
                 android:textSize="20sp"
-                android:textStyle="bold" />
+                android:fontFamily="sans-serif-medium"/>
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Thông tin cá nhân của bạn"
+                android:text="@string/account_header_subtitle"
                 android:textColor="#757575"
                 android:textSize="14sp"
                 android:layout_marginTop="4dp" />
@@ -89,7 +89,7 @@
                             android:text="Nguyễn Văn A"
                             android:textColor="#212121"
                             android:textSize="18sp"
-                            android:textStyle="bold" />
+                            android:fontFamily="sans-serif-medium" />
 
                         <TextView
                             android:id="@+id/user_email"
@@ -105,7 +105,7 @@
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
-                    android:background="#E0E0E0"
+                    android:background="#EEEEEE"
                     android:layout_marginHorizontal="16dp" />
 
                 <!-- Account Options -->
@@ -128,23 +128,23 @@
                         <ImageView
                             android:layout_width="24dp"
                             android:layout_height="24dp"
-                            android:src="@drawable/ic_launcher_foreground"
+                            android:src="@drawable/ic_account_edit"
                             app:tint="#757575" />
 
                         <TextView
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="Chỉnh sửa hồ sơ"
+                            android:text="@string/account_edit_profile"
                             android:textColor="#212121"
                             android:textSize="16sp"
+                            android:fontFamily="sans-serif-medium"
                             android:layout_marginStart="16dp" />
 
                         <ImageView
-                            android:layout_width="16dp"
-                            android:layout_height="16dp"
-                            android:src="@drawable/ic_launcher_foreground"
-                            app:tint="#BDBDBD" />
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@drawable/ic_chevron_right"/>
                     </LinearLayout>
 
                     <!-- Change Password -->
@@ -160,23 +160,23 @@
                         <ImageView
                             android:layout_width="24dp"
                             android:layout_height="24dp"
-                            android:src="@drawable/ic_launcher_foreground"
+                            android:src="@drawable/ic_account_password"
                             app:tint="#757575" />
 
                         <TextView
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="Đổi mật khẩu"
+                            android:text="@string/account_change_password"
                             android:textColor="#212121"
                             android:textSize="16sp"
+                            android:fontFamily="sans-serif-medium"
                             android:layout_marginStart="16dp" />
 
                         <ImageView
-                            android:layout_width="16dp"
-                            android:layout_height="16dp"
-                            android:src="@drawable/ic_launcher_foreground"
-                            app:tint="#BDBDBD" />
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@drawable/ic_chevron_right"/>
                     </LinearLayout>
 
                     <!-- Settings -->
@@ -192,23 +192,23 @@
                         <ImageView
                             android:layout_width="24dp"
                             android:layout_height="24dp"
-                            android:src="@drawable/ic_launcher_foreground"
+                            android:src="@drawable/ic_account_settings"
                             app:tint="#757575" />
 
                         <TextView
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="Cài đặt"
+                            android:text="@string/account_settings"
                             android:textColor="#212121"
                             android:textSize="16sp"
+                            android:fontFamily="sans-serif-medium"
                             android:layout_marginStart="16dp" />
 
                         <ImageView
-                            android:layout_width="16dp"
-                            android:layout_height="16dp"
-                            android:src="@drawable/ic_launcher_foreground"
-                            app:tint="#BDBDBD" />
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@drawable/ic_chevron_right"/>
                     </LinearLayout>
 
                     <!-- Help & Support -->
@@ -224,23 +224,23 @@
                         <ImageView
                             android:layout_width="24dp"
                             android:layout_height="24dp"
-                            android:src="@drawable/ic_launcher_foreground"
+                            android:src="@drawable/ic_account_help"
                             app:tint="#757575" />
 
                         <TextView
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="Trợ giúp &amp; Hỗ trợ"
+                            android:text="@string/account_help_support"
                             android:textColor="#212121"
                             android:textSize="16sp"
+                            android:fontFamily="sans-serif-medium"
                             android:layout_marginStart="16dp" />
 
                         <ImageView
-                            android:layout_width="16dp"
-                            android:layout_height="16dp"
-                            android:src="@drawable/ic_launcher_foreground"
-                            app:tint="#BDBDBD" />
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@drawable/ic_chevron_right"/>
                     </LinearLayout>
                 </LinearLayout>
             </LinearLayout>
@@ -266,13 +266,12 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:backgroundTint="@color/primaryBlue"
-                    android:fontFamily="@font/rubik_semibold"
+                    android:fontFamily="sans-serif-black"
                     android:padding="12dp"
                     android:text="@string/title_signout"
                     android:textAllCaps="false"
                     android:textColor="@android:color/white"
                     android:textSize="20sp"
-                    android:textStyle="bold"
                     app:cornerRadius="12dp" />
 
             </LinearLayout>

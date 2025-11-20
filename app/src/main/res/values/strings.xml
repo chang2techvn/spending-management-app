@@ -1,36 +1,44 @@
 <resources>
-    <string name="app_name">Spending Management</string>
-    <string name="settings_language">Language</string>
-    <string name="choose_language">Choose Language</string>
-    <string name="english">English</string>
-    <string name="vietnamese">Vietnamese</string>
+    <string name="app_name">Quản lý chi tiêu</string>
+    <string name="settings_language">Ngôn ngữ</string>
+    <string name="choose_language">Chọn ngôn ngữ</string>
+    <string name="english">Tiếng Anh</string>
+    <string name="vietnamese">Tiếng Việt</string>
 
-    <string name="title_home">Home</string>
-    <string name="title_dashboard">Dashboard</string>
-    <string name="title_notifications">Notifications</string>
-    <string name="title_welcome">Welcome</string>
-    <string name="subtitle_welcome">Managing expenses has never been easier</string>
-    <string name="startup_text">Continue</string>
-    <string name="signupSuggest_text">Don\'t have an Account?</string>
-    <string name="email_hind">Enter your email address</string>
-    <string name="password_hind">Enter your password</string>
-    <string name="title_signin">Sign in</string>
+    <string name="title_home">Trang chủ</string>
+    <string name="title_dashboard">Bảng điều khiển</string>
+    <string name="title_notifications">Thông báo</string>
+    <string name="title_welcome">Chào mừng</string>
+    <string name="subtitle_welcome">Quản lý chi tiêu chưa bao giờ dễ dàng hơn</string>
+    <string name="startup_text">Tiếp tục</string>
+    <string name="signupSuggest_text">Chưa có tài khoản?</string>
+    <string name="email_hind">Nhập địa chỉ email của bạn</string>
+    <string name="password_hind">Nhập mật khẩu của bạn</string>
+    <string name="title_signin">Đăng nhập</string>
     <string name="title_email">Email</string>
-    <string name="title_signout">Sign out</string>
-    <string name="title_password">Password</string>
-    <string name="title_remember">Remember me</string>
-    <string name="forgotPassword_text">Forgot Password</string>
-    <string name="title_signup">Sign up</string>
-    <string name="signinSuggest_text">Already have an Account?</string>
-    <string name="title_firstname">First name</string>
-    <string name="firstname_hint">Enter your firstname</string>
-    <string name="title_lastname">Last name</string>
-    <string name="lastname_hint">and your lastname</string>
-    <string name="confirmPassword_hint">Re-enter your password to confirm</string>
+    <string name="title_signout">Đăng xuất</string>
+    <string name="title_password">Mật khẩu</string>
+    <string name="title_remember">Ghi nhớ tôi</string>
+    <string name="forgotPassword_text">Quên mật khẩu</string>
+    <string name="title_signup">Đăng ký</string>
+    <string name="signinSuggest_text">Đã có tài khoản?</string>
+    <string name="title_firstname">Tên</string>
+    <string name="firstname_hint">Nhập tên của bạn</string>
+    <string name="title_lastname">Họ</string>
+    <string name="lastname_hint">và họ của bạn</string>
+    <string name="confirmPassword_hint">Nhập lại mật khẩu để xác nhận</string>
+
+    <!-- Account Screen -->
+    <string name="account_header_title">Tài khoản</string>
+    <string name="account_header_subtitle">Thông tin cá nhân và cài đặt</string>
+    <string name="account_edit_profile">Chỉnh sửa hồ sơ</string>
+    <string name="account_change_password">Đổi mật khẩu</string>
+    <string name="account_settings">Cài đặt</string>
+    <string name="account_help_support">Trợ giúp &amp; Hỗ trợ</string>
 
     <string-array name="transaction_types">
-        <item>Expense</item>
-        <item>Income</item>
+        <item>Chi tiêu</item>
+        <item>Thu nhập</item>
     </string-array>
 
     <string-array name="currencies">
@@ -41,59 +49,59 @@
     </string-array>
 
     <string-array name="categories">
-        <item>Food</item>
-        <item>Transport</item>
-        <item>Shopping</item>
-        <item>Entertainment</item>
-        <item>Bills</item>
-        <item>Other</item>
+        <item>Ăn uống</item>
+        <item>Di chuyển</item>
+        <item>Mua sắm</item>
+        <item>Giải trí</item>
+        <item>Hóa đơn</item>
+        <item>Khác</item>
     </string-array>
 
-    <string name="error_user_not_found" translatable="false">Error: User not found.</string>
-    <string name="edit_profile_title" translatable="false">Edit Profile</string>
-    <string name="first_name_hint" translatable="false">First Name</string>
-    <string name="last_name_hint" translatable="false">Last Name</string>
-    <string name="save_button" translatable="false">Save</string>
-    <string name="cancel_button" translatable="false">Cancel</string>
-    <string name="profile_updated_toast" translatable="false">Profile updated</string>
-    <string name="fill_all_fields_toast" translatable="false">Please fill in all fields</string>
-    <string name="error_loading_image_toast" translatable="false">Error loading image</string>
-    <string name="change_password_title" translatable="false">Change Password</string>
-    <string name="current_password_hint" translatable="false">Current Password</string>
-    <string name="new_password_hint" translatable="false">New Password</string>
-    <string name="confirm_new_password_hint" translatable="false">Confirm New Password</string>
-    <string name="change_password_button" translatable="false">Change Password</string>
-    <string name="passwords_do_not_match_toast" translatable="false">Passwords do not match</string>
-    <string name="incorrect_current_password_toast" translatable="false">Incorrect current password</string>
-    <string name="password_changed_toast" translatable="false">Password changed</string>
-    <string name="logout_confirmation_title" translatable="false">Confirm Logout</string>
-    <string name="logout_confirmation_message" translatable="false">Are you sure you want to log out?</string>
-    <string name="logout_button" translatable="false">Logout</string>
-    <string name="logged_out_toast" translatable="false">Logged out</string>
-    <string name="settings_title" translatable="false">Settings</string>
-    <string name="notifications_item" translatable="false">Notifications</string>
-    <string name="notifications_enabled_toast" translatable="false">Notifications enabled</string>
-    <string name="notifications_disabled_toast" translatable="false">Notifications disabled</string>
-    <string name="ok_button" translatable="false">OK</string>
-    <string name="help_support_title" translatable="false">Help &amp; Support</string>
-    <string name="settings_theme" translatable="false">Theme</string>
-    <string name="settings_security" translatable="false">Security</string>
+    <string name="error_user_not_found">Lỗi: Không tìm thấy người dùng.</string>
+    <string name="edit_profile_title">Chỉnh sửa hồ sơ</string>
+    <string name="first_name_hint">Tên</string>
+    <string name="last_name_hint">Họ</string>
+    <string name="save_button">Lưu</string>
+    <string name="cancel_button">Hủy</string>
+    <string name="profile_updated_toast">Hồ sơ đã được cập nhật</string>
+    <string name="fill_all_fields_toast">Vui lòng điền đầy đủ thông tin</string>
+    <string name="error_loading_image_toast">Lỗi khi tải ảnh</string>
+    <string name="change_password_title">Đổi mật khẩu</string>
+    <string name="current_password_hint">Mật khẩu hiện tại</string>
+    <string name="new_password_hint">Mật khẩu mới</string>
+    <string name="confirm_new_password_hint">Xác nhận mật khẩu mới</string>
+    <string name="change_password_button">Đổi mật khẩu</string>
+    <string name="passwords_do_not_match_toast">Mật khẩu không khớp</string>
+    <string name="incorrect_current_password_toast">Mật khẩu hiện tại không đúng</string>
+    <string name="password_changed_toast">Mật khẩu đã được thay đổi</string>
+    <string name="logout_confirmation_title">Xác nhận đăng xuất</string>
+    <string name="logout_confirmation_message">Bạn có chắc chắn muốn đăng xuất?</string>
+    <string name="logout_button">Đăng xuất</string>
+    <string name="logged_out_toast">Đã đăng xuất</string>
+    <string name="settings_title">Cài đặt</string>
+    <string name="notifications_item">Thông báo</string>
+    <string name="notifications_enabled_toast">Thông báo đã được bật</string>
+    <string name="notifications_disabled_toast">Thông báo đã được tắt</string>
+    <string name="ok_button">OK</string>
+    <string name="help_support_title">Trợ giúp &amp; Hỗ trợ</string>
+    <string name="settings_theme">Chủ đề</string>
+    <string name="settings_security">Bảo mật</string>
 
     <!-- Help Center -->
-    <string name="help_search_hint" translatable="false">Bạn cần tìm gì?</string>
-    <string name="help_faq_title" translatable="false">Câu hỏi thường gặp</string>
-    <string name="help_faq_q1" translatable="false">Làm sao để thêm một khoản thu hoặc chi?</string>
-    <string name="help_faq_a1" translatable="false">Bạn có thể thêm giao dịch bằng cách nhấn nút “+” trên màn hình chính → chọn loại Thu/Chi → nhập số tiền và mô tả → Lưu. Ứng dụng sẽ tự động phân loại và hiển thị trên trang Tổng quan.</string>
-    <string name="help_faq_q2" translatable="false">Tôi có thể chỉnh sửa hoặc xóa giao dịch không?</string>
-    <string name="help_faq_a2" translatable="false">Có. Chỉ cần nhấn vào giao dịch bạn muốn quản lý → chọn “Chỉnh sửa” hoặc “Xóa”. Lưu ý: các giao dịch đã xóa sẽ không thể khôi phục.</string>
-    <string name="help_faq_q3" translatable="false">Ứng dụng có tự động tính tổng thu/chi theo ngày, tuần, tháng không?</string>
-    <string name="help_faq_a3" translatable="false">Có. Trang Tổng quan tự động cập nhật biểu đồ và số liệu tổng hợp theo khoảng thời gian bạn chọn. Bạn cũng có thể lọc từng loại chi tiêu.</string>
-    <string name="help_faq_q4" translatable="false">Tôi có thể sao lưu hoặc khôi phục dữ liệu không?</string>
-    <string name="help_faq_a4" translatable="false">Có. Bạn vào Cài đặt → Sao lưu &amp; Khôi phục, sau đó chọn:
+    <string name="help_search_hint">Bạn cần tìm gì?</string>
+    <string name="help_faq_title">Câu hỏi thường gặp</string>
+    <string name="help_faq_q1">Làm sao để thêm một khoản thu hoặc chi?</string>
+    <string name="help_faq_a1">Bạn có thể thêm giao dịch bằng cách nhấn nút “+” trên màn hình chính → chọn loại Thu/Chi → nhập số tiền và mô tả → Lưu. Ứng dụng sẽ tự động phân loại và hiển thị trên trang Tổng quan.</string>
+    <string name="help_faq_q2">Tôi có thể chỉnh sửa hoặc xóa giao dịch không?</string>
+    <string name="help_faq_a2">Có. Chỉ cần nhấn vào giao dịch bạn muốn quản lý → chọn “Chỉnh sửa” hoặc “Xóa”. Lưu ý: các giao dịch đã xóa sẽ không thể khôi phục.</string>
+    <string name="help_faq_q3">Ứng dụng có tự động tính tổng thu/chi theo ngày, tuần, tháng không?</string>
+    <string name="help_faq_a3">Có. Trang Tổng quan tự động cập nhật biểu đồ và số liệu tổng hợp theo khoảng thời gian bạn chọn. Bạn cũng có thể lọc từng loại chi tiêu.</string>
+    <string name="help_faq_q4">Tôi có thể sao lưu hoặc khôi phục dữ liệu không?</string>
+    <string name="help_faq_a4">Có. Bạn vào Cài đặt → Sao lưu &amp; Khôi phục, sau đó chọn:
 
 - Sao lưu lên Google Drive
 - Xuất file CSV (tùy chọn nâng cao)</string>
-    <string name="help_faq_q5" translatable="false">Làm sao để nhận hỗ trợ nhanh hoặc hỏi trợ lý AI?</string>
-    <string name="help_faq_a5" translatable="false">Nếu bạn muốn giải thích giao dịch, phân tích chi tiêu hoặc cần câu trả lời nhanh — hãy dùng Trợ lý AI bằng cách nhấn nút “Hỏi trợ lý AI” trong mục Trợ giúp hoặc trên màn hình chính.</string>
-    <string name="help_ask_ai_button" translatable="false">Hỏi trợ lý AI</string>
+    <string name="help_faq_q5">Làm sao để nhận hỗ trợ nhanh hoặc hỏi trợ lý AI?</string>
+    <string name="help_faq_a5">Nếu bạn muốn giải thích giao dịch, phân tích chi tiêu hoặc cần câu trả lời nhanh — hãy dùng Trợ lý AI bằng cách nhấn nút “Hỏi trợ lý AI” trong mục Trợ giúp hoặc trên màn hình chính.</string>
+    <string name="help_ask_ai_button">Hỏi trợ lý AI</string>
 </resources>
