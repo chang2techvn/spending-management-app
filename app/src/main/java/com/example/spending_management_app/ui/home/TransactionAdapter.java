@@ -22,6 +22,13 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
     public TransactionAdapter(List<Transaction> transactions) {
         this.transactions = transactions;
     }
+    
+    public void updateTransactions(List<Transaction> newTransactions) {
+        this.transactions.clear();
+        this.transactions.addAll(newTransactions);
+        notifyDataSetChanged();
+        android.util.Log.d("TransactionAdapter", "Updated with " + newTransactions.size() + " transactions");
+    }
 
     @NonNull
     @Override

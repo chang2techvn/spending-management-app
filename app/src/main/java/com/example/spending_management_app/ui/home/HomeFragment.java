@@ -208,6 +208,11 @@ public class HomeFragment extends Fragment {
                 // Update UI on main thread
                 if (getActivity() != null) {
                     getActivity().runOnUiThread(() -> {
+                        if (!isAdded() || getContext() == null) {
+                            android.util.Log.w("HomeFragment", "Fragment not added or context null, skipping UI update");
+                            return;
+                        }
+                        
                         transactions.clear();
                         transactions.addAll(recentTransactions);
                         
@@ -221,12 +226,12 @@ public class HomeFragment extends Fragment {
                             binding.viewAllTransactions.setOnClickListener(v -> {
                                 Navigation.findNavController(v).navigate(R.id.navigation_history);
                             });
+                            android.util.Log.d("HomeFragment", "Created new adapter with " + recentTransactions.size() + " transactions");
                         } else {
-                            // Just notify adapter of data change
-                            transactionAdapter.notifyDataSetChanged();
+                            // Update adapter data and notify
+                            transactionAdapter.updateTransactions(recentTransactions);
+                            android.util.Log.d("HomeFragment", "Updated adapter with " + recentTransactions.size() + " transactions");
                         }
-                        
-                        android.util.Log.d("HomeFragment", "Loaded " + recentTransactions.size() + " recent transactions from database");
                     });
                 }
                 
@@ -602,10 +607,15 @@ public class HomeFragment extends Fragment {
     
     // Method to refresh recent transactions when new ones are added
     public void refreshRecentTransactions() {
-        if (isAdded() && getContext() != null) {
-            loadRecentTransactionsFromDatabase();
-            loadBalanceDataFromDatabase();
-            loadCategorySpendingFromDatabase(); // Also refresh category spending
+        if (getActivity() != null) {
+            getActivity().runOnUiThread(() -> {
+                if (isAdded() && getContext() != null) {
+                    android.util.Log.d("HomeFragment", "refreshRecentTransactions called");
+                    loadRecentTransactionsFromDatabase();
+                    loadBalanceDataFromDatabase();
+                    loadCategorySpendingFromDatabase(); // Also refresh category spending
+                }
+            });
         }
     }
     

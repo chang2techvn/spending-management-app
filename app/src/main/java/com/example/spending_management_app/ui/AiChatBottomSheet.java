@@ -1785,16 +1785,31 @@ public class AiChatBottomSheet extends DialogFragment {
                     (androidx.navigation.fragment.NavHostFragment) fragmentManager.findFragmentById(R.id.nav_host_fragment_activity_main);
                 
                 if (navHostFragment != null) {
-                    androidx.fragment.app.Fragment currentFragment = navHostFragment.getChildFragmentManager().getPrimaryNavigationFragment();
+                    // Try to find HomeFragment in all child fragments, not just current one
+                    androidx.fragment.app.FragmentManager childFragmentManager = navHostFragment.getChildFragmentManager();
+                    
+                    // First try current fragment
+                    androidx.fragment.app.Fragment currentFragment = childFragmentManager.getPrimaryNavigationFragment();
                     if (currentFragment instanceof com.example.spending_management_app.ui.home.HomeFragment) {
                         com.example.spending_management_app.ui.home.HomeFragment homeFragment = 
                             (com.example.spending_management_app.ui.home.HomeFragment) currentFragment;
                         homeFragment.refreshRecentTransactions();
-                        android.util.Log.d("AiChatBottomSheet", "HomeFragment refreshed after transaction save");
-                    } else {
-                        android.util.Log.d("AiChatBottomSheet", "Current fragment is not HomeFragment: " + 
-                            (currentFragment != null ? currentFragment.getClass().getSimpleName() : "null"));
+                        android.util.Log.d("AiChatBottomSheet", "HomeFragment refreshed (current fragment)");
+                        return;
                     }
+                    
+                    // If not current, search in all fragments
+                    for (androidx.fragment.app.Fragment fragment : childFragmentManager.getFragments()) {
+                        if (fragment instanceof com.example.spending_management_app.ui.home.HomeFragment) {
+                            com.example.spending_management_app.ui.home.HomeFragment homeFragment = 
+                                (com.example.spending_management_app.ui.home.HomeFragment) fragment;
+                            homeFragment.refreshRecentTransactions();
+                            android.util.Log.d("AiChatBottomSheet", "HomeFragment refreshed (found in fragments list)");
+                            return;
+                        }
+                    }
+                    
+                    android.util.Log.d("AiChatBottomSheet", "HomeFragment not found in any fragments");
                 }
             }
         } catch (Exception e) {
@@ -3824,12 +3839,8 @@ public class AiChatBottomSheet extends DialogFragment {
             // Extract category (check if any category keyword exists)
             String category = CategoryHelper.detectCategory(text);
             
-            // Extract description (remove amount and date keywords)
-            String description = text
-                    .replaceAll("(?i)(hôm qua|hôm kia|ngày|tháng|năm|\\d+/\\d+(/\\d+)?)", "")
-                    .replaceAll(amountPattern.pattern(), "")
-                    .replaceAll("(?i)(tôi|mình|em|chi tiêu|mua|đổ)", "")
-                    .trim();
+            // Extract description using proper method
+            String description = extractDescriptionOffline(text, category, amount);
             
             if (description.isEmpty()) {
                 description = category; // Use category as description if empty
@@ -3870,6 +3881,10 @@ public class AiChatBottomSheet extends DialogFragment {
                             
                             // Toast notification like online
                             showToastOnTop("Đã thêm: " + finalDesc + " - " + formattedAmount + " VND");
+                            
+                            // Refresh home fragment and welcome message like online
+                            refreshHomeFragment();
+                            refreshExpenseWelcomeMessage();
                         });
                     }
                 } catch (Exception e) {
@@ -3924,6 +3939,10 @@ public class AiChatBottomSheet extends DialogFragment {
                                 
                                 // Toast notification like online
                                 showToastOnTop("Đã xóa chi tiêu #" + id);
+                                
+                                // Refresh home fragment and welcome message like online
+                                refreshHomeFragment();
+                                refreshExpenseWelcomeMessage();
                             });
                         }
                     } else {
@@ -4068,6 +4087,9 @@ public class AiChatBottomSheet extends DialogFragment {
                             
                             // Toast notification like online
                             showToastOnTop("Ngân sách đã được cập nhật: " + formattedAmount + " VND");
+                            
+                            // Refresh home fragment like online
+                            refreshHomeFragment();
                         });
                     }
                 } catch (Exception e) {
@@ -4131,6 +4153,9 @@ public class AiChatBottomSheet extends DialogFragment {
                                 
                                 // Toast notification like online
                                 showToastOnTop("✅ Đã xóa ngân sách tháng");
+                                
+                                // Refresh home fragment like online
+                                refreshHomeFragment();
                             });
                         }
                     } else {
@@ -4269,6 +4294,10 @@ public class AiChatBottomSheet extends DialogFragment {
                             
                             // Toast notification like online
                             showToastOnTop("Ngân sách '" + finalCategory + "' đã được cập nhật: " + formattedAmount + " VND");
+                            
+                            // Refresh welcome message and home fragment like online
+                            refreshCategoryBudgetWelcomeMessage();
+                            refreshHomeFragment();
                         });
                     }
                 } catch (Exception e) {
@@ -4352,6 +4381,10 @@ public class AiChatBottomSheet extends DialogFragment {
                                 
                                 // Toast notification like online
                                 showToastOnTop("Đã xóa ngân sách danh mục '" + finalCategory + "'");
+                                
+                                // Refresh welcome message and home fragment like online
+                                refreshCategoryBudgetWelcomeMessage();
+                                refreshHomeFragment();
                             });
                         }
                     } else {
@@ -4415,5 +4448,50 @@ public class AiChatBottomSheet extends DialogFragment {
         } catch (Exception e) {
             return null;
         }
+    }
+    
+    private String extractDescriptionOffline(String text, String category, long amount) {
+        String result = text;
+        String lowerResult = result.toLowerCase();
+        
+        // Remove date keywords first
+        result = result.replaceAll("(?i)(hôm qua|hôm kia|hôm nay)", "").trim();
+        result = result.replaceAll("(?i)(ngày|tháng|năm)\\s*\\d+", "").trim();
+        result = result.replaceAll("\\d{1,2}/\\d{1,2}(?:/\\d{4})?", "").trim();
+        
+        // Remove amount patterns (all formats: 100k, 2 triệu, 500 nghìn, etc.)
+        result = result.replaceAll("(?i)\\d+[\\s,.]*(triệu|tr|nghìn|ngàn|nghin|ngan|k|đ|vnd|dong)", "").trim();
+        result = result.replaceAll("\\d+[\\s,.]*\\d*", "").trim();
+        
+        // Remove category name if it appears
+        if (category != null && !category.equals("Khác")) {
+            result = result.replaceAll("(?i)" + Pattern.quote(category.toLowerCase()), "").trim();
+        }
+        
+        // Remove common action verbs but keep the main object
+        // Only remove these if they appear at the beginning
+        result = result.replaceAll("^(?i)(tôi|mình|em|anh|chị)\\s+", "").trim();
+        result = result.replaceAll("^(?i)(chi tiêu|thêm|đã)\\s+", "").trim();
+        
+        // Keep "mua" + object (e.g., "mua cá" -> "Mua cá")
+        if (result.toLowerCase().startsWith("mua ") || 
+            result.toLowerCase().startsWith("đổ ") ||
+            result.toLowerCase().startsWith("ăn ") ||
+            result.toLowerCase().startsWith("uống ")) {
+            // Capitalize first letter
+            result = result.substring(0, 1).toUpperCase() + result.substring(1);
+        } else {
+            // If no action verb, capitalize first letter
+            if (!result.isEmpty()) {
+                result = result.substring(0, 1).toUpperCase() + result.substring(1);
+            }
+        }
+        
+        // Clean up extra spaces and special characters
+        result = result.replaceAll("\\s+", " ").trim();
+        result = result.replaceAll("^[,.:;\\s]+", "").trim();
+        result = result.replaceAll("[,.:;\\s]+$", "").trim();
+        
+        return result;
     }
 }
