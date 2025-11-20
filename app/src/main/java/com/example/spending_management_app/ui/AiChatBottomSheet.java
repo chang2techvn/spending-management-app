@@ -3800,33 +3800,9 @@ public class AiChatBottomSheet extends DialogFragment {
     
     private boolean handleOfflineAddExpense(String text) {
         try {
-            // Regex patterns for parsing expense
-            // Pattern: "description amount [category] [date]"
-            // Example: "Hôm qua tôi đổ xăng 50k", "Mua cafe 25k ăn uống"
-            
-            // Extract amount (support k/triệu format)
-            Pattern amountPattern = Pattern.compile("(\\d+(?:[,.]\\d+)?)\\s*(?:k|triệu|tr|nghìn|ngàn)?", Pattern.CASE_INSENSITIVE);
-            Matcher amountMatcher = amountPattern.matcher(text);
-            
-            long amount = 0;
-            String amountStr = "";
-            if (amountMatcher.find()) {
-                amountStr = amountMatcher.group(1).replace(",", ".");
-                String unit = amountMatcher.group(0).toLowerCase();
-                
-                try {
-                    double baseAmount = Double.parseDouble(amountStr);
-                    if (unit.contains("triệu") || unit.contains("tr")) {
-                        amount = (long) (baseAmount * 1000000);
-                    } else if (unit.contains("k") || unit.contains("nghìn") || unit.contains("ngàn")) {
-                        amount = (long) (baseAmount * 1000);
-                    } else {
-                        amount = (long) baseAmount;
-                    }
-                } catch (NumberFormatException e) {
-                    return false;
-                }
-            } else {
+            // Extract amount using improved parser
+            Long amount = parseAmount(text);
+            if (amount == null) {
                 return false;
             }
             
@@ -3976,28 +3952,9 @@ public class AiChatBottomSheet extends DialogFragment {
         try {
             String lowerText = text.toLowerCase();
             
-            // Extract amount
-            Pattern amountPattern = Pattern.compile("(\\d+(?:[,.]\\d+)?)\\s*(?:k|triệu|tr|nghìn|ngàn)?", Pattern.CASE_INSENSITIVE);
-            Matcher amountMatcher = amountPattern.matcher(text);
-            
-            long amount = 0;
-            if (amountMatcher.find()) {
-                String amountStr = amountMatcher.group(1).replace(",", ".");
-                String unit = amountMatcher.group(0).toLowerCase();
-                
-                try {
-                    double baseAmount = Double.parseDouble(amountStr);
-                    if (unit.contains("triệu") || unit.contains("tr")) {
-                        amount = (long) (baseAmount * 1000000);
-                    } else if (unit.contains("k") || unit.contains("nghìn") || unit.contains("ngàn")) {
-                        amount = (long) (baseAmount * 1000);
-                    } else {
-                        amount = (long) baseAmount;
-                    }
-                } catch (NumberFormatException e) {
-                    return false;
-                }
-            } else {
+            // Extract amount using improved parser
+            Long amount = parseAmount(text);
+            if (amount == null) {
                 return false;
             }
             
@@ -4205,29 +4162,10 @@ public class AiChatBottomSheet extends DialogFragment {
                 return true;
             }
             
-            // Extract amount
-            Pattern amountPattern = Pattern.compile("(\\d+(?:[,.]\\d+)?)\\s*(?:k|triệu|tr|nghìn|ngàn)?", Pattern.CASE_INSENSITIVE);
-            Matcher amountMatcher = amountPattern.matcher(text);
-            
-            long amount = 0;
-            if (amountMatcher.find()) {
-                String amountStr = amountMatcher.group(1).replace(",", ".");
-                String unit = amountMatcher.group(0).toLowerCase();
-                
-                try {
-                    double baseAmount = Double.parseDouble(amountStr);
-                    if (unit.contains("triệu") || unit.contains("tr")) {
-                        amount = (long) (baseAmount * 1000000);
-                    } else if (unit.contains("k") || unit.contains("nghìn") || unit.contains("ngàn")) {
-                        amount = (long) (baseAmount * 1000);
-                    } else {
-                        amount = (long) baseAmount;
-                    }
-                } catch (NumberFormatException e) {
-                    return false;
-                }
-            } else {
-                messages.add(new ChatMessage("❌ Không tìm thấy số tiền. Vui lòng nhập số tiền (ví dụ: '500k', '2 triệu')", false, "Bây giờ"));
+            // Extract amount using improved parser
+            Long amount = parseAmount(text);
+            if (amount == null) {
+                messages.add(new ChatMessage("❌ Không tìm thấy số tiền. Vui lòng nhập số tiền (ví dụ: '500k', '2 triệu', '8 tỷ 6')", false, "Bây giờ"));
                 chatAdapter.notifyItemInserted(messages.size() - 1);
                 messagesRecycler.smoothScrollToPosition(messages.size() - 1);
                 return true;
@@ -4459,7 +4397,8 @@ public class AiChatBottomSheet extends DialogFragment {
         result = result.replaceAll("(?i)(ngày|tháng|năm)\\s*\\d+", "").trim();
         result = result.replaceAll("\\d{1,2}/\\d{1,2}(?:/\\d{4})?", "").trim();
         
-        // Remove amount patterns (all formats: 100k, 2 triệu, 500 nghìn, etc.)
+        // Remove amount patterns (all formats: 100k, 2 triệu, 500 nghìn, 8 tỷ 6, etc.)
+        result = result.replaceAll("(?i)\\d+[\\s,.]*(tỷ|tỉ)\\s*\\d*[\\s,.]*(triệu|tr|nghìn|ngàn|k)?", "").trim();
         result = result.replaceAll("(?i)\\d+[\\s,.]*(triệu|tr|nghìn|ngàn|nghin|ngan|k|đ|vnd|dong)", "").trim();
         result = result.replaceAll("\\d+[\\s,.]*\\d*", "").trim();
         
@@ -4493,5 +4432,100 @@ public class AiChatBottomSheet extends DialogFragment {
         result = result.replaceAll("[,.:;\\s]+$", "").trim();
         
         return result;
+    }
+    
+    private Long parseAmount(String text) {
+        try {
+            String lowerText = text.toLowerCase();
+            
+            // Pattern 1: "X tỷ Y triệu" or "X tỷ Y" (e.g., "8 tỷ 6" = 8,500,000,000 or "8 tỷ 500 triệu" = 8,500,000,000)
+            Pattern tyTrieuPattern = Pattern.compile("(\\d+(?:[,.]\\d+)?)\\s*(?:tỷ|tỉ)\\s*(\\d+(?:[,.]\\d+)?)?\\s*(?:triệu|tr)?", Pattern.CASE_INSENSITIVE);
+            Matcher tyTrieuMatcher = tyTrieuPattern.matcher(lowerText);
+            if (tyTrieuMatcher.find()) {
+                String tyStr = tyTrieuMatcher.group(1).replace(",", ".");
+                String trieuStr = tyTrieuMatcher.group(2);
+                
+                double ty = Double.parseDouble(tyStr);
+                long amount = (long) (ty * 1000000000); // tỷ = 1,000,000,000
+                
+                if (trieuStr != null && !trieuStr.isEmpty()) {
+                    double trieu = Double.parseDouble(trieuStr.replace(",", "."));
+                    // If trieu >= 100, it's already in triệu (e.g., "8 tỷ 500 triệu")
+                    // If trieu < 100, it's in trăm triệu (e.g., "8 tỷ 5" = "8 tỷ 500 triệu")
+                    if (trieu >= 100) {
+                        amount += (long) (trieu * 1000000);
+                    } else {
+                        amount += (long) (trieu * 100000000); // trăm triệu
+                    }
+                }
+                
+                android.util.Log.d("AiChatBottomSheet", "Parsed amount (tỷ): " + amount + " from text: " + text);
+                return amount;
+            }
+            
+            // Pattern 2: "X triệu Y" or "X triệu Y nghìn" (e.g., "2 triệu 5" = 2,500,000 or "2 triệu 500 nghìn" = 2,500,000)
+            Pattern trieuNghinPattern = Pattern.compile("(\\d+(?:[,.]\\d+)?)\\s*(?:triệu|tr)\\s*(\\d+(?:[,.]\\d+)?)?\\s*(?:nghìn|ngàn|k)?", Pattern.CASE_INSENSITIVE);
+            Matcher trieuNghinMatcher = trieuNghinPattern.matcher(lowerText);
+            if (trieuNghinMatcher.find()) {
+                String trieuStr = trieuNghinMatcher.group(1).replace(",", ".");
+                String nghinStr = trieuNghinMatcher.group(2);
+                
+                double trieu = Double.parseDouble(trieuStr);
+                long amount = (long) (trieu * 1000000); // triệu = 1,000,000
+                
+                if (nghinStr != null && !nghinStr.isEmpty()) {
+                    double nghin = Double.parseDouble(nghinStr.replace(",", "."));
+                    // If nghin >= 100, it's already in nghìn (e.g., "2 triệu 500 nghìn")
+                    // If nghin < 100, it's in trăm nghìn (e.g., "2 triệu 5" = "2 triệu 500 nghìn")
+                    if (nghin >= 100) {
+                        amount += (long) (nghin * 1000);
+                    } else {
+                        amount += (long) (nghin * 100000); // trăm nghìn
+                    }
+                }
+                
+                android.util.Log.d("AiChatBottomSheet", "Parsed amount (triệu): " + amount + " from text: " + text);
+                return amount;
+            }
+            
+            // Pattern 3: Simple format "X triệu", "Y nghìn", "Z k"
+            Pattern simplePattern = Pattern.compile("(\\d+(?:[,.]\\d+)?)\\s*(tỷ|tỉ|triệu|tr|nghìn|ngàn|k)", Pattern.CASE_INSENSITIVE);
+            Matcher simpleMatcher = simplePattern.matcher(lowerText);
+            if (simpleMatcher.find()) {
+                String amountStr = simpleMatcher.group(1).replace(",", ".");
+                String unit = simpleMatcher.group(2).toLowerCase();
+                
+                double baseAmount = Double.parseDouble(amountStr);
+                long amount;
+                
+                if (unit.contains("tỷ") || unit.contains("tỉ")) {
+                    amount = (long) (baseAmount * 1000000000);
+                } else if (unit.contains("triệu") || unit.contains("tr")) {
+                    amount = (long) (baseAmount * 1000000);
+                } else if (unit.contains("k") || unit.contains("nghìn") || unit.contains("ngàn")) {
+                    amount = (long) (baseAmount * 1000);
+                } else {
+                    amount = (long) baseAmount;
+                }
+                
+                android.util.Log.d("AiChatBottomSheet", "Parsed amount (simple): " + amount + " from text: " + text);
+                return amount;
+            }
+            
+            // Pattern 4: Just number (no unit)
+            Pattern numberPattern = Pattern.compile("(\\d+(?:[,.]\\d+)?)");
+            Matcher numberMatcher = numberPattern.matcher(lowerText);
+            if (numberMatcher.find()) {
+                String amountStr = numberMatcher.group(1).replace(",", ".");
+                long amount = (long) Double.parseDouble(amountStr);
+                android.util.Log.d("AiChatBottomSheet", "Parsed amount (no unit): " + amount + " from text: " + text);
+                return amount;
+            }
+            
+            return null;
+        } catch (Exception e) {
+            android.util.Log.e("AiChatBottomSheet", "Error parsing amount from: " + text, e);
+            return null;
+        }
     }
 }
