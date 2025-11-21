@@ -2,6 +2,7 @@ package com.example.spending_management_app.utils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 public class ExtractorHelper {
     private ExtractorHelper() {
@@ -87,6 +88,25 @@ public class ExtractorHelper {
         result = result.trim();
 
         return result.isEmpty() ? "✅ Đã xử lý!" : result;
+    }
+
+    public static String extractDescription(String text, String category, long amount) {
+        String result = text;
+
+        // Remove category
+        result = result.replaceAll("(?i)" + Pattern.quote(category), "").trim();
+
+        // Remove amount patterns
+        result = result.replaceAll("\\d+[\\s]*(triệu|tr|ngàn|k|nghìn|n|đ|vnd)", "").trim();
+        result = result.replaceAll("\\d+", "").trim();
+
+        // Remove common keywords
+        result = result.replaceAll("(?i)(chi tiêu|thêm|mua|đi|về)", "").trim();
+
+        // Clean up extra spaces
+        result = result.replaceAll("\\s+", " ").trim();
+
+        return result;
     }
 
 }
