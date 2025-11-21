@@ -1,5 +1,6 @@
 package com.example.spending_management_app.ui.helpcenter;
 
+import android.graphics.Paint;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -9,6 +10,7 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.fragment.NavHostFragment;
 
 import com.example.spending_management_app.R;
 import com.example.spending_management_app.databinding.FragmentHelpCenterBinding;
@@ -24,6 +26,7 @@ public class HelpCenterFragment extends Fragment {
         View root = binding.getRoot();
 
         setupFaqToggle();
+        setupBackButton();
 
         binding.askAiButton.setOnClickListener(v -> {
             AiChatBottomSheet bottomSheet = new AiChatBottomSheet();
@@ -31,6 +34,15 @@ public class HelpCenterFragment extends Fragment {
         });
 
         return root;
+    }
+
+    private void setupBackButton() {
+        // Add underline to the back button text
+        binding.tvBack.setPaintFlags(binding.tvBack.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
+
+        binding.backButton.setOnClickListener(v -> {
+            NavHostFragment.findNavController(this).navigateUp();
+        });
     }
 
     private void setupFaqToggle() {
@@ -46,12 +58,12 @@ public class HelpCenterFragment extends Fragment {
         question.setOnClickListener(v -> {
             if (answer.getVisibility() == View.GONE) {
                 answer.setVisibility(View.VISIBLE);
-                // Preserve the start icon, update the end icon to 'up' arrow
+                // Preserve the start icon, update the end icon to 'up' arrow. Note: ic_chevron_right rotated -90 deg is up
                 question.setCompoundDrawablesWithIntrinsicBounds(startIconResId, 0, R.drawable.ic_arrow_up, 0);
             } else {
                 answer.setVisibility(View.GONE);
-                // Preserve the start icon, update the end icon to 'down' arrow
-                question.setCompoundDrawablesWithIntrinsicBounds(startIconResId, 0, R.drawable.ic_arrow_down, 0);
+                // Preserve the start icon, update the end icon to 'down' arrow. Note: ic_chevron_right is right, we used ic_chevron_right in xml
+                question.setCompoundDrawablesWithIntrinsicBounds(startIconResId, 0, R.drawable.ic_chevron_right, 0);
             }
         });
     }

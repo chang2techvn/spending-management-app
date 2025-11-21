@@ -14,15 +14,52 @@
         android:orientation="vertical"
         android:padding="16dp">
 
-        <!-- FAQ Section -->
-        <TextView
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/help_faq_title"
-            android:textSize="18sp"
-            android:textColor="#212121"
-            android:fontFamily="sans-serif-medium"
-            android:layout_marginBottom="16dp"/>
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="16dp">
+
+            <LinearLayout
+                android:id="@+id/back_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:clickable="true"
+                android:focusable="true"
+                android:padding="8dp"
+                android:layout_marginEnd="16dp">
+
+                <ImageView
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:src="@drawable/icons8_back_100"
+                    app:tint="#212121" />
+
+                <TextView
+                    android:id="@+id/tv_back"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:fontFamily="sans-serif-medium"
+                    android:text="Back"
+                    android:textColor="#212121"
+                    android:textSize="18sp"
+                    android:textStyle="italic" />
+            </LinearLayout>
+
+            <!-- FAQ Section -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/help_faq_title"
+                android:textSize="18sp"
+                android:textColor="#212121"
+                android:fontFamily="sans-serif-medium"/>
+        </LinearLayout>
 
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
@@ -55,7 +92,7 @@
                         android:fontFamily="sans-serif-medium"
                         android:drawableStart="@drawable/ic_faq_add"
                         android:drawablePadding="12dp"
-                        android:drawableEnd="@android:drawable/arrow_down_float"
+                        android:drawableEnd="@drawable/ic_chevron_right"
                         android:gravity="center_vertical"/>
 
                     <TextView
@@ -96,7 +133,7 @@
                         android:fontFamily="sans-serif-medium"
                         android:drawableStart="@drawable/ic_faq_edit"
                         android:drawablePadding="12dp"
-                        android:drawableEnd="@android:drawable/arrow_down_float"
+                        android:drawableEnd="@drawable/ic_chevron_right"
                         android:gravity="center_vertical"/>
 
                     <TextView
@@ -137,7 +174,7 @@
                         android:fontFamily="sans-serif-medium"
                         android:drawableStart="@drawable/ic_faq_chart"
                         android:drawablePadding="12dp"
-                        android:drawableEnd="@android:drawable/arrow_down_float"
+                        android:drawableEnd="@drawable/ic_chevron_right"
                         android:gravity="center_vertical"/>
 
                     <TextView
@@ -178,7 +215,7 @@
                         android:fontFamily="sans-serif-medium"
                         android:drawableStart="@drawable/ic_faq_backup"
                         android:drawablePadding="12dp"
-                        android:drawableEnd="@android:drawable/arrow_down_float"
+                        android:drawableEnd="@drawable/ic_chevron_right"
                         android:gravity="center_vertical"/>
 
                     <TextView
@@ -219,7 +256,7 @@
                         android:fontFamily="sans-serif-medium"
                         android:drawableStart="@drawable/ic_faq_ai"
                         android:drawablePadding="12dp"
-                        android:drawableEnd="@android:drawable/arrow_down_float"
+                        android:drawableEnd="@drawable/ic_chevron_right"
                         android:gravity="center_vertical"/>
 
                     <TextView

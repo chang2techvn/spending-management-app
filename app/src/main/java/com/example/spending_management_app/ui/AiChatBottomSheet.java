@@ -54,7 +54,7 @@ import java.text.NumberFormat;
 
 public class AiChatBottomSheet extends DialogFragment {
 
-    public static final String TAG = "AiChatBottomSheet";
+    public static final String TAG =  "AiChatBottomSheet";
     private static final int VOICE_REQUEST_CODE = 1001;
 
     @Override
