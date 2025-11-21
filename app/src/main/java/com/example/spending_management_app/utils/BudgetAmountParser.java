@@ -102,4 +102,41 @@ public class BudgetAmountParser {
             return null;
         }
     }
+
+    public static long extractBudgetAmount(String text) {
+        try {
+            text = text.toLowerCase().trim();
+            
+            // Pattern 1: "X triệu" or "X tr"
+            Pattern trPattern = Pattern.compile("(\\d+(?:[,.]\\d+)?)\\s*(?:triệu|tr)");
+            Matcher trMatcher = trPattern.matcher(text);
+            if (trMatcher.find()) {
+                String numberStr = trMatcher.group(1).replace(",", ".").replace(".", "");
+                double millions = Double.parseDouble(numberStr);
+                return (long)(millions * 1000000);
+            }
+            
+            // Pattern 2: "X nghìn" or "X k"
+            Pattern kPattern = Pattern.compile("(\\d+(?:[,.]\\d+)?)\\s*(?:nghìn|k|ng)");
+            Matcher kMatcher = kPattern.matcher(text);
+            if (kMatcher.find()) {
+                String numberStr = kMatcher.group(1).replace(",", ".").replace(".", "");
+                double thousands = Double.parseDouble(numberStr);
+                return (long)(thousands * 1000);
+            }
+            
+            // Pattern 3: Plain number (should be large enough to be a budget)
+            Pattern numberPattern = Pattern.compile("(\\d{5,})"); // At least 5 digits
+            Matcher numberMatcher = numberPattern.matcher(text);
+            if (numberMatcher.find()) {
+                return Long.parseLong(numberMatcher.group(1));
+            }
+            
+            return 0;
+            
+        } catch (Exception e) {
+            android.util.Log.e("AiChatBottomSheet", "Error extracting budget amount", e);
+            return 0;
+        }
+    }
 }

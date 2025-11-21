@@ -38,6 +38,10 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.spending_management_app.MainActivity;
 import com.example.spending_management_app.R;
+import com.example.spending_management_app.utils.TextFormatHelper;
+import com.example.spending_management_app.utils.ExpenseDescriptionParser;
+import com.example.spending_management_app.utils.DateParser;
+import com.example.spending_management_app.utils.JsonExtractor;
 import com.example.spending_management_app.utils.BudgetAmountParser;
 import com.example.spending_management_app.utils.CategoryHelper;
 import com.example.spending_management_app.utils.ExpenseMessageHelper;
@@ -954,10 +958,10 @@ public class AiChatBottomSheet extends DialogFragment {
         android.util.Log.d("AiChatBottomSheet", "=== FINAL RESULT: isAbsoluteSet=" + isAbsoluteSet + ", isIncrease=" + isIncrease + ", isDecrease=" + isDecrease + " ===");
         
         // Extract amount from text (support various formats like "15 triệu", "20000000", "25tr")
-        long amount = extractBudgetAmount(text);
+        long amount = BudgetAmountParser.extractBudgetAmount(text);
         
         // Extract month and year from text (default to current month if not specified)
-        int[] monthYear = extractMonthYear(text);
+        int[] monthYear = DateParser.extractMonthYear(text);
         int targetMonth = monthYear[0];
         int targetYear = monthYear[1];
         
@@ -1178,98 +1182,6 @@ public class AiChatBottomSheet extends DialogFragment {
         }
     }
     
-    private int[] extractMonthYear(String text) {
-        try {
-            text = text.toLowerCase().trim();
-            
-            Calendar currentCal = Calendar.getInstance();
-            int currentMonth = currentCal.get(Calendar.MONTH) + 1; // 0-based to 1-based
-            int currentYear = currentCal.get(Calendar.YEAR);
-            
-            // Pattern 1: "tháng X" or "tháng X/YYYY"
-            Pattern monthPattern = Pattern.compile("tháng\\s+(\\d{1,2})(?:/(\\d{4}))?");
-            Matcher monthMatcher = monthPattern.matcher(text);
-            if (monthMatcher.find()) {
-                int month = Integer.parseInt(monthMatcher.group(1));
-                int year = monthMatcher.group(2) != null ? 
-                          Integer.parseInt(monthMatcher.group(2)) : currentYear;
-                
-                // If month is valid (1-12)
-                if (month >= 1 && month <= 12) {
-                    return new int[]{month, year};
-                }
-            }
-            
-            // Pattern 2: "X/YYYY" or "XX/YYYY"
-            Pattern datePattern = Pattern.compile("(\\d{1,2})/(\\d{4})");
-            Matcher dateMatcher = datePattern.matcher(text);
-            if (dateMatcher.find()) {
-                int month = Integer.parseInt(dateMatcher.group(1));
-                int year = Integer.parseInt(dateMatcher.group(2));
-                
-                if (month >= 1 && month <= 12) {
-                    return new int[]{month, year};
-                }
-            }
-            
-            // Pattern 3: "tháng này" - current month
-            if (text.contains("tháng này") || text.contains("thang nay")) {
-                return new int[]{currentMonth, currentYear};
-            }
-            
-            // Pattern 4: "tháng sau" or "tháng tới" - next month
-            if (text.contains("tháng sau") || text.contains("tháng tới") || 
-                text.contains("thang sau") || text.contains("thang toi")) {
-                currentCal.add(Calendar.MONTH, 1);
-                return new int[]{currentCal.get(Calendar.MONTH) + 1, currentCal.get(Calendar.YEAR)};
-            }
-            
-            // Default: current month
-            return new int[]{currentMonth, currentYear};
-            
-        } catch (Exception e) {
-            android.util.Log.e("AiChatBottomSheet", "Error extracting month/year", e);
-            Calendar currentCal = Calendar.getInstance();
-            return new int[]{currentCal.get(Calendar.MONTH) + 1, currentCal.get(Calendar.YEAR)};
-        }
-    }
-    
-    private long extractBudgetAmount(String text) {
-        try {
-            text = text.toLowerCase().trim();
-            
-            // Pattern 1: "X triệu" or "X tr"
-            Pattern trPattern = Pattern.compile("(\\d+(?:[,.]\\d+)?)\\s*(?:triệu|tr)");
-            Matcher trMatcher = trPattern.matcher(text);
-            if (trMatcher.find()) {
-                String numberStr = trMatcher.group(1).replace(",", ".").replace(".", "");
-                double millions = Double.parseDouble(numberStr);
-                return (long)(millions * 1000000);
-            }
-            
-            // Pattern 2: "X nghìn" or "X k"
-            Pattern kPattern = Pattern.compile("(\\d+(?:[,.]\\d+)?)\\s*(?:nghìn|k|ng)");
-            Matcher kMatcher = kPattern.matcher(text);
-            if (kMatcher.find()) {
-                String numberStr = kMatcher.group(1).replace(",", ".").replace(".", "");
-                double thousands = Double.parseDouble(numberStr);
-                return (long)(thousands * 1000);
-            }
-            
-            // Pattern 3: Plain number (should be large enough to be a budget)
-            Pattern numberPattern = Pattern.compile("(\\d{5,})"); // At least 5 digits
-            Matcher numberMatcher = numberPattern.matcher(text);
-            if (numberMatcher.find()) {
-                return Long.parseLong(numberMatcher.group(1));
-            }
-            
-            return 0;
-            
-        } catch (Exception e) {
-            android.util.Log.e("AiChatBottomSheet", "Error extracting budget amount", e);
-            return 0;
-        }
-    }
 
     private void sendPromptToAI(String text) {
         // Add temporary "Đang phân tích..." message
@@ -1355,7 +1267,7 @@ public class AiChatBottomSheet extends DialogFragment {
                             String aiText = parts.getJSONObject(0).getString("text").trim();
 
                             // Check if response contains JSON - extract ALL JSON objects
-                            List<String> allJsonParts = extractAllJsonFromText(aiText);
+                            List<String> allJsonParts = JsonExtractor.extractAllJsonFromText(aiText);
                             String displayText = extractDisplayText(aiText);
 
                             android.util.Log.d("AiChatBottomSheet", "AI full response: " + aiText);
@@ -1367,7 +1279,7 @@ public class AiChatBottomSheet extends DialogFragment {
                                 android.util.Log.d("AiChatBottomSheet", "Updating message at index: " + analyzingIndex + " with: " + displayText);
                                 
                                 // Format markdown text để dễ đọc hơn
-                                String formattedDisplayText = formatMarkdownText(displayText);
+                                String formattedDisplayText = TextFormatHelper.formatMarkdownText(displayText);
                                 
                                 messages.set(analyzingIndex, new ChatMessage(formattedDisplayText, false, "Bây giờ"));
                                 chatAdapter.notifyItemChanged(analyzingIndex);
@@ -1419,84 +1331,7 @@ public class AiChatBottomSheet extends DialogFragment {
             chatAdapter.notifyItemChanged(analyzingIndex);
         }
     }
-
-
-
-    private String extractJsonFromText(String text) {
-        android.util.Log.d("AiChatBottomSheet", "Extracting JSON from text: " + text);
-        // Find JSON object in text
-        int start = text.indexOf('{');
-        int end = text.lastIndexOf('}');
-        android.util.Log.d("AiChatBottomSheet", "JSON positions - start: " + start + ", end: " + end);
-        if (start != -1 && end != -1 && end > start) {
-            String jsonResult = text.substring(start, end + 1);
-            android.util.Log.d("AiChatBottomSheet", "Extracted JSON result: " + jsonResult);
-            return jsonResult;
-        }
-        android.util.Log.d("AiChatBottomSheet", "No JSON found in text");
-        return null;
-    }
     
-    private List<String> extractAllJsonFromText(String text) {
-        android.util.Log.d("AiChatBottomSheet", "Extracting ALL JSON objects from text");
-        List<String> jsonList = new ArrayList<>();
-        
-        int pos = 0;
-        while (pos < text.length()) {
-            int start = text.indexOf('{', pos);
-            if (start == -1) break;
-            
-            // Find matching closing brace
-            int braceCount = 0;
-            int end = start;
-            boolean inString = false;
-            boolean escapeNext = false;
-            
-            for (int i = start; i < text.length(); i++) {
-                char c = text.charAt(i);
-                
-                if (escapeNext) {
-                    escapeNext = false;
-                    continue;
-                }
-                
-                if (c == '\\') {
-                    escapeNext = true;
-                    continue;
-                }
-                
-                if (c == '"') {
-                    inString = !inString;
-                    continue;
-                }
-                
-                if (!inString) {
-                    if (c == '{') {
-                        braceCount++;
-                    } else if (c == '}') {
-                        braceCount--;
-                        if (braceCount == 0) {
-                            end = i;
-                            break;
-                        }
-                    }
-                }
-            }
-            
-            if (braceCount == 0 && end > start) {
-                String json = text.substring(start, end + 1);
-                android.util.Log.d("AiChatBottomSheet", "Found JSON object: " + json);
-                jsonList.add(json);
-                pos = end + 1;
-            } else {
-                pos = start + 1;
-            }
-        }
-        
-        android.util.Log.d("AiChatBottomSheet", "Total JSON objects found: " + jsonList.size());
-        return jsonList;
-    }
-
     private String extractDisplayText(String text) {
         // Remove ALL JSON parts and markdown code blocks
         String result = text;
@@ -1506,7 +1341,7 @@ public class AiChatBottomSheet extends DialogFragment {
         result = result.replaceAll("```[\\s\\S]*?```", "");
         
         // Remove all JSON objects
-        List<String> allJsons = extractAllJsonFromText(result);
+        List<String> allJsons = JsonExtractor.extractAllJsonFromText(result);
         for (String json : allJsons) {
             result = result.replace(json, "");
         }
@@ -1606,17 +1441,6 @@ public class AiChatBottomSheet extends DialogFragment {
         }
     }
 
-    // Helper method để thêm message vào chat
-    private void addMessageToChat(String message, boolean isUser) {
-        android.util.Log.d("AiChatBottomSheet", "Adding message to chat (isUser=" + isUser + "): " + message);
-        android.util.Log.d("AiChatBottomSheet", "Current message count before add: " + messages.size());
-        
-        messages.add(new ChatMessage(message, isUser, "Bây giờ"));
-        chatAdapter.notifyItemInserted(messages.size() - 1);
-        messagesRecycler.smoothScrollToPosition(messages.size() - 1);
-        
-        android.util.Log.d("AiChatBottomSheet", "Current message count after add: " + messages.size());
-    }
 
     // Helper method để hiển thị toast ở top
     private void showTopToast(String message, int duration) {
@@ -1809,27 +1633,6 @@ public class AiChatBottomSheet extends DialogFragment {
             android.util.Log.e("AiChatBottomSheet", "Error refreshing HistoryFragment", e);
         }
     }
-
-
-
-    private String createExpenseConfirmationMessage(String name, long amount, String category, int day, int month, int year, String type) {
-        // Format amount with thousand separator
-        String formattedAmount = String.format(Locale.getDefault(), "%,d", amount);
-        String dateStr = String.format("%d/%d/%d", day, month, year);
-        
-        // Create humorous comments based on category and amount
-        String humorousComment = ExpenseMessageHelper.getHumorousComment(category, amount, name);
-        
-        // Create confirmation message with full format
-        if ("expense".equals(type)) {
-            return String.format("Okela! Đã ghi nhận chi tiêu %s với số tiền %s VND thuộc danh mục %s vào ngày %s. %s Bạn có muốn thêm chi tiêu nào khác không?", 
-                name, formattedAmount, category, dateStr, humorousComment);
-        } else {
-            return String.format("Tuyệt vời! Đã ghi nhận thu nhập %s với số tiền %s VND thuộc danh mục %s vào ngày %s. %s Túi tiền đang mỉm cười đấy! 😊", 
-                name, formattedAmount, category, dateStr, humorousComment);
-        }
-    }
-
 
     public static class ChatMessage {
         public String message;
@@ -2083,7 +1886,7 @@ public class AiChatBottomSheet extends DialogFragment {
                             String aiText = parts.getJSONObject(0).getString("text").trim();
 
                             // Format markdown text để dễ đọc
-                            String formattedText = formatMarkdownText(aiText);
+                            String formattedText = TextFormatHelper.formatMarkdownText(aiText);
 
                             getActivity().runOnUiThread(() -> {
                                 messages.set(analyzingIndex, new ChatMessage(formattedText, false, "Bây giờ"));
@@ -2114,42 +1917,6 @@ public class AiChatBottomSheet extends DialogFragment {
         }
     }
 
-    // Helper method để format markdown text thành plain text dễ đọc
-    private String formatMarkdownText(String text) {
-        if (text == null || text.isEmpty()) {
-            return text;
-        }
-        
-        try {
-            // Xóa bold markdown (**text**)
-            text = text.replaceAll("\\*\\*(.*?)\\*\\*", "$1");
-            
-            // Xóa italic markdown (*text*)
-            text = text.replaceAll("(?<!\\*)\\*(?!\\*)([^*]+)\\*(?!\\*)", "$1");
-            
-            // Xóa heading markdown (###, ##, #)
-            text = text.replaceAll("^#{1,6}\\s+", "");
-            text = text.replaceAll("\\n#{1,6}\\s+", "\n");
-            
-            // Giữ nguyên xuống dòng - KHÔNG xóa
-            // Chỉ chuẩn hóa: tối đa 2 xuống dòng liên tiếp
-            text = text.replaceAll("\\n{3,}", "\n\n");
-            
-            // Xóa các asterisk đơn lẻ còn sót lại
-            text = text.replaceAll("(?<!\\S)\\*(?!\\S)", "");
-            
-            // Trim whitespace đầu cuối
-            text = text.trim();
-            
-            android.util.Log.d("AiChatBottomSheet", "Formatted text: " + text);
-            
-            return text;
-            
-        } catch (Exception e) {
-            android.util.Log.e("AiChatBottomSheet", "Error formatting markdown", e);
-            return text; // Return original if error
-        }
-    }
     
     // Get comprehensive budget context from database
     private String getBudgetContext() {
@@ -2403,7 +2170,7 @@ public class AiChatBottomSheet extends DialogFragment {
                             JSONArray parts = content.getJSONArray("parts");
                             String aiText = parts.getJSONObject(0).getString("text").trim();
 
-                            String formattedText = formatMarkdownText(aiText);
+                            String formattedText = TextFormatHelper.formatMarkdownText(aiText);
 
                             getActivity().runOnUiThread(() -> {
                                 messages.set(analyzingIndex, new ChatMessage(formattedText, false, "Bây giờ"));
@@ -2443,7 +2210,7 @@ public class AiChatBottomSheet extends DialogFragment {
         messagesRecycler.smoothScrollToPosition(messages.size() - 1);
         
         // Extract month and year from text
-        int[] monthYear = extractMonthYear(text);
+        int[] monthYear = DateParser.extractMonthYear(text);
         int targetMonth = monthYear[0];
         int targetYear = monthYear[1];
         
@@ -2696,7 +2463,7 @@ public class AiChatBottomSheet extends DialogFragment {
                 
                 if (!operationType.equals("delete")) {
                     // Extract amount from this segment only
-                    amount = extractBudgetAmount(segment);
+                    amount = BudgetAmountParser.extractBudgetAmount(segment);
                     
                     if (amount <= 0) {
                         continue; // Skip if no valid amount found for add/edit
@@ -2716,7 +2483,7 @@ public class AiChatBottomSheet extends DialogFragment {
         int searchEnd = Math.min(text.length(), categoryEnd + 50);
         String searchArea = text.substring(searchStart, searchEnd);
         
-        return extractBudgetAmount(searchArea);
+        return BudgetAmountParser.extractBudgetAmount(searchArea);
     }
     
     private long extractAmountNearCategory(String text, String category) {
@@ -3293,7 +3060,7 @@ public class AiChatBottomSheet extends DialogFragment {
                 long amount = 0;
                 
                 // Extract amount
-                amount = extractBudgetAmount(segment);
+                amount = BudgetAmountParser.extractBudgetAmount(segment);
                 android.util.Log.d("AiChatBottomSheet", "    Extracted amount: " + amount);
                 
                 if (amount <= 0) {
@@ -3572,7 +3339,7 @@ public class AiChatBottomSheet extends DialogFragment {
             }
             
             // Extract date
-            Date expenseDate = parseDate(text);
+            Date expenseDate = DateParser.parseDate(text);
             if (expenseDate == null) {
                 expenseDate = new Date(); // Default to today
             }
@@ -3581,7 +3348,7 @@ public class AiChatBottomSheet extends DialogFragment {
             String category = CategoryHelper.detectCategory(text);
             
             // Extract description using proper method
-            String description = extractDescriptionOffline(text, category, amount);
+            String description = ExpenseDescriptionParser.extractDescriptionOffline(text, category, amount);
             
             if (description.isEmpty()) {
                 description = category; // Use category as description if empty
@@ -4115,88 +3882,6 @@ public class AiChatBottomSheet extends DialogFragment {
             android.util.Log.e("AiChatBottomSheet", "Error handling offline delete category budget", e);
             return false;
         }
-    }
-    
-    private Date parseDate(String text) {
-        try {
-            String lowerText = text.toLowerCase();
-            Calendar cal = Calendar.getInstance();
-            
-            if (lowerText.contains("hôm qua")) {
-                cal.add(Calendar.DAY_OF_MONTH, -1);
-                return cal.getTime();
-            } else if (lowerText.contains("hôm kia")) {
-                cal.add(Calendar.DAY_OF_MONTH, -2);
-                return cal.getTime();
-            }
-            
-            // Pattern: dd/MM or dd/MM/yyyy
-            Pattern datePattern = Pattern.compile("(\\d{1,2})/(\\d{1,2})(?:/(\\d{4}))?");
-            Matcher dateMatcher = datePattern.matcher(text);
-            
-            if (dateMatcher.find()) {
-                int day = Integer.parseInt(dateMatcher.group(1));
-                int month = Integer.parseInt(dateMatcher.group(2)) - 1; // Calendar month is 0-based
-                int year = cal.get(Calendar.YEAR);
-                
-                if (dateMatcher.group(3) != null) {
-                    year = Integer.parseInt(dateMatcher.group(3));
-                }
-                
-                cal.set(year, month, day);
-                return cal.getTime();
-            }
-            
-            return null;
-        } catch (Exception e) {
-            return null;
-        }
-    }
-    
-    private String extractDescriptionOffline(String text, String category, long amount) {
-        String result = text;
-        String lowerResult = result.toLowerCase();
-        
-        // Remove date keywords first
-        result = result.replaceAll("(?i)(hôm qua|hôm kia|hôm nay)", "").trim();
-        result = result.replaceAll("(?i)(ngày|tháng|năm)\\s*\\d+", "").trim();
-        result = result.replaceAll("\\d{1,2}/\\d{1,2}(?:/\\d{4})?", "").trim();
-        
-        // Remove amount patterns (all formats: 100k, 2 triệu, 500 nghìn, 8 tỷ 6, etc.)
-        result = result.replaceAll("(?i)\\d+[\\s,.]*(tỷ|tỉ)\\s*\\d*[\\s,.]*(triệu|tr|nghìn|ngàn|k)?", "").trim();
-        result = result.replaceAll("(?i)\\d+[\\s,.]*(triệu|tr|nghìn|ngàn|nghin|ngan|k|đ|vnd|dong)", "").trim();
-        result = result.replaceAll("\\d+[\\s,.]*\\d*", "").trim();
-        
-        // Remove category name if it appears
-        if (category != null && !category.equals("Khác")) {
-            result = result.replaceAll("(?i)" + Pattern.quote(category.toLowerCase()), "").trim();
-        }
-        
-        // Remove common action verbs but keep the main object
-        // Only remove these if they appear at the beginning
-        result = result.replaceAll("^(?i)(tôi|mình|em|anh|chị)\\s+", "").trim();
-        result = result.replaceAll("^(?i)(chi tiêu|thêm|đã)\\s+", "").trim();
-        
-        // Keep "mua" + object (e.g., "mua cá" -> "Mua cá")
-        if (result.toLowerCase().startsWith("mua ") || 
-            result.toLowerCase().startsWith("đổ ") ||
-            result.toLowerCase().startsWith("ăn ") ||
-            result.toLowerCase().startsWith("uống ")) {
-            // Capitalize first letter
-            result = result.substring(0, 1).toUpperCase() + result.substring(1);
-        } else {
-            // If no action verb, capitalize first letter
-            if (!result.isEmpty()) {
-                result = result.substring(0, 1).toUpperCase() + result.substring(1);
-            }
-        }
-        
-        // Clean up extra spaces and special characters
-        result = result.replaceAll("\\s+", " ").trim();
-        result = result.replaceAll("^[,.:;\\s]+", "").trim();
-        result = result.replaceAll("[,.:;\\s]+$", "").trim();
-        
-        return result;
     }
     
 }
