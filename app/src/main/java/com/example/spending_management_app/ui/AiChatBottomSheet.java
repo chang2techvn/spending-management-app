@@ -2,10 +2,7 @@ package com.example.spending_management_app.ui;
 
 import static android.app.Activity.RESULT_OK;
 
-import android.app.Dialog;
 import android.content.Intent;
-import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -20,9 +17,6 @@ import android.view.View;
 import android.view.Gravity;
 import android.view.ViewGroup;
 import android.view.WindowManager;
-import android.view.animation.AccelerateInterpolator;
-import android.view.animation.DecelerateInterpolator;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.speech.tts.TextToSpeech;
@@ -38,17 +32,17 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.spending_management_app.MainActivity;
 import com.example.spending_management_app.R;
+import com.example.spending_management_app.service.GeminiAI;
 import com.example.spending_management_app.utils.TextFormatHelper;
 import com.example.spending_management_app.utils.ExpenseDescriptionParser;
 import com.example.spending_management_app.utils.DateParser;
-import com.example.spending_management_app.utils.JsonExtractor;
+import com.example.spending_management_app.utils.ExtractorHelper;
 import com.example.spending_management_app.utils.BudgetAmountParser;
+import com.example.spending_management_app.utils.BudgetMessageHelper;
 import com.example.spending_management_app.utils.CategoryHelper;
 import com.example.spending_management_app.utils.ExpenseMessageHelper;
 import com.example.spending_management_app.utils.CategoryIconHelper;
 import com.example.spending_management_app.utils.AiSystemInstructions;
-import com.google.android.material.textfield.TextInputEditText;
-import com.google.android.material.snackbar.Snackbar;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -67,11 +61,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Date;
 import java.util.concurrent.Executors;
-import java.text.NumberFormat;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
-import java.util.Locale;
-import java.util.stream.Collectors;
 
 public class AiChatBottomSheet extends DialogFragment {
 
@@ -712,13 +703,13 @@ public class AiChatBottomSheet extends DialogFragment {
         }
         
         // Check if user is asking for budget analysis, view, or delete
-        if (isBudgetMode || isBudgetQuery(text)) {
+        if (isBudgetMode || BudgetMessageHelper.isBudgetQuery(text)) {
             handleBudgetQuery(text);
             return;
         }
         
         // Check if user is asking for financial analysis or reports
-        if (!isBudgetMode && isFinancialQuery(text)) {
+        if (!isBudgetMode && ExpenseMessageHelper.isFinancialQuery(text)) {
             // Get comprehensive financial data from database
             Executors.newSingleThreadExecutor().execute(() -> {
                 try {
@@ -816,42 +807,7 @@ public class AiChatBottomSheet extends DialogFragment {
         }
         return false;
     }
-    
-    // Check if user is querying about budget
-    private boolean isBudgetQuery(String text) {
-        String lowerText = text.toLowerCase();
-        
-        // Nếu có từ "ngân sách"
-        if (!lowerText.contains("ngân sách")) {
-            return false;
-        }
-        
-        // Các trường hợp luôn là câu hỏi về ngân sách:
-        // 1. Có động từ hành động hoặc câu hỏi
-        boolean hasActionOrQuestion = 
-                lowerText.contains("xem") || lowerText.contains("hiển thị") ||
-                lowerText.contains("cho tôi biết") || lowerText.contains("thế nào") ||
-                lowerText.contains("bao nhiêu") || lowerText.contains("phân tích") ||
-                lowerText.contains("tư vấn") || lowerText.contains("đánh giá") ||
-                lowerText.contains("so sánh") || lowerText.contains("xu hướng") ||
-                lowerText.contains("xóa") || lowerText.contains("xoá") ||
-                lowerText.contains("thêm") || lowerText.contains("đặt") || 
-                lowerText.contains("sửa") || lowerText.contains("thay đổi") ||
-                lowerText.contains("thiết lập");
-        
-        // 2. Có từ khóa thời gian (năm, tháng, ngày) - ngầm hiểu là xem ngân sách
-        boolean hasTimeKeyword = 
-                lowerText.contains("năm") || lowerText.contains("tháng") ||
-                lowerText.contains("này") || lowerText.contains("trước") ||
-                lowerText.contains("sau") || lowerText.contains("tất cả") ||
-                lowerText.contains("toàn bộ") || lowerText.contains("hiện tại");
-        
-        // 3. Chỉ có "ngân sách" một mình (câu ngắn <= 15 ký tự) - có thể là xem tổng quan
-        boolean isShortBudgetQuery = lowerText.trim().length() <= 15;
-        
-        return hasActionOrQuestion || hasTimeKeyword || isShortBudgetQuery;
-    }
-    
+
     // Handle budget queries (view, analyze, add, edit, delete)
     private void handleBudgetQuery(String text) {
         String lowerText = text.toLowerCase();
@@ -1267,8 +1223,8 @@ public class AiChatBottomSheet extends DialogFragment {
                             String aiText = parts.getJSONObject(0).getString("text").trim();
 
                             // Check if response contains JSON - extract ALL JSON objects
-                            List<String> allJsonParts = JsonExtractor.extractAllJsonFromText(aiText);
-                            String displayText = extractDisplayText(aiText);
+                            List<String> allJsonParts = ExtractorHelper.extractAllJsonFromText(aiText);
+                            String displayText = ExtractorHelper.extractDisplayText(aiText);
 
                             android.util.Log.d("AiChatBottomSheet", "AI full response: " + aiText);
                             android.util.Log.d("AiChatBottomSheet", "Number of JSON objects found: " + allJsonParts.size());
@@ -1331,27 +1287,7 @@ public class AiChatBottomSheet extends DialogFragment {
             chatAdapter.notifyItemChanged(analyzingIndex);
         }
     }
-    
-    private String extractDisplayText(String text) {
-        // Remove ALL JSON parts and markdown code blocks
-        String result = text;
-        
-        // Remove markdown code blocks (```json ... ```)
-        result = result.replaceAll("```json[\\s\\S]*?```", "");
-        result = result.replaceAll("```[\\s\\S]*?```", "");
-        
-        // Remove all JSON objects
-        List<String> allJsons = JsonExtractor.extractAllJsonFromText(result);
-        for (String json : allJsons) {
-            result = result.replace(json, "");
-        }
-        
-        // Clean up extra whitespace and newlines
-        result = result.replaceAll("\\n{3,}", "\n\n"); // Max 2 consecutive newlines
-        result = result.trim();
-        
-        return result.isEmpty() ? "✅ Đã xử lý!" : result;
-    }
+
 
     private void saveExpenseDirectly(String jsonString) {
         android.util.Log.d("AiChatBottomSheet", "saveExpenseDirectly called with: " + jsonString);
@@ -1702,20 +1638,6 @@ public class AiChatBottomSheet extends DialogFragment {
                 ((android.widget.LinearLayout.LayoutParams) timeText.getLayoutParams()).gravity = android.view.Gravity.START;
             }
         }
-    }
-
-    // Check if user is asking for financial analysis
-    private boolean isFinancialQuery(String text) {
-        String lowerText = text.toLowerCase();
-        return lowerText.contains("chi tiêu") && (
-                lowerText.contains("hôm nay") || lowerText.contains("hôm qua") || 
-                lowerText.contains("tuần") || lowerText.contains("tháng") ||
-                lowerText.contains("tổng") || lowerText.contains("bao nhiêu") ||
-                lowerText.contains("phân tích") || lowerText.contains("báo cáo") ||
-                lowerText.contains("danh mục") || lowerText.contains("thống kê") ||
-                lowerText.contains("ngày") && (lowerText.contains("/") || lowerText.matches(".*\\d+.*")) ||
-                lowerText.contains("so với") || lowerText.contains("tư vấn")
-        );
     }
 
     // Get comprehensive financial context from database
@@ -2101,6 +2023,10 @@ public class AiChatBottomSheet extends DialogFragment {
     }
     
     // Send prompt to AI with budget context
+    /**
+     * Send prompt to AI with budget context using GeminiAI service
+     * This method uses callback pattern to handle UI updates
+     */
     private void sendPromptToAIWithBudgetContext(String userQuery, String budgetContext) {
         // Add temporary "Đang phân tích..." message
         int analyzingIndex = messages.size();
@@ -2108,97 +2034,26 @@ public class AiChatBottomSheet extends DialogFragment {
         chatAdapter.notifyItemInserted(messages.size() - 1);
         messagesRecycler.smoothScrollToPosition(messages.size() - 1);
 
-        try {
-            JSONObject json = new JSONObject();
+        // Use GeminiAI service with callback
+        GeminiAI.sendPromptWithBudgetContext(userQuery, budgetContext, new GeminiAI.AIResponseCallback() {
+            @Override
+            public void onSuccess(String formattedResponse) {
+                // Update UI with AI response
+                messages.set(analyzingIndex, new ChatMessage(formattedResponse, false, "Bây giờ"));
+                chatAdapter.notifyItemChanged(analyzingIndex);
+                messagesRecycler.smoothScrollToPosition(messages.size() - 1);
+                textToSpeech.speak(formattedResponse, TextToSpeech.QUEUE_FLUSH, null, null);
+                updateNetworkStatus();
+            }
 
-            // Get current date for AI context
-            java.util.Calendar currentCalendar = java.util.Calendar.getInstance();
-            int currentDay = currentCalendar.get(java.util.Calendar.DAY_OF_MONTH);
-            int currentMonth = currentCalendar.get(java.util.Calendar.MONTH) + 1;
-            int currentYear = currentCalendar.get(java.util.Calendar.YEAR);
-            String currentDateInfo = String.format("Hôm nay là ngày %d/%d/%d", currentDay, currentMonth, currentYear);
-
-            // System instruction for budget analysis
-            JSONObject systemInstruction = new JSONObject();
-            JSONArray systemParts = new JSONArray();
-            JSONObject systemPart = new JSONObject();
-            
-            String instruction = AiSystemInstructions.getBudgetAnalysisInstruction(currentDateInfo, budgetContext);
-            
-            systemPart.put("text", instruction);
-            systemParts.put(systemPart);
-            systemInstruction.put("parts", systemParts);
-            json.put("system_instruction", systemInstruction);
-
-            // User message
-            JSONArray contents = new JSONArray();
-            JSONObject userContent = new JSONObject();
-            JSONArray userParts = new JSONArray();
-            JSONObject userPart = new JSONObject();
-            userPart.put("text", userQuery);
-            userParts.put(userPart);
-            userContent.put("parts", userParts);
-            userContent.put("role", "user");
-            contents.put(userContent);
-            json.put("contents", contents);
-
-            RequestBody body = RequestBody.create(json.toString(), MediaType.parse("application/json"));
-            Request request = new Request.Builder()
-                    .url("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyAsDEIa1N6Dn_rCXYiRCXuUAY-E1DQ0Yv8")
-                    .post(body)
-                    .build();
-
-            client.newCall(request).enqueue(new Callback() {
-                @Override
-                public void onFailure(Call call, IOException e) {
-                    getActivity().runOnUiThread(() -> {
-                        messages.set(analyzingIndex, new ChatMessage("Lỗi kết nối AI.", false, "Bây giờ"));
-                        chatAdapter.notifyItemChanged(analyzingIndex);
-                        updateNetworkStatus();
-                    });
-                }
-
-                @Override
-                public void onResponse(Call call, Response response) throws IOException {
-                    if (response.isSuccessful()) {
-                        try {
-                            String responseBody = response.body().string();
-                            JSONObject jsonResponse = new JSONObject(responseBody);
-                            JSONArray candidates = jsonResponse.getJSONArray("candidates");
-                            JSONObject candidate = candidates.getJSONObject(0);
-                            JSONObject content = candidate.getJSONObject("content");
-                            JSONArray parts = content.getJSONArray("parts");
-                            String aiText = parts.getJSONObject(0).getString("text").trim();
-
-                            String formattedText = TextFormatHelper.formatMarkdownText(aiText);
-
-                            getActivity().runOnUiThread(() -> {
-                                messages.set(analyzingIndex, new ChatMessage(formattedText, false, "Bây giờ"));
-                                chatAdapter.notifyItemChanged(analyzingIndex);
-                                messagesRecycler.smoothScrollToPosition(messages.size() - 1);
-                                textToSpeech.speak(formattedText, TextToSpeech.QUEUE_FLUSH, null, null);
-                                updateNetworkStatus();
-                            });
-                        } catch (Exception e) {
-                            getActivity().runOnUiThread(() -> {
-                                messages.set(analyzingIndex, new ChatMessage("Lỗi xử lý phản hồi AI.", false, "Bây giờ"));
-                                chatAdapter.notifyItemChanged(analyzingIndex);
-                                updateNetworkStatus();
-                            });
-                        }
-                    } else {
-                        getActivity().runOnUiThread(() -> {
-                            messages.set(analyzingIndex, new ChatMessage("Lỗi từ AI: " + response.code(), false, "Bây giờ"));
-                            chatAdapter.notifyItemChanged(analyzingIndex);
-                            updateNetworkStatus();
-                        });
-                    }
-                }
-            });
-        } catch (Exception e) {
-            messages.set(analyzingIndex, new ChatMessage("Lỗi gửi tin nhắn.", false, "Bây giờ"));
-            chatAdapter.notifyItemChanged(analyzingIndex);
-        }
+            @Override
+            public void onFailure(String errorMessage) {
+                // Update UI with error message
+                messages.set(analyzingIndex, new ChatMessage(errorMessage, false, "Bây giờ"));
+                chatAdapter.notifyItemChanged(analyzingIndex);
+                updateNetworkStatus();
+            }
+        });
     }
     
     // Handle delete budget request
@@ -3037,7 +2892,7 @@ public class AiChatBottomSheet extends DialogFragment {
             android.util.Log.d("AiChatBottomSheet", "Processing line: [" + line + "]");
             
             // Extract date from this line (each line can have its own date)
-            Date expenseDate = extractDateFromText(line);
+            Date expenseDate = DateParser.extractDateFromText(line);
             android.util.Log.d("AiChatBottomSheet", "Extracted date: " + expenseDate);
             
             // Split each line by common separators (và, ,, ;)
@@ -3133,45 +2988,7 @@ public class AiChatBottomSheet extends DialogFragment {
         
         return result;
     }
-    
-    private Date extractDateFromText(String text) {
-        String lowerText = text.toLowerCase();
-        Calendar cal = Calendar.getInstance();
-        
-        // Check for specific date patterns
-        if (lowerText.contains("hôm qua") || lowerText.contains("yesterday")) {
-            cal.add(Calendar.DAY_OF_MONTH, -1);
-        } else if (lowerText.contains("hôm kia") || lowerText.contains("2 ngày trước")) {
-            cal.add(Calendar.DAY_OF_MONTH, -2);
-        } else if (lowerText.contains("tuần trước") || lowerText.contains("last week")) {
-            cal.add(Calendar.DAY_OF_MONTH, -7);
-        } else {
-            // Try to find date pattern: "ngày 10/11" or "10/11" or "10-11"
-            Pattern datePattern = Pattern.compile("(?:ngày\\s+)?(\\d{1,2})[/-](\\d{1,2})(?:[/-](\\d{2,4}))?");
-            Matcher matcher = datePattern.matcher(lowerText);
-            
-            if (matcher.find()) {
-                int day = Integer.parseInt(matcher.group(1));
-                int month = Integer.parseInt(matcher.group(2));
-                int year = cal.get(Calendar.YEAR);
-                
-                if (matcher.group(3) != null) {
-                    year = Integer.parseInt(matcher.group(3));
-                    if (year < 100) {
-                        year += 2000;
-                    }
-                }
-                
-                cal.set(Calendar.YEAR, year);
-                cal.set(Calendar.MONTH, month - 1);
-                cal.set(Calendar.DAY_OF_MONTH, day);
-            }
-            // Default: today (no changes to cal)
-        }
-        
-        // Set time to current time
-        return cal.getTime();
-    }
+
     
     private void processExpenseOperations(List<ExpenseOperation> operations, int analyzingIndex) {
         Executors.newSingleThreadExecutor().execute(() -> {

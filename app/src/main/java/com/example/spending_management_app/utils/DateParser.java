@@ -101,4 +101,43 @@ public final class DateParser {
             return new int[]{currentCal.get(Calendar.MONTH) + 1, currentCal.get(Calendar.YEAR)};
         }
     }
+
+    public static Date extractDateFromText(String text) {
+        String lowerText = text.toLowerCase();
+        Calendar cal = Calendar.getInstance();
+
+        // Check for specific date patterns
+        if (lowerText.contains("hôm qua") || lowerText.contains("yesterday")) {
+            cal.add(Calendar.DAY_OF_MONTH, -1);
+        } else if (lowerText.contains("hôm kia") || lowerText.contains("2 ngày trước")) {
+            cal.add(Calendar.DAY_OF_MONTH, -2);
+        } else if (lowerText.contains("tuần trước") || lowerText.contains("last week")) {
+            cal.add(Calendar.DAY_OF_MONTH, -7);
+        } else {
+            // Try to find date pattern: "ngày 10/11" or "10/11" or "10-11"
+            Pattern datePattern = Pattern.compile("(?:ngày\\s+)?(\\d{1,2})[/-](\\d{1,2})(?:[/-](\\d{2,4}))?");
+            Matcher matcher = datePattern.matcher(lowerText);
+
+            if (matcher.find()) {
+                int day = Integer.parseInt(matcher.group(1));
+                int month = Integer.parseInt(matcher.group(2));
+                int year = cal.get(Calendar.YEAR);
+
+                if (matcher.group(3) != null) {
+                    year = Integer.parseInt(matcher.group(3));
+                    if (year < 100) {
+                        year += 2000;
+                    }
+                }
+
+                cal.set(Calendar.YEAR, year);
+                cal.set(Calendar.MONTH, month - 1);
+                cal.set(Calendar.DAY_OF_MONTH, day);
+            }
+            // Default: today (no changes to cal)
+        }
+
+        // Set time to current time
+        return cal.getTime();
+    }
 }

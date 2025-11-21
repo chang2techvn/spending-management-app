@@ -41,4 +41,18 @@ public final class ExpenseMessageHelper {
                 }
         }
     }
+
+        // Check if user is asking for financial analysis
+    public static boolean isFinancialQuery(String text) {
+        String lowerText = text.toLowerCase();
+        return lowerText.contains("chi tiêu") && (
+                lowerText.contains("hôm nay") || lowerText.contains("hôm qua") || 
+                lowerText.contains("tuần") || lowerText.contains("tháng") ||
+                lowerText.contains("tổng") || lowerText.contains("bao nhiêu") ||
+                lowerText.contains("phân tích") || lowerText.contains("báo cáo") ||
+                lowerText.contains("danh mục") || lowerText.contains("thống kê") ||
+                lowerText.contains("ngày") && (lowerText.contains("/") || lowerText.matches(".*\\d+.*")) ||
+                lowerText.contains("so với") || lowerText.contains("tư vấn")
+        );
+    }
 }

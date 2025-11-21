@@ -3,8 +3,8 @@ package com.example.spending_management_app.utils;
 import java.util.ArrayList;
 import java.util.List;
 
-public class JsonExtractor {
-    private JsonExtractor() {
+public class ExtractorHelper {
+    private ExtractorHelper() {
         throw new UnsupportedOperationException("Utility class");
     }
 
@@ -66,6 +66,27 @@ public class JsonExtractor {
         
         android.util.Log.d("AiChatBottomSheet", "Total JSON objects found: " + jsonList.size());
         return jsonList;
+    }
+
+    public static String extractDisplayText(String text) {
+        // Remove ALL JSON parts and markdown code blocks
+        String result = text;
+
+        // Remove markdown code blocks (```json ... ```)
+        result = result.replaceAll("```json[\\s\\S]*?```", "");
+        result = result.replaceAll("```[\\s\\S]*?```", "");
+
+        // Remove all JSON objects
+        List<String> allJsons = ExtractorHelper.extractAllJsonFromText(result);
+        for (String json : allJsons) {
+            result = result.replace(json, "");
+        }
+
+        // Clean up extra whitespace and newlines
+        result = result.replaceAll("\\n{3,}", "\n\n"); // Max 2 consecutive newlines
+        result = result.trim();
+
+        return result.isEmpty() ? "✅ Đã xử lý!" : result;
     }
 
 }
