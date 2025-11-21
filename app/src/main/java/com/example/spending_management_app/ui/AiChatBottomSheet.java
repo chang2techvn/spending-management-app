@@ -43,6 +43,7 @@ import com.example.spending_management_app.utils.CategoryHelper;
 import com.example.spending_management_app.utils.ExpenseMessageHelper;
 import com.example.spending_management_app.utils.CategoryIconHelper;
 import com.example.spending_management_app.utils.AiSystemInstructions;
+import com.example.spending_management_app.utils.ToastHelper;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -611,7 +612,7 @@ public class AiChatBottomSheet extends DialogFragment {
         try {
             startActivityForResult(intent, VOICE_REQUEST_CODE);
         } catch (Exception e) {
-            showTopToast("Thiết bị không hỗ trợ nhận diện giọng nói", Toast.LENGTH_SHORT);
+            ToastHelper.showTopToast(getActivity(), "Thiết bị không hỗ trợ nhận diện giọng nói", Toast.LENGTH_SHORT);
         }
     }
 
@@ -760,9 +761,9 @@ public class AiChatBottomSheet extends DialogFragment {
                 if (getActivity() != null) {
                     getActivity().runOnUiThread(() -> {
                         if (isError) {
-                            showErrorToast(toastMessage);
+                            ToastHelper.showErrorToast(getActivity(), toastMessage);
                         } else {
-                            showToastOnTop(toastMessage);
+                            ToastHelper.showToastOnTop(getActivity(), toastMessage);
                         }
                     });
                 }
@@ -1072,7 +1073,7 @@ public class AiChatBottomSheet extends DialogFragment {
                             chatAdapter.notifyItemChanged(analyzingIndex);
                             messagesRecycler.smoothScrollToPosition(messages.size() - 1);
                             
-                            showToastOnTop(toastMessage);
+                            ToastHelper.showToastOnTop(getActivity(), toastMessage);
                             
                             // Refresh HomeFragment
                             refreshHomeFragment();
@@ -1088,7 +1089,7 @@ public class AiChatBottomSheet extends DialogFragment {
                                     "❌ Có lỗi xảy ra khi lưu ngân sách. Vui lòng thử lại!", 
                                     false, "Bây giờ"));
                             chatAdapter.notifyItemChanged(analyzingIndex);
-                            showErrorToast("Lỗi lưu ngân sách");
+                            ToastHelper.showErrorToast(getActivity(), "Lỗi lưu ngân sách");
                         });
                     }
                 }
@@ -1322,7 +1323,7 @@ public class AiChatBottomSheet extends DialogFragment {
                             android.util.Log.d("AiChatBottomSheet", "Toast message: " + toastMessage);
                             
                             // Hiển thị 1 toast duy nhất ở TOP với UI đẹp
-                            showToastOnTop(toastMessage);
+                            ToastHelper.showToastOnTop(requireActivity(), toastMessage);
                             
                             // Refresh HomeFragment if available
                             refreshHomeFragment();
@@ -1341,7 +1342,7 @@ public class AiChatBottomSheet extends DialogFragment {
                         e.printStackTrace();
                         requireActivity().runOnUiThread(() -> {
                             String errorMessage = "❌ Có lỗi xảy ra khi lưu dữ liệu: " + e.getMessage();
-                            showErrorToast(errorMessage);
+                            ToastHelper.showErrorToast(getActivity(), errorMessage);
                             android.util.Log.e("AiChatBottomSheet", "Error saving expense", e);
                         });
                     }
@@ -1351,136 +1352,12 @@ public class AiChatBottomSheet extends DialogFragment {
         } catch (Exception e) {
             e.printStackTrace();
             String errorMessage = "❌ Có lỗi xảy ra khi xử lý dữ liệu: " + e.getMessage();
-            showErrorToast(errorMessage);
+            ToastHelper.showErrorToast(getActivity(), errorMessage);
             android.util.Log.e("AiChatBottomSheet", "Error processing data", e);
         }
     }
 
 
-    // Helper method để hiển thị toast ở top
-    private void showTopToast(String message, int duration) {
-        try {
-            if (getActivity() != null) {
-                Toast toast = Toast.makeText(getActivity().getApplicationContext(), message, duration);
-                // Đặt toast ở TOP của màn hình với margin lớn
-                toast.setGravity(Gravity.TOP | Gravity.CENTER_HORIZONTAL, 0, 250);
-                toast.show();
-                
-                // Log để debug
-                android.util.Log.d("AiChatBottomSheet", "Top toast shown: " + message);
-            }
-        } catch (Exception e) {
-            android.util.Log.e("AiChatBottomSheet", "Error showing top toast", e);
-        }
-    }
-
-    // Method tạo custom view toast ở TOP với UI đẹp và animation
-    private void showCustomTopToast(String message) {
-        showCustomToastWithType(message, "success");
-    }
-
-    // Method tổng quát cho các loại toast
-    private void showCustomToastWithType(String message, String type) {
-        try {
-            // Tạo custom toast view với layout đẹp
-            android.view.LayoutInflater inflater = android.view.LayoutInflater.from(requireActivity());
-            android.view.View layout = inflater.inflate(R.layout.custom_toast_layout, null);
-            
-            // Set background dựa vào type
-            switch (type) {
-                case "success":
-                    layout.setBackgroundResource(R.drawable.toast_success_background);
-                    break;
-                case "error":
-                    layout.setBackgroundResource(R.drawable.toast_error_background);
-                    break;
-                default:
-                    layout.setBackgroundResource(R.drawable.toast_background);
-                    break;
-            }
-            
-            android.widget.TextView text = layout.findViewById(R.id.toast_text);
-            text.setText(message);
-            
-            Toast toast = new Toast(requireActivity());
-            toast.setGravity(Gravity.TOP | Gravity.CENTER_HORIZONTAL, 0, 150);
-            toast.setDuration(Toast.LENGTH_LONG);
-            toast.setView(layout);
-            
-            // Animation dựa vào type
-            layout.setAlpha(0f);
-            if ("error".equals(type)) {
-                // Animation cho error với shake effect
-                layout.animate()
-                    .alpha(1f)
-                    .setDuration(400)
-                    .withEndAction(() -> {
-                        // Hiệu ứng rung nhẹ
-                        layout.animate().translationX(-8).setDuration(80)
-                            .withEndAction(() -> layout.animate().translationX(8).setDuration(80)
-                                .withEndAction(() -> layout.animate().translationX(0).setDuration(80).start()).start()).start();
-                    }).start();
-            } else {
-                // Animation bình thường cho success/info
-                layout.animate()
-                    .alpha(1f)
-                    .setDuration(400)
-                    .setInterpolator(new android.view.animation.DecelerateInterpolator())
-                    .start();
-            }
-            
-            toast.show();
-            
-            // Animation slide out với timing khác nhau
-            int delay = "error".equals(type) ? 4500 : 4000;
-            new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                if (layout.getParent() != null) {
-                    layout.animate()
-                        .translationX(layout.getWidth() + 100)
-                        .alpha(0.2f)
-                        .setDuration(600)
-                        .setInterpolator(new android.view.animation.AccelerateInterpolator())
-                        .withEndAction(() -> android.util.Log.d("AiChatBottomSheet", "Toast slide out completed"))
-                        .start();
-                }
-            }, delay);
-            
-            android.util.Log.d("AiChatBottomSheet", "Beautiful " + type + " toast shown: " + message);
-            
-        } catch (Exception e) {
-            android.util.Log.e("AiChatBottomSheet", "Custom toast failed", e);
-            // Fallback đơn giản
-            Toast simpleToast = Toast.makeText(requireActivity(), message, Toast.LENGTH_LONG);
-            simpleToast.setGravity(Gravity.TOP | Gravity.CENTER_HORIZONTAL, 0, 150);
-            simpleToast.show();
-        }
-    }
-
-    // Method để hiển thị toast ở layer cao nhất (trên cùng màn hình)
-    private void showToastOnTop(String message) {
-        try {
-            // Chỉ hiển thị 1 custom toast duy nhất ở TOP với UI đẹp
-            showCustomTopToast(message);
-            android.util.Log.d("AiChatBottomSheet", "Single top toast shown: " + message);
-            
-        } catch (Exception e) {
-            android.util.Log.e("AiChatBottomSheet", "Error showing top toast", e);
-            // Simple fallback nếu custom toast fail
-            try {
-                Toast simpleToast = Toast.makeText(requireActivity(), message, Toast.LENGTH_LONG);
-                simpleToast.setGravity(Gravity.TOP | Gravity.CENTER_HORIZONTAL, 0, 200);
-                simpleToast.show();
-            } catch (Exception ex) {
-                android.util.Log.e("AiChatBottomSheet", "Fallback toast failed", ex);
-            }
-        }
-    }
-
-    // Method riêng cho error toast
-    private void showErrorToast(String message) {
-        showCustomToastWithType(message, "error");
-    }
-    
     // Method to refresh HomeFragment after successful transaction save
     // Method to refresh HomeFragment - delegates to FragmentRefreshHelper
     private void refreshHomeFragment() {
@@ -1644,7 +1521,7 @@ public class AiChatBottomSheet extends DialogFragment {
                             chatAdapter.notifyItemChanged(analyzingIndex);
                             messagesRecycler.smoothScrollToPosition(messages.size() - 1);
                             
-                            showToastOnTop("✅ Đã xóa ngân sách tháng " + monthYearStr);
+                            ToastHelper.showToastOnTop(getActivity(), "✅ Đã xóa ngân sách tháng " + monthYearStr);
                             refreshHomeFragment();
                         });
                     }
@@ -1671,7 +1548,7 @@ public class AiChatBottomSheet extends DialogFragment {
                                 "❌ Có lỗi xảy ra khi xóa ngân sách. Vui lòng thử lại!", 
                                 false, "Bây giờ"));
                         chatAdapter.notifyItemChanged(analyzingIndex);
-                        showErrorToast("Lỗi xóa ngân sách");
+                        ToastHelper.showErrorToast(getActivity(), "Lỗi xóa ngân sách");
                     });
                 }
             }
@@ -1922,11 +1799,11 @@ public class AiChatBottomSheet extends DialogFragment {
                                 chatAdapter.notifyItemChanged(analyzingIndex);
                                 
                                 if (counts[0] > 0) {
-                                    showToastOnTop("✅ Đã xóa tất cả ngân sách danh mục");
+                                    ToastHelper.showToastOnTop(getActivity(), "✅ Đã xóa tất cả ngân sách danh mục");
                                     refreshHomeFragment();
                                     refreshCategoryBudgetWelcomeMessage();
                                 } else {
-                                    showErrorToast("⚠️ Không có ngân sách nào để xóa");
+                                    ToastHelper.showErrorToast(getActivity(), "⚠️ Không có ngân sách nào để xóa");
                                 }
                             });
                         }
@@ -1940,7 +1817,7 @@ public class AiChatBottomSheet extends DialogFragment {
                                         "❌ Có lỗi xảy ra khi xóa tất cả ngân sách danh mục!", 
                                         false, "Bây giờ"));
                                 chatAdapter.notifyItemChanged(analyzingIndex);
-                                showErrorToast("Lỗi xóa ngân sách");
+                                ToastHelper.showErrorToast(getActivity(), "Lỗi xóa ngân sách");
                             });
                         }
                     }
@@ -2080,14 +1957,14 @@ public class AiChatBottomSheet extends DialogFragment {
                             // Has failures - show error toast in red
                             if (counts[0] > 0) {
                                 // Mixed results
-                                showErrorToast("⚠️ " + counts[0] + " thành công, " + counts[1] + " thất bại");
+                                ToastHelper.showErrorToast(getActivity(), "⚠️ " + counts[0] + " thành công, " + counts[1] + " thất bại");
                             } else {
                                 // All failed
-                                showErrorToast("❌ Thất bại: " + counts[1] + " danh mục");
+                                ToastHelper.showErrorToast(getActivity(), "❌ Thất bại: " + counts[1] + " danh mục");
                             }
                         } else {
                             // All success - show success toast in green
-                            showToastOnTop("✅ Cập nhật " + counts[0] + " danh mục");
+                            ToastHelper.showToastOnTop(getActivity(), "✅ Cập nhật " + counts[0] + " danh mục");
                         }
                         
                         refreshHomeFragment();
@@ -2438,12 +2315,12 @@ public class AiChatBottomSheet extends DialogFragment {
                         // Show toast based on result
                         if (counts[1] > 0) {
                             if (counts[0] > 0) {
-                                showErrorToast("⚠️ " + counts[0] + " thành công, " + counts[1] + " thất bại");
+                                ToastHelper.showErrorToast(getActivity(), "⚠️ " + counts[0] + " thành công, " + counts[1] + " thất bại");
                             } else {
-                                showErrorToast("❌ Thất bại: " + counts[1] + " giao dịch");
+                                ToastHelper.showErrorToast(getActivity(), "❌ Thất bại: " + counts[1] + " giao dịch");
                             }
                         } else {
-                            showToastOnTop("✅ Thêm " + counts[0] + " chi tiêu");
+                            ToastHelper.showToastOnTop(getActivity(), "✅ Thêm " + counts[0] + " chi tiêu");
                         }
                         
                         refreshHomeFragment();
