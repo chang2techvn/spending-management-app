@@ -38,7 +38,10 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.spending_management_app.MainActivity;
 import com.example.spending_management_app.R;
+import com.example.spending_management_app.utils.BudgetAmountParser;
 import com.example.spending_management_app.utils.CategoryHelper;
+import com.example.spending_management_app.utils.ExpenseMessageHelper;
+import com.example.spending_management_app.utils.CategoryIconHelper;
 import com.example.spending_management_app.utils.AiSystemInstructions;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.snackbar.Snackbar;
@@ -524,7 +527,7 @@ public class AiChatBottomSheet extends DialogFragment {
                     SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM", new Locale("vi", "VN"));
                     
                     for (TransactionEntity transaction : recentTransactions) {
-                        String emoji = getIconEmoji(transaction.category);
+                        String emoji = CategoryIconHelper.getIconEmoji(transaction.category);
                         String formattedAmount = String.format("%,d", Math.abs(transaction.amount));
                         String dateStr = dateFormat.format(transaction.date);
                         
@@ -1815,7 +1818,7 @@ public class AiChatBottomSheet extends DialogFragment {
         String dateStr = String.format("%d/%d/%d", day, month, year);
         
         // Create humorous comments based on category and amount
-        String humorousComment = getHumorousComment(category, amount, name);
+        String humorousComment = ExpenseMessageHelper.getHumorousComment(category, amount, name);
         
         // Create confirmation message with full format
         if ("expense".equals(type)) {
@@ -1827,41 +1830,6 @@ public class AiChatBottomSheet extends DialogFragment {
         }
     }
 
-    private String getHumorousComment(String category, long amount, String name) {
-        // Generate humorous comments based on category and amount
-        switch (category.toLowerCase()) {
-            case "ăn uống":
-                if (amount > 100000) {
-                    return "Ăn ngon thế này thì tiền bay cũng đáng rồi! 🍽️";
-                } else if (amount > 50000) {
-                    return "Đói bụng thì phải ăn thôi mà! 😋";
-                } else {
-                    return "Tiết kiệm mà vẫn ngon, giỏi lắm! 👍";
-                }
-            case "di chuyển":
-                if (amount > 200000) {
-                    return "Đi xa thế này chắc về quê nhỉ? 🚗";
-                } else {
-                    return "Đi lại cũng cần tiền xăng chứ! ⛽";
-                }
-            case "mua sắm":
-                if (amount > 500000) {
-                    return "Shopping thế này ví run cầm cập! 💸";
-                } else {
-                    return "Mua sắm hợp lý, đúng rồi! 🛍️";
-                }
-            case "giải trí":
-                return "Vui chơi để sống khỏe mạnh! 🎉";
-            case "y tế":
-                return "Sức khỏe là vàng, chi tiêu đúng rồi! 🏥";
-            default:
-                if (amount > 100000) {
-                    return "Chi tiêu khủng thế này! 💰";
-                } else {
-                    return "Chi tiêu hợp lý, tốt lắm! ✨";
-                }
-        }
-    }
 
     public static class ChatMessage {
         public String message;
@@ -2865,7 +2833,7 @@ public class AiChatBottomSheet extends DialogFragment {
                                 com.example.spending_management_app.utils.BudgetHistoryLogger.logCategoryBudgetDeleted(
                                         getContext(), op.category, deletedAmount);
                                 
-                                String icon = getIconEmoji(op.category);
+                                String icon = CategoryIconHelper.getIconEmoji(op.category);
                                 resultMessage.append("✅ Xóa ").append(icon).append(" ").append(op.category).append("\n");
                                 counts[0]++;
                             } else {
@@ -2897,7 +2865,7 @@ public class AiChatBottomSheet extends DialogFragment {
                                 long newTotal = currentTotal + op.amount;
                                 
                                 if (newTotal > monthlyBudgetLimit) {
-                                    String icon = getIconEmoji(op.category);
+                                    String icon = CategoryIconHelper.getIconEmoji(op.category);
                                     long available = monthlyBudgetLimit - currentTotal;
                                     resultMessage.append(String.format("⚠️ %s %s: Vượt ngân sách tháng %,d VND (Ngân sách còn lại: %,d VND)\n", 
                                             icon, op.category, monthlyBudgetLimit, available));
@@ -2925,7 +2893,7 @@ public class AiChatBottomSheet extends DialogFragment {
                                         getContext(), op.category, op.amount);
                             }
                             
-                            String icon = getIconEmoji(op.category);
+                            String icon = CategoryIconHelper.getIconEmoji(op.category);
                             String formattedAmount = String.format("%,d", op.amount);
                             String action = isUpdate ? "Sửa" : "Thêm";
                             resultMessage.append("✅ ").append(action).append(" ").append(icon).append(" ")
@@ -3112,7 +3080,7 @@ public class AiChatBottomSheet extends DialogFragment {
                 }
                 
                 for (CategoryInfo info : allCategoryInfo) {
-                    String icon = getIconEmoji(info.category);
+                    String icon = CategoryIconHelper.getIconEmoji(info.category);
                     if (info.amount > 0) {
                         message.append(String.format("%s %s: %,d VND\n", 
                                 icon, info.category, info.amount));
@@ -3147,80 +3115,6 @@ public class AiChatBottomSheet extends DialogFragment {
         });
     }
     
-
-    private String getIconEmoji(String category) {
-        switch (category) {
-            // Nhu cầu thiết yếu
-            case "Ăn uống":
-                return "🍽️";
-            case "Di chuyển":
-                return "🚗";
-            case "Tiện ích":
-                return "⚡";
-            case "Y tế":
-                return "🏥";
-            case "Nhà ở":
-                return "🏠";
-            
-            // Mua sắm & Phát triển bản thân
-            case "Mua sắm":
-                return "🛍️";
-            case "Giáo dục":
-                return "📚";
-            case "Sách & Học tập":
-                return "📖";
-            case "Thể thao":
-                return "⚽";
-            case "Sức khỏe & Làm đẹp":
-                return "💆";
-            
-            // Giải trí & Xã hội
-            case "Giải trí":
-                return "🎬";
-            case "Du lịch":
-                return "✈️";
-            case "Ăn ngoài & Cafe":
-                return "☕";
-            case "Quà tặng & Từ thiện":
-                return "🎁";
-            case "Hội họp & Tiệc tụng":
-                return "🎉";
-            
-            // Công nghệ & Dịch vụ
-            case "Điện thoại & Internet":
-                return "📱";
-            case "Đăng ký & Dịch vụ":
-                return "💳";
-            case "Phần mềm & Apps":
-                return "💻";
-            case "Ngân hàng & Phí":
-                return "🏦";
-            
-            // Gia đình & Con cái
-            case "Con cái":
-                return "👶";
-            case "Thú cưng":
-                return "🐕";
-            case "Gia đình":
-                return "👨‍👩‍👧‍👦";
-            
-            // Thu nhập & Tài chính
-            case "Lương":
-                return "💰";
-            case "Đầu tư":
-                return "📈";
-            case "Thu nhập phụ":
-                return "💵";
-            case "Tiết kiệm":
-                return "🏦";
-            
-            // Khác
-            case "Khác":
-                return "📌";
-            default:
-                return "💳";
-        }
-    }
     
     // ==================== EXPENSE BULK MANAGEMENT ====================
     
@@ -3554,7 +3448,7 @@ public class AiChatBottomSheet extends DialogFragment {
                             
                             AppDatabase.getInstance(getContext()).transactionDao().insert(newTransaction);
                             
-                            String icon = getIconEmoji(op.category);
+                            String icon = CategoryIconHelper.getIconEmoji(op.category);
                             resultMessage.append("✅ Thêm ").append(icon).append(" ")
                                     .append(op.description).append(": ")
                                     .append(String.format("%,d", op.amount)).append(" VND")
@@ -3633,7 +3527,7 @@ public class AiChatBottomSheet extends DialogFragment {
                     SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM", new Locale("vi", "VN"));
                     
                     for (TransactionEntity transaction : recentTransactions) {
-                        String emoji = getIconEmoji(transaction.category);
+                        String emoji = CategoryIconHelper.getIconEmoji(transaction.category);
                         String formattedAmount = String.format("%,d", Math.abs(transaction.amount));
                         String dateStr = dateFormat.format(transaction.date);
                         
@@ -3672,7 +3566,7 @@ public class AiChatBottomSheet extends DialogFragment {
     private boolean handleOfflineAddExpense(String text) {
         try {
             // Extract amount using improved parser
-            Long amount = parseAmount(text);
+            Long amount = BudgetAmountParser.parseAmount(text);
             if (amount == null) {
                 return false;
             }
@@ -3824,7 +3718,7 @@ public class AiChatBottomSheet extends DialogFragment {
             String lowerText = text.toLowerCase();
             
             // Extract amount using improved parser
-            Long amount = parseAmount(text);
+            Long amount = BudgetAmountParser.parseAmount(text);
             if (amount == null) {
                 return false;
             }
@@ -4034,7 +3928,7 @@ public class AiChatBottomSheet extends DialogFragment {
             }
             
             // Extract amount using improved parser
-            Long amount = parseAmount(text);
+            Long amount = BudgetAmountParser.parseAmount(text);
             if (amount == null) {
                 messages.add(new ChatMessage("❌ Không tìm thấy số tiền. Vui lòng nhập số tiền (ví dụ: '500k', '2 triệu', '8 tỷ 6')", false, "Bây giờ"));
                 chatAdapter.notifyItemInserted(messages.size() - 1);
@@ -4305,98 +4199,4 @@ public class AiChatBottomSheet extends DialogFragment {
         return result;
     }
     
-    private Long parseAmount(String text) {
-        try {
-            String lowerText = text.toLowerCase();
-            
-            // Pattern 1: "X tỷ Y triệu" or "X tỷ Y" (e.g., "8 tỷ 6" = 8,500,000,000 or "8 tỷ 500 triệu" = 8,500,000,000)
-            Pattern tyTrieuPattern = Pattern.compile("(\\d+(?:[,.]\\d+)?)\\s*(?:tỷ|tỉ)\\s*(\\d+(?:[,.]\\d+)?)?\\s*(?:triệu|tr)?", Pattern.CASE_INSENSITIVE);
-            Matcher tyTrieuMatcher = tyTrieuPattern.matcher(lowerText);
-            if (tyTrieuMatcher.find()) {
-                String tyStr = tyTrieuMatcher.group(1).replace(",", ".");
-                String trieuStr = tyTrieuMatcher.group(2);
-                
-                double ty = Double.parseDouble(tyStr);
-                long amount = (long) (ty * 1000000000); // tỷ = 1,000,000,000
-                
-                if (trieuStr != null && !trieuStr.isEmpty()) {
-                    double trieu = Double.parseDouble(trieuStr.replace(",", "."));
-                    // If trieu >= 100, it's already in triệu (e.g., "8 tỷ 500 triệu")
-                    // If trieu < 100, it's in trăm triệu (e.g., "8 tỷ 5" = "8 tỷ 500 triệu")
-                    if (trieu >= 100) {
-                        amount += (long) (trieu * 1000000);
-                    } else {
-                        amount += (long) (trieu * 100000000); // trăm triệu
-                    }
-                }
-                
-                android.util.Log.d("AiChatBottomSheet", "Parsed amount (tỷ): " + amount + " from text: " + text);
-                return amount;
-            }
-            
-            // Pattern 2: "X triệu Y" or "X triệu Y nghìn" (e.g., "2 triệu 5" = 2,500,000 or "2 triệu 500 nghìn" = 2,500,000)
-            Pattern trieuNghinPattern = Pattern.compile("(\\d+(?:[,.]\\d+)?)\\s*(?:triệu|tr)\\s*(\\d+(?:[,.]\\d+)?)?\\s*(?:nghìn|ngàn|k)?", Pattern.CASE_INSENSITIVE);
-            Matcher trieuNghinMatcher = trieuNghinPattern.matcher(lowerText);
-            if (trieuNghinMatcher.find()) {
-                String trieuStr = trieuNghinMatcher.group(1).replace(",", ".");
-                String nghinStr = trieuNghinMatcher.group(2);
-                
-                double trieu = Double.parseDouble(trieuStr);
-                long amount = (long) (trieu * 1000000); // triệu = 1,000,000
-                
-                if (nghinStr != null && !nghinStr.isEmpty()) {
-                    double nghin = Double.parseDouble(nghinStr.replace(",", "."));
-                    // If nghin >= 100, it's already in nghìn (e.g., "2 triệu 500 nghìn")
-                    // If nghin < 100, it's in trăm nghìn (e.g., "2 triệu 5" = "2 triệu 500 nghìn")
-                    if (nghin >= 100) {
-                        amount += (long) (nghin * 1000);
-                    } else {
-                        amount += (long) (nghin * 100000); // trăm nghìn
-                    }
-                }
-                
-                android.util.Log.d("AiChatBottomSheet", "Parsed amount (triệu): " + amount + " from text: " + text);
-                return amount;
-            }
-            
-            // Pattern 3: Simple format "X triệu", "Y nghìn", "Z k"
-            Pattern simplePattern = Pattern.compile("(\\d+(?:[,.]\\d+)?)\\s*(tỷ|tỉ|triệu|tr|nghìn|ngàn|k)", Pattern.CASE_INSENSITIVE);
-            Matcher simpleMatcher = simplePattern.matcher(lowerText);
-            if (simpleMatcher.find()) {
-                String amountStr = simpleMatcher.group(1).replace(",", ".");
-                String unit = simpleMatcher.group(2).toLowerCase();
-                
-                double baseAmount = Double.parseDouble(amountStr);
-                long amount;
-                
-                if (unit.contains("tỷ") || unit.contains("tỉ")) {
-                    amount = (long) (baseAmount * 1000000000);
-                } else if (unit.contains("triệu") || unit.contains("tr")) {
-                    amount = (long) (baseAmount * 1000000);
-                } else if (unit.contains("k") || unit.contains("nghìn") || unit.contains("ngàn")) {
-                    amount = (long) (baseAmount * 1000);
-                } else {
-                    amount = (long) baseAmount;
-                }
-                
-                android.util.Log.d("AiChatBottomSheet", "Parsed amount (simple): " + amount + " from text: " + text);
-                return amount;
-            }
-            
-            // Pattern 4: Just number (no unit)
-            Pattern numberPattern = Pattern.compile("(\\d+(?:[,.]\\d+)?)");
-            Matcher numberMatcher = numberPattern.matcher(lowerText);
-            if (numberMatcher.find()) {
-                String amountStr = numberMatcher.group(1).replace(",", ".");
-                long amount = (long) Double.parseDouble(amountStr);
-                android.util.Log.d("AiChatBottomSheet", "Parsed amount (no unit): " + amount + " from text: " + text);
-                return amount;
-            }
-            
-            return null;
-        } catch (Exception e) {
-            android.util.Log.e("AiChatBottomSheet", "Error parsing amount from: " + text, e);
-            return null;
-        }
-    }
 }
