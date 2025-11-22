@@ -24,4 +24,21 @@
         <item>Hóa đơn</item>
         <item>Khác</item>
     </string-array>
+
+    <!-- Authentication strings -->
+    <string name="title_signin">Đăng nhập</string>
+    <string name="title_signup">Đăng ký</string>
+    <string name="title_firstname">Tên</string>
+    <string name="title_lastname">Họ</string>
+    <string name="title_email">Email</string>
+    <string name="title_password">Mật khẩu</string>
+    <string name="signin_hint">Email hoặc số điện thoại</string>
+    <string name="password_hint">Mật khẩu</string>
+    <string name="firstname_hint">Nhập tên của bạn</string>
+    <string name="lastname_hint">Nhập họ của bạn</string>
+    <string name="email_hint">Nhập địa chỉ email hoặc số điện thoại</string>
+    <string name="confirmPassword_hint">Xác nhận mật khẩu</string>
+    <string name="signupSuggest_text">Đã có tài khoản?</string>
+    <string name="title_remember">Ghi nhớ đăng nhập</string>
+    <string name="forgotPassword_text">Quên mật khẩu?</string>
 </resources>

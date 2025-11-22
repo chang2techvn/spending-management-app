@@ -1,8 +1,12 @@
 package com.example.spending_management_app.presentation.activity;
 
 import android.content.Intent;
+import android.text.method.PasswordTransformationMethod;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
@@ -12,7 +16,7 @@ import androidx.lifecycle.ViewModelProvider;
 import com.example.spending_management_app.R;
 import com.example.spending_management_app.data.local.database.AppDatabase;
 import com.example.spending_management_app.data.repository.UserRepositoryImpl;
-import com.example.spending_management_app.databinding.ActivityLoginBinding;
+import com.example.spending_management_app.databinding.ActivitySigninBinding;
 import com.example.spending_management_app.domain.repository.UserRepository;
 import com.example.spending_management_app.domain.usecase.user.UserUseCase;
 import com.example.spending_management_app.presentation.viewmodel.auth.AuthViewModel;
@@ -26,16 +30,15 @@ import com.google.android.material.textfield.TextInputLayout;
  */
 public class LoginActivity extends AppCompatActivity {
 
-    private ActivityLoginBinding binding;
+    private ActivitySigninBinding binding;
     private AuthViewModel authViewModel;
     private SessionManager sessionManager;
 
-    private TextInputLayout emailLayout;
-    private TextInputLayout passwordLayout;
-    private TextInputEditText emailInput;
-    private TextInputEditText passwordInput;
-    private MaterialButton loginButton;
+    private EditText emailInput;
+    private EditText passwordInput;
+    private Button signinButton;
     private ProgressBar progressBar;
+    private ImageView passwordVisibilityToggle;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,7 +51,7 @@ public class LoginActivity extends AppCompatActivity {
             return;
         }
 
-        binding = ActivityLoginBinding.inflate(getLayoutInflater());
+        binding = ActivitySigninBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
         initializeDependencies();
@@ -73,21 +76,22 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void initializeViews() {
-        emailLayout = binding.emailLayout;
-        passwordLayout = binding.passwordLayout;
-        emailInput = binding.emailInput;
-        passwordInput = binding.passwordInput;
-        loginButton = binding.loginButton;
+        emailInput = binding.editTextEmail;
+        passwordInput = binding.editTextPassword;
+        signinButton = binding.signinButton;
         progressBar = binding.progressBar;
+        passwordVisibilityToggle = binding.passwordVisibilityToggle;
     }
 
     private void setupListeners() {
-        loginButton.setOnClickListener(v -> performLogin());
+        signinButton.setOnClickListener(v -> performLogin());
 
-        binding.registerLink.setOnClickListener(v -> {
+        binding.signupText.setOnClickListener(v -> {
             Intent intent = new Intent(this, RegisterActivity.class);
             startActivity(intent);
         });
+
+        passwordVisibilityToggle.setOnClickListener(v -> togglePasswordVisibility());
     }
 
     private void observeViewModel() {
@@ -109,20 +113,16 @@ public class LoginActivity extends AppCompatActivity {
         String emailOrPhone = emailInput.getText().toString().trim();
         String password = passwordInput.getText().toString().trim();
 
-        // Clear previous errors
-        emailLayout.setError(null);
-        passwordLayout.setError(null);
-
         // Basic validation
         boolean isValid = true;
 
         if (emailOrPhone.isEmpty()) {
-            emailLayout.setError("Vui lòng nhập email hoặc số điện thoại");
+            emailInput.setError("Vui lòng nhập email hoặc số điện thoại");
             isValid = false;
         }
 
         if (password.isEmpty()) {
-            passwordLayout.setError("Vui lòng nhập mật khẩu");
+            passwordInput.setError("Vui lòng nhập mật khẩu");
             isValid = false;
         }
 
@@ -143,14 +143,14 @@ public class LoginActivity extends AppCompatActivity {
 
     private void showLoading() {
         progressBar.setVisibility(View.VISIBLE);
-        loginButton.setEnabled(false);
-        loginButton.setText("Đang đăng nhập...");
+        signinButton.setEnabled(false);
+        signinButton.setText("Đang đăng nhập...");
     }
 
     private void hideLoading() {
         progressBar.setVisibility(View.GONE);
-        loginButton.setEnabled(true);
-        loginButton.setText("Đăng nhập");
+        signinButton.setEnabled(true);
+        signinButton.setText("Đăng nhập");
     }
 
     private void showError(String message) {
@@ -162,5 +162,18 @@ public class LoginActivity extends AppCompatActivity {
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
         finish();
+    }
+
+    private void togglePasswordVisibility() {
+        if (passwordInput.getTransformationMethod() instanceof PasswordTransformationMethod) {
+            // Show password
+            passwordInput.setTransformationMethod(null);
+            passwordVisibilityToggle.setImageResource(R.drawable.ic_view_off);
+        } else {
+            // Hide password
+            passwordInput.setTransformationMethod(new PasswordTransformationMethod());
+            passwordVisibilityToggle.setImageResource(R.drawable.ic_view);
+        }
+        passwordInput.setSelection(passwordInput.getText().length());
     }
 }
