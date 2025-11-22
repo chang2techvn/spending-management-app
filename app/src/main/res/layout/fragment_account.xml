@@ -132,7 +132,7 @@
                     <ImageView
                         android:layout_width="24dp"
                         android:layout_height="24dp"
-                        android:src="@drawable/ic_launcher_foreground"
+                        android:src="@drawable/ic_edit_profile"
                         android:tint="#757575" />
 
                     <TextView
@@ -147,9 +147,7 @@
                     <ImageView
                         android:layout_width="16dp"
                         android:layout_height="16dp"
-                        android:src="@drawable/ic_launcher_foreground"
-                        android:tint="#BDBDBD"
-                        android:rotation="180" />
+                        android:src="@drawable/ic_arrow_right" />
 
                 </LinearLayout>
 
@@ -172,7 +170,7 @@
                     <ImageView
                         android:layout_width="24dp"
                         android:layout_height="24dp"
-                        android:src="@drawable/ic_launcher_foreground"
+                        android:src="@drawable/ic_change_password"
                         android:tint="#757575" />
 
                     <TextView
@@ -187,9 +185,7 @@
                     <ImageView
                         android:layout_width="16dp"
                         android:layout_height="16dp"
-                        android:src="@drawable/ic_launcher_foreground"
-                        android:tint="#BDBDBD"
-                        android:rotation="180" />
+                        android:src="@drawable/ic_arrow_right" />
 
                 </LinearLayout>
 
@@ -212,7 +208,7 @@
                     <ImageView
                         android:layout_width="24dp"
                         android:layout_height="24dp"
-                        android:src="@drawable/ic_launcher_foreground"
+                        android:src="@drawable/ic_settings"
                         android:tint="#757575" />
 
                     <TextView
@@ -227,9 +223,7 @@
                     <ImageView
                         android:layout_width="16dp"
                         android:layout_height="16dp"
-                        android:src="@drawable/ic_launcher_foreground"
-                        android:tint="#BDBDBD"
-                        android:rotation="180" />
+                        android:src="@drawable/ic_arrow_right" />
 
                 </LinearLayout>
 
@@ -252,7 +246,7 @@
                     <ImageView
                         android:layout_width="24dp"
                         android:layout_height="24dp"
-                        android:src="@drawable/ic_launcher_foreground"
+                        android:src="@drawable/ic_help"
                         android:tint="#757575" />
 
                     <TextView
@@ -267,9 +261,7 @@
                     <ImageView
                         android:layout_width="16dp"
                         android:layout_height="16dp"
-                        android:src="@drawable/ic_launcher_foreground"
-                        android:tint="#BDBDBD"
-                        android:rotation="180" />
+                        android:src="@drawable/ic_arrow_right" />
 
                 </LinearLayout>
 

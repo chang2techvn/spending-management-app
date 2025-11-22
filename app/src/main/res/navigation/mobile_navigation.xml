@@ -26,6 +26,16 @@
         android:id="@+id/navigation_account"
         android:name="com.example.spending_management_app.presentation.fragment.account.AccountFragment"
         android:label="Tài khoản"
-        tools:layout="@layout/fragment_account" />
+        tools:layout="@layout/fragment_account" >
+        <action
+            android:id="@+id/action_navigation_account_to_navigation_help_support"
+            app:destination="@id/navigation_help_support" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/navigation_help_support"
+        android:name="com.example.spending_management_app.presentation.fragment.account.HelpSupportFragment"
+        android:label="Trợ giúp &amp; Hỗ trợ"
+        tools:layout="@layout/fragment_help_support" />
 
 </navigation>

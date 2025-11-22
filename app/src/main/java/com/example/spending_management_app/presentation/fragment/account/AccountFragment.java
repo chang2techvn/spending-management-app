@@ -27,6 +27,7 @@ import android.graphics.Color;
 
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.Navigation;
 
 import com.bumptech.glide.Glide;
 import com.example.spending_management_app.R;
@@ -98,17 +99,15 @@ public class AccountFragment extends Fragment {
         binding.editProfileOption.setOnClickListener(v -> showEditProfileDialog());
         
         binding.profileCard.setOnClickListener(v -> showEditProfileDialog());
-
+        
         binding.changePasswordOption.setOnClickListener(v -> showChangePasswordDialog());
 
         binding.settingsOption.setOnClickListener(v -> showSettingsDialog());
 
-        binding.helpSupportOption.setOnClickListener(v -> showHelpSupportDialog());
+        binding.helpSupportOption.setOnClickListener(v -> navigateToHelpSupport());
 
         binding.logoutButton.setOnClickListener(v -> showLogoutConfirmationDialog());
-    }
-
-    private void showEditProfileDialog() {
+    }    private void showEditProfileDialog() {
         Dialog dialog = new Dialog(getContext(), R.style.RoundedDialog4Corners);
         View dialogView = LayoutInflater.from(getContext()).inflate(R.layout.dialog_edit_profile, null);
         dialog.setContentView(dialogView);
@@ -287,13 +286,9 @@ public class AccountFragment extends Fragment {
         builder.show();
     }
 
-    private void showHelpSupportDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(getContext(), R.style.RoundedDialog4Corners);
-        builder.setTitle("Trợ giúp & Hỗ trợ");
-        builder.setMessage("Liên hệ với chúng tôi:\n\nEmail: support@spendingapp.com\nĐiện thoại: 1900-xxxx\n\nPhiên bản: 1.0.0");
-
-        builder.setPositiveButton("OK", null);
-        builder.show();
+    private void navigateToHelpSupport() {
+        // Navigate to Help & Support fragment using Navigation Component
+        Navigation.findNavController(requireView()).navigate(R.id.action_navigation_account_to_navigation_help_support);
     }
 
     private void showLogoutConfirmationDialog() {
