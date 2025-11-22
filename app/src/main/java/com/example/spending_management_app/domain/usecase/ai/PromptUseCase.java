@@ -29,10 +29,16 @@ import java.io.IOException;
  */
 public class PromptUseCase {
 
+    private final ExpenseUseCase expenseUseCase;
+
+    public PromptUseCase(ExpenseUseCase expenseUseCase) {
+        this.expenseUseCase = expenseUseCase;
+    }
+
     /**
      * Send a prompt to AI for expense tracking
      */
-    public static void sendPromptToAI(String text, Activity activity, List<AiChatBottomSheet.ChatMessage> messages,
+    public void sendPromptToAI(String text, Activity activity, List<AiChatBottomSheet.ChatMessage> messages,
                                      AiChatBottomSheet.ChatAdapter chatAdapter, RecyclerView messagesRecycler,
                                      TextToSpeech textToSpeech, Runnable updateNetworkStatusCallback) {
         // Add temporary "Đang phân tích..." message
@@ -147,7 +153,7 @@ public class PromptUseCase {
                                     for (String jsonPart : allJsonParts) {
                                         try {
                                             android.util.Log.d("PromptService", "Routing to saveExpenseDirectly");
-                                            ExpenseUseCase.saveExpenseDirectly(jsonPart, activity, messages, chatAdapter, messagesRecycler);
+                                            expenseUseCase.saveExpenseDirectly(jsonPart, activity, messages, chatAdapter, messagesRecycler);
                                         } catch (Exception e) {
                                             android.util.Log.e("PromptService", "Error processing JSON: " + jsonPart, e);
                                         }

@@ -5,9 +5,10 @@ import android.content.Context;
 
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.spending_management_app.data.local.database.AppDatabase;
 import com.example.spending_management_app.data.local.entity.BudgetEntity;
 import com.example.spending_management_app.data.local.entity.CategoryBudgetEntity;
+import com.example.spending_management_app.domain.repository.BudgetRepository;
+import com.example.spending_management_app.domain.repository.CategoryBudgetRepository;
 import com.example.spending_management_app.presentation.dialog.AiChatBottomSheet;
 import com.example.spending_management_app.domain.usecase.budget.BudgetHistoryLogger;
 import com.example.spending_management_app.utils.CategoryIconHelper;
@@ -23,10 +24,18 @@ import java.util.concurrent.Executors;
  */
 public class CategoryBudgetUseCase {
 
+    private final BudgetRepository budgetRepository;
+    private final CategoryBudgetRepository categoryBudgetRepository;
+
+    public CategoryBudgetUseCase(BudgetRepository budgetRepository, CategoryBudgetRepository categoryBudgetRepository) {
+        this.budgetRepository = budgetRepository;
+        this.categoryBudgetRepository = categoryBudgetRepository;
+    }
+
     /**
      * Handle category budget request (add, edit, delete category budgets)
      */
-    public static void handleCategoryBudgetRequest(String text, Context context, Activity activity,
+    public void handleCategoryBudgetRequest(String text, Context context, Activity activity,
                                                  List<AiChatBottomSheet.ChatMessage> messages,
                                                  AiChatBottomSheet.ChatAdapter chatAdapter,
                                                  RecyclerView messagesRecycler,
@@ -68,7 +77,7 @@ public class CategoryBudgetUseCase {
     /**
      * Process category budget operations
      */
-    private static void processCategoryBudgetOperations(List<CategoryBudgetParserUseCase.CategoryBudgetOperation> operations, int analyzingIndex,
+    private void processCategoryBudgetOperations(List<CategoryBudgetParserUseCase.CategoryBudgetOperation> operations, int analyzingIndex,
                                                         Context context, Activity activity,
                                                         List<AiChatBottomSheet.ChatMessage> messages,
                                                         AiChatBottomSheet.ChatAdapter chatAdapter,
@@ -95,7 +104,7 @@ public class CategoryBudgetUseCase {
 
                 // Get monthly budget to check limit
                 List<BudgetEntity> monthlyBudgets =
-                        AppDatabase.getInstance(context).budgetDao()
+                        budgetRepository
                                 .getBudgetsByDateRange(startOfMonth, endOfMonth);
                 long monthlyBudgetLimit = (monthlyBudgets != null && !monthlyBudgets.isEmpty())
                         ? monthlyBudgets.get(0).getMonthlyLimit() : 0;
@@ -108,13 +117,13 @@ public class CategoryBudgetUseCase {
                     try {
                         // Get all category budgets for current month
                         List<CategoryBudgetEntity> allBudgets =
-                                AppDatabase.getInstance(context).categoryBudgetDao()
+                                categoryBudgetRepository
                                         .getAllCategoryBudgetsForMonth(startOfMonth, endOfMonth);
 
                         if (allBudgets != null && !allBudgets.isEmpty()) {
                             // Delete all category budgets
                             for (CategoryBudgetEntity budget : allBudgets) {
-                                AppDatabase.getInstance(context).categoryBudgetDao().delete(budget);
+                                categoryBudgetRepository.delete(budget);
                                 counts[0]++;
                             }
 
@@ -167,13 +176,12 @@ public class CategoryBudgetUseCase {
                         if (op.type.equals("delete")) {
                             // Delete operation
                             CategoryBudgetEntity existing =
-                                    AppDatabase.getInstance(context)
-                                            .categoryBudgetDao()
+                                    categoryBudgetRepository
                                             .getCategoryBudgetForMonth(op.category, startOfMonth, endOfMonth);
 
                             if (existing != null) {
                                 long deletedAmount = existing.budgetAmount;
-                                AppDatabase.getInstance(context).categoryBudgetDao().delete(existing);
+                                categoryBudgetRepository.delete(existing);
 
                                 // Log budget history
                                 BudgetHistoryLogger.logCategoryBudgetDeleted(
@@ -189,8 +197,7 @@ public class CategoryBudgetUseCase {
                         } else {
                             // Add or Edit operation
                             CategoryBudgetEntity existing =
-                                    AppDatabase.getInstance(context)
-                                            .categoryBudgetDao()
+                                    categoryBudgetRepository
                                             .getCategoryBudgetForMonth(op.category, startOfMonth, endOfMonth);
 
                             boolean isUpdate = (existing != null);
@@ -198,7 +205,7 @@ public class CategoryBudgetUseCase {
                             // Check if adding/updating will exceed monthly budget
                             if (monthlyBudgetLimit > 0) {
                                 List<CategoryBudgetEntity> allCategoryBudgets =
-                                        AppDatabase.getInstance(context).categoryBudgetDao()
+                                        categoryBudgetRepository
                                                 .getAllCategoryBudgetsForMonth(startOfMonth, endOfMonth);
 
                                 long currentTotal = 0;
@@ -223,7 +230,7 @@ public class CategoryBudgetUseCase {
                             if (isUpdate) {
                                 long oldAmount = existing.budgetAmount;
                                 existing.budgetAmount = op.amount;
-                                AppDatabase.getInstance(context).categoryBudgetDao().update(existing);
+                                categoryBudgetRepository.update(existing);
 
                                 // Log budget history
                                 BudgetHistoryLogger.logCategoryBudgetUpdated(
@@ -232,7 +239,7 @@ public class CategoryBudgetUseCase {
                                 CategoryBudgetEntity newBudget =
                                         new CategoryBudgetEntity(
                                                 op.category, op.amount, startOfMonth);
-                                AppDatabase.getInstance(context).categoryBudgetDao().insert(newBudget);
+                                categoryBudgetRepository.insert(newBudget);
 
                                 // Log budget history
                                 BudgetHistoryLogger.logCategoryBudgetCreated(
@@ -264,7 +271,7 @@ public class CategoryBudgetUseCase {
                 if (counts[0] > 0 && monthlyBudgetLimit > 0) {
                     // Recalculate total after all operations
                     List<CategoryBudgetEntity> updatedBudgets =
-                            AppDatabase.getInstance(context).categoryBudgetDao()
+                            categoryBudgetRepository
                                     .getAllCategoryBudgetsForMonth(startOfMonth, endOfMonth);
 
                     long totalUsed = 0;

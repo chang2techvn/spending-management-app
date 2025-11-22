@@ -2,8 +2,8 @@ package com.example.spending_management_app.domain.usecase.expense;
 
 import android.content.Context;
 
-import com.example.spending_management_app.data.local.database.AppDatabase;
 import com.example.spending_management_app.data.local.entity.TransactionEntity;
+import com.example.spending_management_app.domain.repository.ExpenseRepository;
 import com.example.spending_management_app.presentation.dialog.AiChatBottomSheet;
 import com.example.spending_management_app.domain.usecase.budget.BudgetAmountParser;
 import com.example.spending_management_app.utils.CategoryIconHelper;
@@ -20,9 +20,15 @@ import java.util.regex.Pattern;
 
 public class ExpenseBulkUseCase {
 
+    private final ExpenseRepository expenseRepository;
+
+    public ExpenseBulkUseCase(ExpenseRepository expenseRepository) {
+        this.expenseRepository = expenseRepository;
+    }
+
     // ==================== EXPENSE BULK MANAGEMENT ====================
 
-    public static void handleExpenseBulkRequest(String text, Context context,
+    public void handleExpenseBulkRequest(String text, Context context,
             android.app.Activity activity, List<AiChatBottomSheet.ChatMessage> messages,
             AiChatBottomSheet.ChatAdapter chatAdapter, androidx.recyclerview.widget.RecyclerView messagesRecycler,
             Runnable refreshHomeFragment, Runnable refreshExpenseWelcomeMessage) {
@@ -256,7 +262,7 @@ public class ExpenseBulkUseCase {
         return operations;
     }
 
-    private static void processExpenseOperations(List<ExpenseOperation> operations, int analyzingIndex,
+    private void processExpenseOperations(List<ExpenseOperation> operations, int analyzingIndex,
             Context context, android.app.Activity activity, List<AiChatBottomSheet.ChatMessage> messages,
             AiChatBottomSheet.ChatAdapter chatAdapter, androidx.recyclerview.widget.RecyclerView messagesRecycler,
             Runnable refreshHomeFragment, Runnable refreshExpenseWelcomeMessage) {
@@ -270,12 +276,10 @@ public class ExpenseBulkUseCase {
                     try {
                         if (op.type.equals("delete")) {
                             // Delete transaction
-                            TransactionEntity transaction = AppDatabase.getInstance(context)
-                                    .transactionDao()
-                                    .getTransactionById(op.transactionId);
+                            TransactionEntity transaction = expenseRepository.getTransactionById(op.transactionId);
 
                             if (transaction != null) {
-                                AppDatabase.getInstance(context).transactionDao().delete(transaction);
+                                expenseRepository.delete(transaction);
                                 resultMessage.append("✅ Xóa: ").append(transaction.description)
                                         .append(" (").append(String.format("%,d", Math.abs(transaction.amount)))
                                         .append(" VND)\n");
@@ -300,7 +304,7 @@ public class ExpenseBulkUseCase {
                                     "expense"
                             );
 
-                            AppDatabase.getInstance(context).transactionDao().insert(newTransaction);
+                            expenseRepository.insert(newTransaction);
 
                             String icon = CategoryIconHelper.getIconEmoji(op.category);
                             resultMessage.append("✅ Thêm ").append(icon).append(" ")

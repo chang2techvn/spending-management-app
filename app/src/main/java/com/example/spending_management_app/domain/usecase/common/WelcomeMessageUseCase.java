@@ -4,7 +4,8 @@ import android.app.Activity;
 import android.content.Context;
 import android.util.Log;
 import androidx.recyclerview.widget.RecyclerView;
-import com.example.spending_management_app.data.local.database.AppDatabase;
+import com.example.spending_management_app.domain.repository.BudgetRepository;
+import com.example.spending_management_app.domain.repository.ExpenseRepository;
 import com.example.spending_management_app.data.local.entity.BudgetEntity;
 import com.example.spending_management_app.data.local.entity.TransactionEntity;
 import com.example.spending_management_app.presentation.dialog.AiChatBottomSheet.ChatAdapter;
@@ -25,10 +26,18 @@ import java.util.concurrent.Executors;
  */
 public class WelcomeMessageUseCase {
 
+    private final BudgetRepository budgetRepository;
+    private final ExpenseRepository expenseRepository;
+
+    public WelcomeMessageUseCase(BudgetRepository budgetRepository, ExpenseRepository expenseRepository) {
+        this.budgetRepository = budgetRepository;
+        this.expenseRepository = expenseRepository;
+    }
+
     /**
      * Load budget welcome message with budget history and current budget information
      */
-    public static void loadBudgetWelcomeMessage(Context context, Activity activity,
+    public void loadBudgetWelcomeMessage(Context context, Activity activity,
             List<ChatMessage> messages, ChatAdapter chatAdapter, RecyclerView messagesRecycler,
             Runnable refreshHomeFragment) {
         // Add a temporary loading message
@@ -55,8 +64,7 @@ public class WelcomeMessageUseCase {
 
                 Log.d("WelcomeMessageService", "Loading budget for range: " + currentMonthStart + " to " + currentMonthEnd);
 
-                List<BudgetEntity> currentMonthBudgets = AppDatabase.getInstance(context)
-                        .budgetDao()
+                List<BudgetEntity> currentMonthBudgets = budgetRepository
                         .getBudgetsByDateRangeOrdered(currentMonthStart, currentMonthEnd);
 
                 Log.d("WelcomeMessageService", "Found " + (currentMonthBudgets != null ? currentMonthBudgets.size() : 0) + " budgets for current month");
@@ -67,8 +75,7 @@ public class WelcomeMessageUseCase {
                 pastCal.set(Calendar.DAY_OF_MONTH, 1);
                 Date sixMonthsAgoStart = pastCal.getTime();
 
-                List<BudgetEntity> pastBudgets = AppDatabase.getInstance(context)
-                        .budgetDao()
+                List<BudgetEntity> pastBudgets = budgetRepository
                         .getBudgetsByDateRangeOrdered(sixMonthsAgoStart, currentMonthEnd);
 
                 SimpleDateFormat monthFormat = new SimpleDateFormat("MM/yyyy", new Locale("vi", "VN"));
@@ -186,7 +193,7 @@ public class WelcomeMessageUseCase {
     /**
      * Load recent transactions welcome message for expense tracking
      */
-    public static void loadRecentTransactionsForWelcome(Context context, Activity activity,
+    public void loadRecentTransactionsForWelcome(Context context, Activity activity,
             List<ChatMessage> messages, ChatAdapter chatAdapter, RecyclerView messagesRecycler) {
         // Add a temporary loading message
         messages.add(new ChatMessage("Đang tải...", false, "Bây giờ"));
@@ -194,8 +201,7 @@ public class WelcomeMessageUseCase {
         // Load recent transactions from database in background
         Executors.newSingleThreadExecutor().execute(() -> {
             try {
-                List<TransactionEntity> recentTransactions = AppDatabase.getInstance(context)
-                        .transactionDao()
+                List<TransactionEntity> recentTransactions = expenseRepository
                         .getRecentTransactions(3);
 
                 // Build welcome message with recent transactions
@@ -276,7 +282,7 @@ public class WelcomeMessageUseCase {
     /**
      * Load expense bulk welcome message for bulk expense management
      */
-    public static void loadExpenseBulkWelcomeMessage(Context context, Activity activity,
+    public void loadExpenseBulkWelcomeMessage(Context context, Activity activity,
             List<ChatMessage> messages, ChatAdapter chatAdapter, RecyclerView messagesRecycler,
             Runnable refreshHomeFragment, Runnable refreshExpenseWelcomeMessage) {
         // Add a temporary loading message
@@ -285,8 +291,7 @@ public class WelcomeMessageUseCase {
         // Load recent transactions from database in background
         Executors.newSingleThreadExecutor().execute(() -> {
             try {
-                List<TransactionEntity> recentTransactions = AppDatabase.getInstance(context)
-                        .transactionDao()
+                List<TransactionEntity> recentTransactions = expenseRepository
                         .getRecentTransactions(5); // Show 5 recent transactions
 
                 // Build welcome message with recent transactions

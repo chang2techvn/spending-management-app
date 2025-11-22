@@ -4,8 +4,8 @@ import android.app.Activity;
 
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.spending_management_app.data.local.database.AppDatabase;
 import com.example.spending_management_app.data.local.entity.TransactionEntity;
+import com.example.spending_management_app.domain.repository.ExpenseRepository;
 import com.example.spending_management_app.presentation.dialog.AiChatBottomSheet;
 import com.example.spending_management_app.utils.FragmentRefreshHelper;
 import com.example.spending_management_app.utils.ToastHelper;
@@ -20,10 +20,16 @@ import java.util.List;
  */
 public class ExpenseUseCase {
 
+    private final ExpenseRepository expenseRepository;
+
+    public ExpenseUseCase(ExpenseRepository expenseRepository) {
+        this.expenseRepository = expenseRepository;
+    }
+
     /**
      * Save expense directly from AI response JSON
      */
-    public static void saveExpenseDirectly(String jsonString, Activity activity,
+    public void saveExpenseDirectly(String jsonString, Activity activity,
                                          List<AiChatBottomSheet.ChatMessage> messages,
                                          AiChatBottomSheet.ChatAdapter chatAdapter,
                                          RecyclerView messagesRecycler) {
@@ -67,7 +73,7 @@ public class ExpenseUseCase {
                 new Thread(() -> {
                     android.util.Log.d("ExpenseService", "Background thread started for database save");
                     try {
-                        AppDatabase.getInstance(activity).transactionDao().insert(transaction);
+                        expenseRepository.insert(transaction);
                         android.util.Log.d("ExpenseService", "Database save successful");
 
                         // Hiển thị toast trên main thread với layer cao nhất

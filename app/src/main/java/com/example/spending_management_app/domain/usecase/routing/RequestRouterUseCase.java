@@ -6,13 +6,21 @@ import android.os.Bundle;
 import android.speech.tts.TextToSpeech;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.spending_management_app.data.local.database.AppDatabase;
+import com.example.spending_management_app.data.repository.BudgetRepositoryImpl;
+import com.example.spending_management_app.data.repository.CategoryBudgetRepositoryImpl;
+import com.example.spending_management_app.data.repository.ExpenseRepositoryImpl;
+import com.example.spending_management_app.domain.repository.BudgetRepository;
+import com.example.spending_management_app.domain.repository.CategoryBudgetRepository;
+import com.example.spending_management_app.domain.repository.ExpenseRepository;
 import com.example.spending_management_app.domain.usecase.ai.AiContextUseCase;
-import com.example.spending_management_app.domain.usecase.ai.PromptUseCase;
+import com.example.spending_management_app.domain.usecase.budget.BudgetMessageHelper;
 import com.example.spending_management_app.domain.usecase.category.CategoryBudgetUseCase;
+import com.example.spending_management_app.domain.usecase.expense.ExpenseMessageHelper;
 import com.example.spending_management_app.presentation.dialog.AiChatBottomSheet.ChatMessage;
 import com.example.spending_management_app.presentation.dialog.AiChatBottomSheet.ChatAdapter;
-import com.example.spending_management_app.domain.usecase.budget.BudgetMessageHelper;
-import com.example.spending_management_app.domain.usecase.expense.ExpenseMessageHelper;
+import com.example.spending_management_app.domain.usecase.ai.PromptUseCase;
+import com.example.spending_management_app.domain.usecase.expense.ExpenseUseCase;
 
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -34,6 +42,16 @@ public class RequestRouterUseCase {
                                    List<ChatMessage> messages, ChatAdapter chatAdapter,
                                    RecyclerView messagesRecycler, TextToSpeech textToSpeech,
                                    Runnable updateNetworkStatusCallback, RequestRouterCallback callback) {
+
+        // Initialize repositories and use cases
+        AppDatabase appDatabase = AppDatabase.getInstance(context);
+        ExpenseRepository expenseRepository = new ExpenseRepositoryImpl(appDatabase);
+        BudgetRepository budgetRepository = new BudgetRepositoryImpl(appDatabase);
+        CategoryBudgetRepository categoryBudgetRepository = new CategoryBudgetRepositoryImpl(appDatabase);
+        AiContextUseCase aiContextUseCase = new AiContextUseCase(expenseRepository, budgetRepository, categoryBudgetRepository);
+        CategoryBudgetUseCase categoryBudgetUseCase = new CategoryBudgetUseCase(budgetRepository, categoryBudgetRepository);
+        ExpenseUseCase expenseUseCase = new ExpenseUseCase(expenseRepository);
+        PromptUseCase promptUseCase = new PromptUseCase(expenseUseCase);
 
         // Check network connectivity first
         boolean isOnline = callback.isNetworkAvailable();
@@ -64,7 +82,7 @@ public class RequestRouterUseCase {
 
         // Handle category budget management
         if (isCategoryBudgetMode) {
-            CategoryBudgetUseCase.handleCategoryBudgetRequest(text, context, activity, messages, chatAdapter, messagesRecycler, callback::refreshHomeFragment, callback::refreshCategoryBudgetWelcomeMessage);
+            categoryBudgetUseCase.handleCategoryBudgetRequest(text, context, activity, messages, chatAdapter, messagesRecycler, callback::refreshHomeFragment, callback::refreshCategoryBudgetWelcomeMessage);
             return;
         }
 
@@ -79,13 +97,13 @@ public class RequestRouterUseCase {
             // Get comprehensive financial data from database
             Executors.newSingleThreadExecutor().execute(() -> {
                 try {
-                    String financialContext = AiContextUseCase.getFinancialContext(context);
+                    String financialContext = aiContextUseCase.getFinancialContext(context);
                     activity.runOnUiThread(() -> {
-                        AiContextUseCase.sendPromptToAIWithContext(text, financialContext, activity, messages, chatAdapter, messagesRecycler, textToSpeech, updateNetworkStatusCallback);
+                        aiContextUseCase.sendPromptToAIWithContext(text, financialContext, activity, messages, chatAdapter, messagesRecycler, textToSpeech, updateNetworkStatusCallback);
                     });
                 } catch (Exception e) {
                     activity.runOnUiThread(() -> {
-                        PromptUseCase.sendPromptToAI(text, activity, messages, chatAdapter, messagesRecycler, textToSpeech, updateNetworkStatusCallback);
+                        promptUseCase.sendPromptToAI(text, activity, messages, chatAdapter, messagesRecycler, textToSpeech, updateNetworkStatusCallback);
                     });
                 }
             });
@@ -93,6 +111,6 @@ public class RequestRouterUseCase {
         }
 
         // Normal send to AI for expense tracking
-        PromptUseCase.sendPromptToAI(text, activity, messages, chatAdapter, messagesRecycler, textToSpeech, updateNetworkStatusCallback);
+        promptUseCase.sendPromptToAI(text, activity, messages, chatAdapter, messagesRecycler, textToSpeech, updateNetworkStatusCallback);
     }
 }

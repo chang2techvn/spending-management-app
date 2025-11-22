@@ -29,8 +29,18 @@ import com.example.spending_management_app.domain.usecase.common.WelcomeMessageU
 import com.example.spending_management_app.domain.usecase.budget.BudgetUseCase;
 import com.example.spending_management_app.domain.usecase.routing.RequestRouterUseCase;
 import com.example.spending_management_app.domain.usecase.offline.OfflineRequestHandler;
+import com.example.spending_management_app.domain.usecase.expense.ExpenseUseCase;
+import com.example.spending_management_app.domain.usecase.ai.PromptUseCase;
+import com.example.spending_management_app.domain.usecase.ai.AiContextUseCase;
 import com.example.spending_management_app.utils.FragmentRefreshHelper;
 import com.example.spending_management_app.utils.ToastHelper;
+import com.example.spending_management_app.data.local.database.AppDatabase;
+import com.example.spending_management_app.data.repository.ExpenseRepositoryImpl;
+import com.example.spending_management_app.data.repository.BudgetRepositoryImpl;
+import com.example.spending_management_app.data.repository.CategoryBudgetRepositoryImpl;
+import com.example.spending_management_app.domain.repository.ExpenseRepository;
+import com.example.spending_management_app.domain.repository.BudgetRepository;
+import com.example.spending_management_app.domain.repository.CategoryBudgetRepository;
 
 import okhttp3.OkHttpClient;
 import java.util.ArrayList;
@@ -59,6 +69,17 @@ public class AiChatBottomSheet extends DialogFragment {
     private OkHttpClient client;
     private String spokenText = "";
 
+    // Repositories and UseCases
+    private ExpenseRepository expenseRepository;
+    private BudgetRepository budgetRepository;
+    private CategoryBudgetRepository categoryBudgetRepository;
+    private WelcomeMessageUseCase welcomeMessageUseCase;
+    private BudgetUseCase budgetUseCase;
+    private ExpenseBulkUseCase expenseBulkUseCase;
+    private ExpenseUseCase expenseUseCase;
+    private PromptUseCase promptUseCase;
+    private AiContextUseCase aiContextUseCase;
+
     public void setSpokenText(String text) {
         this.spokenText = text;
     }
@@ -86,6 +107,18 @@ public class AiChatBottomSheet extends DialogFragment {
             }
         });
         client = new OkHttpClient();
+
+        // Initialize repositories and use cases
+        AppDatabase appDatabase = AppDatabase.getInstance(getContext());
+        expenseRepository = new ExpenseRepositoryImpl(appDatabase);
+        budgetRepository = new BudgetRepositoryImpl(appDatabase);
+        categoryBudgetRepository = new CategoryBudgetRepositoryImpl(appDatabase);
+        welcomeMessageUseCase = new WelcomeMessageUseCase(budgetRepository, expenseRepository);
+        expenseUseCase = new ExpenseUseCase(expenseRepository);
+        promptUseCase = new PromptUseCase(expenseUseCase);
+        aiContextUseCase = new AiContextUseCase(expenseRepository, budgetRepository, categoryBudgetRepository);
+        budgetUseCase = new BudgetUseCase(budgetRepository, promptUseCase, aiContextUseCase);
+        expenseBulkUseCase = new ExpenseBulkUseCase(expenseRepository);
         
         // Check and update network status
         updateNetworkStatus();
@@ -197,7 +230,7 @@ public class AiChatBottomSheet extends DialogFragment {
                 messages.add(new ChatMessage(welcomeMessage, false, "Bây giờ"));
             } else if ("budget_management".equals(mode)) {
                 // Load budget welcome message
-                WelcomeMessageUseCase.loadBudgetWelcomeMessage(getContext(), getActivity(), messages, chatAdapter, messagesRecycler, this::refreshHomeFragment);
+                welcomeMessageUseCase.loadBudgetWelcomeMessage(getContext(), getActivity(), messages, chatAdapter, messagesRecycler, this::refreshHomeFragment);
             } else if ("category_budget_management".equals(mode)) {
                 // This should not happen since category budget always provides welcome_message
                 // But add fallback just in case
@@ -216,14 +249,14 @@ public class AiChatBottomSheet extends DialogFragment {
                 messages.add(new ChatMessage(fallbackMessage, false, "Bây giờ"));
             } else if ("expense_bulk_management".equals(mode)) {
                 // Load expense bulk management welcome message
-                WelcomeMessageUseCase.loadExpenseBulkWelcomeMessage(getContext(), getActivity(), messages, chatAdapter, messagesRecycler, this::refreshHomeFragment, this::refreshExpenseWelcomeMessage);
+                welcomeMessageUseCase.loadExpenseBulkWelcomeMessage(getContext(), getActivity(), messages, chatAdapter, messagesRecycler, this::refreshHomeFragment, this::refreshExpenseWelcomeMessage);
             } else {
                 // Load expense tracking welcome message
-                WelcomeMessageUseCase.loadRecentTransactionsForWelcome(getContext(), getActivity(), messages, chatAdapter, messagesRecycler);
+                welcomeMessageUseCase.loadRecentTransactionsForWelcome(getContext(), getActivity(), messages, chatAdapter, messagesRecycler);
             }
         } else {
             // Load expense tracking welcome message (default)
-            WelcomeMessageUseCase.loadRecentTransactionsForWelcome(getContext(), getActivity(), messages, chatAdapter, messagesRecycler);
+            welcomeMessageUseCase.loadRecentTransactionsForWelcome(getContext(), getActivity(), messages, chatAdapter, messagesRecycler);
         }
     }
     
@@ -415,7 +448,7 @@ public class AiChatBottomSheet extends DialogFragment {
 
     // Handle budget queries (view, analyze, add, edit, delete)
     private void handleBudgetQuery(String text) {
-        BudgetUseCase.handleBudgetQuery(text, getContext(), getActivity(), messages, chatAdapter, messagesRecycler, textToSpeech, this::updateNetworkStatus, this::refreshHomeFragment);
+        budgetUseCase.handleBudgetQuery(text, getContext(), getActivity(), messages, chatAdapter, messagesRecycler, textToSpeech, this::updateNetworkStatus, this::refreshHomeFragment);
     }
     
 
@@ -540,7 +573,7 @@ public class AiChatBottomSheet extends DialogFragment {
     // ==================== EXPENSE BULK MANAGEMENT ====================
     
     private void handleExpenseBulkRequest(String text) {
-        ExpenseBulkUseCase.handleExpenseBulkRequest(text, getContext(), getActivity(), messages, chatAdapter, messagesRecycler, this::refreshHomeFragment, this::refreshExpenseWelcomeMessage);
+        expenseBulkUseCase.handleExpenseBulkRequest(text, getContext(), getActivity(), messages, chatAdapter, messagesRecycler, this::refreshHomeFragment, this::refreshExpenseWelcomeMessage);
     }
 
 }

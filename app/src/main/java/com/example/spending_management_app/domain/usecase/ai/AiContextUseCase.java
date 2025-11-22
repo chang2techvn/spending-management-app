@@ -6,7 +6,9 @@ import android.util.Log;
 
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.spending_management_app.data.local.database.AppDatabase;
+import com.example.spending_management_app.domain.repository.BudgetRepository;
+import com.example.spending_management_app.domain.repository.CategoryBudgetRepository;
+import com.example.spending_management_app.domain.repository.ExpenseRepository;
 import com.example.spending_management_app.data.local.entity.BudgetEntity;
 import com.example.spending_management_app.data.local.entity.TransactionEntity;
 import com.example.spending_management_app.data.local.entity.CategoryBudgetEntity;
@@ -33,8 +35,19 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 
 public class AiContextUseCase {
+
+    private final ExpenseRepository expenseRepository;
+    private final BudgetRepository budgetRepository;
+    private final CategoryBudgetRepository categoryBudgetRepository;
+
+    public AiContextUseCase(ExpenseRepository expenseRepository, BudgetRepository budgetRepository, CategoryBudgetRepository categoryBudgetRepository) {
+        this.expenseRepository = expenseRepository;
+        this.budgetRepository = budgetRepository;
+        this.categoryBudgetRepository = categoryBudgetRepository;
+    }
+
         // Get comprehensive financial context from database
-    public static String getFinancialContext(Context context) {
+    public String getFinancialContext(Context context) {
         StringBuilder contextBuilder = new StringBuilder();
         
         try {
@@ -54,9 +67,7 @@ public class AiContextUseCase {
             Date endOfMonth = cal.getTime();
 
             // Get all transactions this month
-            List<TransactionEntity> monthlyTransactions = AppDatabase.getInstance(context)
-                    .transactionDao()
-                    .getTransactionsByDateRange(startOfMonth, endOfMonth);
+            List<TransactionEntity> monthlyTransactions = expenseRepository.getTransactionsByDateRange(startOfMonth, endOfMonth);
 
             // Calculate totals
             long totalExpense = 0;
@@ -81,9 +92,7 @@ public class AiContextUseCase {
             }
 
             // Get budget info
-            List<BudgetEntity> monthlyBudgets = AppDatabase.getInstance(context)
-                    .budgetDao()
-                    .getBudgetsByDateRange(startOfMonth, endOfMonth);
+            List<BudgetEntity> monthlyBudgets = budgetRepository.getBudgetsByDateRange(startOfMonth, endOfMonth);
 
             // Build context string
             contextBuilder.append("THÔNG TIN TÀI CHÍNH THÁNG NÀY:\n");
@@ -239,7 +248,7 @@ public class AiContextUseCase {
 
     
     // Get comprehensive budget context from database
-    public static String getBudgetContext(Context context) {
+    public String getBudgetContext(Context context) {
         StringBuilder contextBuilder = new StringBuilder();
         
         try {
@@ -261,8 +270,7 @@ public class AiContextUseCase {
             cal.set(Calendar.SECOND, 59);
             Date sixMonthsLater = cal.getTime();
             
-            List<BudgetEntity> allBudgets = AppDatabase.getInstance(context)
-                    .budgetDao()
+            List<BudgetEntity> allBudgets = budgetRepository
                     .getBudgetsByDateRangeOrdered(twelveMonthsAgo, sixMonthsLater);
             
             SimpleDateFormat monthYearFormat = new SimpleDateFormat("MM/yyyy", new Locale("vi", "VN"));
@@ -368,8 +376,7 @@ public class AiContextUseCase {
                 
                 // Get all category budgets for current month
                 List<CategoryBudgetEntity> categoryBudgets =
-                        AppDatabase.getInstance(context)
-                                .categoryBudgetDao()
+                        categoryBudgetRepository
                                 .getAllCategoryBudgetsForMonth(startOfMonth, endOfMonth);
                 
                 if (categoryBudgets != null && !categoryBudgets.isEmpty()) {
@@ -425,7 +432,7 @@ public class AiContextUseCase {
      * Send prompt to AI with budget context using GeminiAI service
      * This method uses callback pattern to handle UI updates
      */
-    public static void sendPromptToAIWithBudgetContext(String userQuery, String budgetContext,
+    public void sendPromptToAIWithBudgetContext(String userQuery, String budgetContext,
             List<AiChatBottomSheet.ChatMessage> messages, AiChatBottomSheet.ChatAdapter chatAdapter, 
             RecyclerView messagesRecycler, TextToSpeech textToSpeech, Runnable updateNetworkStatus) {
         // Add temporary "Đang phân tích..." message

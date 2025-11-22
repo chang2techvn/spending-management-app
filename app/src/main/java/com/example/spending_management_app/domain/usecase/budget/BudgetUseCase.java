@@ -5,8 +5,8 @@ import android.content.Context;
 
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.spending_management_app.data.local.database.AppDatabase;
 import com.example.spending_management_app.data.local.entity.BudgetEntity;
+import com.example.spending_management_app.domain.repository.BudgetRepository;
 import com.example.spending_management_app.domain.usecase.ai.AiContextUseCase;
 import com.example.spending_management_app.domain.usecase.ai.PromptUseCase;
 import com.example.spending_management_app.presentation.dialog.AiChatBottomSheet;
@@ -25,10 +25,20 @@ import java.util.concurrent.Executors;
  */
 public class BudgetUseCase {
 
+    private final BudgetRepository budgetRepository;
+    private final PromptUseCase promptUseCase;
+    private final AiContextUseCase aiContextUseCase;
+
+    public BudgetUseCase(BudgetRepository budgetRepository, PromptUseCase promptUseCase, AiContextUseCase aiContextUseCase) {
+        this.budgetRepository = budgetRepository;
+        this.promptUseCase = promptUseCase;
+        this.aiContextUseCase = aiContextUseCase;
+    }
+
     /**
      * Handle budget request (add, edit, increase, decrease budget)
      */
-    public static void handleBudgetRequest(String text, Context context, Activity activity,
+    public void handleBudgetRequest(String text, Context context, Activity activity,
                                          List<AiChatBottomSheet.ChatMessage> messages,
                                          AiChatBottomSheet.ChatAdapter chatAdapter,
                                          RecyclerView messagesRecycler,
@@ -126,8 +136,7 @@ public class BudgetUseCase {
 
                     android.util.Log.d("BudgetService", "Saving budget for range: " + startOfMonth + " to " + endOfMonth);
 
-                    List<BudgetEntity> existingBudgets = AppDatabase.getInstance(context)
-                            .budgetDao()
+                    List<BudgetEntity> existingBudgets = budgetRepository
                             .getBudgetsByDateRangeOrdered(startOfMonth, endOfMonth);
 
                     android.util.Log.d("BudgetService", "Found " + (existingBudgets != null ? existingBudgets.size() : 0) + " existing budgets");
@@ -180,7 +189,7 @@ public class BudgetUseCase {
 
                         existing.monthlyLimit = calculatedFinalAmount;
                         existing.date = budgetDate;
-                        AppDatabase.getInstance(context).budgetDao().update(existing);
+                        budgetRepository.update(existing);
 
                         // Log budget history
                         BudgetHistoryLogger.logMonthlyBudgetUpdated(
@@ -210,7 +219,7 @@ public class BudgetUseCase {
 
                         BudgetEntity budget = new BudgetEntity("Ngân sách tháng", calculatedFinalAmount, 0L, budgetDate);
                         android.util.Log.d("BudgetService", "Inserting new budget: " + budget.date);
-                        AppDatabase.getInstance(context).budgetDao().insert(budget);
+                        budgetRepository.insert(budget);
 
                         // Log budget history
                         BudgetHistoryLogger.logMonthlyBudgetCreated(
@@ -306,7 +315,7 @@ public class BudgetUseCase {
     /**
      * Handle delete budget request
      */
-    public static void handleDeleteBudget(String text, Context context, Activity activity,
+    public void handleDeleteBudget(String text, Context context, Activity activity,
                                         List<AiChatBottomSheet.ChatMessage> messages,
                                         AiChatBottomSheet.ChatAdapter chatAdapter,
                                         RecyclerView messagesRecycler,
@@ -342,17 +351,15 @@ public class BudgetUseCase {
                 Date endOfMonth = targetCal.getTime();
 
                 // Check if budget exists
-                List<BudgetEntity> existingBudgets = AppDatabase.getInstance(context)
-                        .budgetDao()
-                        .getBudgetsByDateRangeOrdered(startOfMonth, endOfMonth);
+                List<BudgetEntity> existingBudgets = budgetRepository
+                        .getBudgetsByDateRange(startOfMonth, endOfMonth);
 
                 if (existingBudgets != null && !existingBudgets.isEmpty()) {
                     // Get the budget amount before deleting
                     long budgetAmount = existingBudgets.get(0).monthlyLimit;
 
                     // Delete budget
-                    AppDatabase.getInstance(context)
-                            .budgetDao()
+                    budgetRepository
                             .deleteBudgetsByDateRange(startOfMonth, endOfMonth);
 
                     // Log budget history
@@ -408,7 +415,7 @@ public class BudgetUseCase {
     /**
      * Handle budget analysis/view request (when user wants to view or analyze budget data)
      */
-    public static void handleBudgetAnalysis(String text, Context context, Activity activity,
+    public void handleBudgetAnalysis(String text, Context context, Activity activity,
                                           List<AiChatBottomSheet.ChatMessage> messages,
                                           AiChatBottomSheet.ChatAdapter chatAdapter,
                                           RecyclerView messagesRecycler,
@@ -419,7 +426,7 @@ public class BudgetUseCase {
         // User wants to view or analyze budget - get budget data and send to AI
         Executors.newSingleThreadExecutor().execute(() -> {
             try {
-                String budgetContext = AiContextUseCase.getBudgetContext(context);
+                String budgetContext = aiContextUseCase.getBudgetContext(context);
 
                 // Detect if user wants detailed analysis/consultation or just viewing
                 boolean needsDetailedAnalysis = lowerText.contains("phân tích") ||
@@ -441,12 +448,12 @@ public class BudgetUseCase {
 
                 String finalQuery = queryWithContext;
                 activity.runOnUiThread(() -> {
-                    AiContextUseCase.sendPromptToAIWithBudgetContext(finalQuery, budgetContext, messages, chatAdapter, messagesRecycler, textToSpeech, updateNetworkStatusCallback);
+                    aiContextUseCase.sendPromptToAIWithBudgetContext(finalQuery, budgetContext, messages, chatAdapter, messagesRecycler, textToSpeech, updateNetworkStatusCallback);
                 });
             } catch (Exception e) {
                 android.util.Log.e("BudgetService", "Error getting budget context", e);
                 activity.runOnUiThread(() -> {
-                    PromptUseCase.sendPromptToAI(text, activity, messages, chatAdapter, messagesRecycler, textToSpeech, updateNetworkStatusCallback);
+                    promptUseCase.sendPromptToAI(text, activity, messages, chatAdapter, messagesRecycler, textToSpeech, updateNetworkStatusCallback);
                 });
             }
         });
@@ -455,7 +462,7 @@ public class BudgetUseCase {
     /**
      * Handle all budget queries (view, analyze, add, edit, delete)
      */
-    public static void handleBudgetQuery(String text, Context context, Activity activity,
+    public void handleBudgetQuery(String text, Context context, Activity activity,
                                        List<AiChatBottomSheet.ChatMessage> messages,
                                        AiChatBottomSheet.ChatAdapter chatAdapter,
                                        RecyclerView messagesRecycler,
@@ -466,7 +473,7 @@ public class BudgetUseCase {
 
         // Check if user wants to delete budget
         if (lowerText.contains("xóa") || lowerText.contains("xoá")) {
-            BudgetUseCase.handleDeleteBudget(text, context, activity, messages, chatAdapter, messagesRecycler, refreshHomeFragmentCallback);
+            handleDeleteBudget(text, context, activity, messages, chatAdapter, messagesRecycler, refreshHomeFragmentCallback);
             return;
         }
 
@@ -479,11 +486,11 @@ public class BudgetUseCase {
             lowerText.contains("giảm") || lowerText.contains("hạ") ||
             lowerText.contains("cộng") || lowerText.contains("trừ") ||
             lowerText.contains("bớt") || lowerText.contains("cắt")) {
-            BudgetUseCase.handleBudgetRequest(text, context, activity, messages, chatAdapter, messagesRecycler, refreshHomeFragmentCallback);
+            handleBudgetRequest(text, context, activity, messages, chatAdapter, messagesRecycler, refreshHomeFragmentCallback);
             return;
         }
 
         // User wants to view or analyze budget - delegate to BudgetService
-        BudgetUseCase.handleBudgetAnalysis(text, context, activity, messages, chatAdapter, messagesRecycler, textToSpeech, updateNetworkStatusCallback);
+        handleBudgetAnalysis(text, context, activity, messages, chatAdapter, messagesRecycler, textToSpeech, updateNetworkStatusCallback);
     }
 }
