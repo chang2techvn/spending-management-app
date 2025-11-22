@@ -46,14 +46,14 @@
 
         <ImageView
             android:id="@+id/user_avatar"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
             android:layout_marginStart="16dp"
-            android:background="@drawable/gradient_blue_purple"
             android:contentDescription="User avatar"
-            android:scaleType="centerInside"
-            android:src="@drawable/ic_user"
-            app:tint="#FFFFFF" />
+            android:scaleType="centerCrop"
+            android:src="@drawable/ic_launcher_foreground"
+            android:padding="8dp"
+            android:clipToOutline="true" />
 
     </LinearLayout>
 

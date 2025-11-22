@@ -87,7 +87,9 @@ public class AccountFragment extends Fragment {
 
     private void setupClickListeners() {
         binding.editProfileOption.setOnClickListener(v -> showEditProfileDialog());
-
+        
+        binding.profileCard.setOnClickListener(v -> showEditProfileDialog());
+        
         binding.changePasswordOption.setOnClickListener(v -> showChangePasswordDialog());
 
         binding.settingsOption.setOnClickListener(v -> showSettingsDialog());

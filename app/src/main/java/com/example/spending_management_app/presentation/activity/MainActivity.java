@@ -24,6 +24,8 @@ import com.example.spending_management_app.R;
 import com.example.spending_management_app.databinding.ActivityMainBinding;
 import com.example.spending_management_app.presentation.dialog.AiChatBottomSheet;
 import com.example.spending_management_app.utils.SessionManager;
+import com.example.spending_management_app.data.local.entity.UserEntity;
+import com.bumptech.glide.Glide;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -38,13 +40,14 @@ public class MainActivity extends AppCompatActivity {
     private Handler greetingUpdateHandler;
     private Runnable greetingUpdateRunnable;
     private static final int VOICE_REQUEST_CODE = 1001;
+    private SessionManager sessionManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         // Check authentication first
-        SessionManager sessionManager = new SessionManager(this);
+        sessionManager = new SessionManager(this);
         if (!sessionManager.isLoggedIn()) {
             navigateToLogin();
             return;
@@ -54,6 +57,9 @@ public class MainActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
 
         homeHeader = findViewById(R.id.home_header);
+
+    // Load user avatar into activity header
+    loadUserAvatar();
 
         navController = Navigation.findNavController(this, R.id.nav_host_fragment_activity_main);
         // Passing each menu ID as a set of Ids because each
@@ -75,6 +81,8 @@ public class MainActivity extends AppCompatActivity {
             // Sau: Header chỉ hiển thị trên tab Home
             if (destination.getId() == R.id.navigation_home) {
                 homeHeader.setVisibility(View.VISIBLE);
+                // Refresh avatar whenever home is shown
+                loadUserAvatar();
             } else {
                 homeHeader.setVisibility(View.GONE);
             }
@@ -90,6 +98,25 @@ public class MainActivity extends AppCompatActivity {
             greetingUpdateHandler.postDelayed(greetingUpdateRunnable, 60000); // 1 minute
         };
         greetingUpdateHandler.post(greetingUpdateRunnable);
+    }
+
+    private void loadUserAvatar() {
+        if (sessionManager == null) return;
+        UserEntity currentUser = sessionManager.getUserData();
+        if (currentUser != null) {
+            if (currentUser.getAvatar() != null && !currentUser.getAvatar().isEmpty()) {
+                Glide.with(this)
+                        .load(currentUser.getAvatar())
+                        .placeholder(R.drawable.ic_launcher_foreground)
+                        .error(R.drawable.ic_launcher_foreground)
+                        .circleCrop()
+                        .into(binding.userAvatar);
+            } else {
+                binding.userAvatar.setImageResource(R.drawable.ic_launcher_foreground);
+            }
+        } else {
+            binding.userAvatar.setImageResource(R.drawable.ic_launcher_foreground);
+        }
     }
 
     private void updateGreeting() {
@@ -199,6 +226,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         updateGreeting();
+        // Refresh avatar in case it was updated from profile edit
+        loadUserAvatar();
     }
 
     @Override
