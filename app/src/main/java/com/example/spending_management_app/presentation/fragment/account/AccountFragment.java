@@ -10,6 +10,10 @@ import android.provider.MediaStore;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import com.google.android.material.textfield.TextInputLayout;
+import com.google.android.material.textfield.TextInputEditText;
+import android.text.TextWatcher;
+import android.text.Editable;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -18,6 +22,10 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import android.content.res.ColorStateList;
+import android.graphics.Color;
+
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
 import com.bumptech.glide.Glide;
@@ -28,6 +36,7 @@ import com.example.spending_management_app.data.repository.UserRepositoryImpl;
 import com.example.spending_management_app.databinding.FragmentAccountBinding;
 import com.example.spending_management_app.domain.repository.UserRepository;
 import com.example.spending_management_app.presentation.activity.LoginActivity;
+import com.example.spending_management_app.utils.PasswordUtils;
 import com.example.spending_management_app.utils.SessionManager;
 
 public class AccountFragment extends Fragment {
@@ -89,7 +98,7 @@ public class AccountFragment extends Fragment {
         binding.editProfileOption.setOnClickListener(v -> showEditProfileDialog());
         
         binding.profileCard.setOnClickListener(v -> showEditProfileDialog());
-        
+
         binding.changePasswordOption.setOnClickListener(v -> showChangePasswordDialog());
 
         binding.settingsOption.setOnClickListener(v -> showSettingsDialog());
@@ -182,47 +191,81 @@ public class AccountFragment extends Fragment {
     }
 
     private void showChangePasswordDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(getContext(), R.style.RoundedDialog4Corners);
-        builder.setTitle("Đổi mật khẩu");
+        Dialog dialog = new Dialog(getContext(), R.style.RoundedDialog4Corners);
+        View dialogView = LayoutInflater.from(getContext()).inflate(R.layout.dialog_change_password, null);
+        dialog.setContentView(dialogView);
 
-        LinearLayout layout = new LinearLayout(getContext());
-        layout.setOrientation(LinearLayout.VERTICAL);
-        layout.setPadding(32, 16, 32, 16);
+        // Find views
+        TextInputLayout currentPasswordLayout = dialogView.findViewById(R.id.current_password_layout);
+        TextInputEditText currentPasswordInput = dialogView.findViewById(R.id.current_password_input);
+        TextInputEditText newPasswordInput = dialogView.findViewById(R.id.new_password_input);
+        TextInputEditText confirmPasswordInput = dialogView.findViewById(R.id.confirm_password_input);
 
-        final EditText currentPasswordInput = new EditText(getContext());
-        currentPasswordInput.setHint("Mật khẩu hiện tại");
-        currentPasswordInput.setInputType(android.text.InputType.TYPE_CLASS_TEXT | android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD);
-        layout.addView(currentPasswordInput);
+        // Add text change listener for real-time validation
+        currentPasswordInput.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
 
-        final EditText newPasswordInput = new EditText(getContext());
-        newPasswordInput.setHint("Mật khẩu mới");
-        newPasswordInput.setInputType(android.text.InputType.TYPE_CLASS_TEXT | android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD);
-        layout.addView(newPasswordInput);
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                String password = s.toString();
+                if (password.isEmpty()) {
+                    currentPasswordLayout.setEndIconDrawable(null);
+                } else if (PasswordUtils.verifyPassword(password, currentUser.getPasswordHash())) {
+                    currentPasswordLayout.setEndIconDrawable(ContextCompat.getDrawable(getContext(), R.drawable.ic_check_green));
+                    currentPasswordLayout.setEndIconTintList(ColorStateList.valueOf(Color.parseColor("#4CAF50")));
+                } else {
+                    currentPasswordLayout.setEndIconDrawable(ContextCompat.getDrawable(getContext(), R.drawable.ic_check_red));
+                    currentPasswordLayout.setEndIconTintList(ColorStateList.valueOf(Color.parseColor("#F44336")));
+                }
+            }
 
-        final EditText confirmPasswordInput = new EditText(getContext());
-        confirmPasswordInput.setHint("Xác nhận mật khẩu mới");
-        confirmPasswordInput.setInputType(android.text.InputType.TYPE_CLASS_TEXT | android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD);
-        layout.addView(confirmPasswordInput);
+            @Override
+            public void afterTextChanged(Editable s) {}
+        });
 
-        builder.setView(layout);
+        // Cancel button
+        dialogView.findViewById(R.id.btn_cancel).setOnClickListener(v -> dialog.dismiss());
 
-        builder.setPositiveButton("Đổi mật khẩu", (dialog, which) -> {
-            String currentPassword = currentPasswordInput.getText().toString();
-            String newPassword = newPasswordInput.getText().toString();
-            String confirmPassword = confirmPasswordInput.getText().toString();
+        // Change password button
+        dialogView.findViewById(R.id.btn_change_password).setOnClickListener(v -> {
+            String currentPassword = currentPasswordInput.getText().toString().trim();
+            String newPassword = newPasswordInput.getText().toString().trim();
+            String confirmPassword = confirmPasswordInput.getText().toString().trim();
 
             if (currentPassword.isEmpty() || newPassword.isEmpty() || confirmPassword.isEmpty()) {
                 Toast.makeText(getContext(), "Vui lòng điền đầy đủ thông tin", Toast.LENGTH_SHORT).show();
-            } else if (!newPassword.equals(confirmPassword)) {
-                Toast.makeText(getContext(), "Mật khẩu xác nhận không khớp", Toast.LENGTH_SHORT).show();
-            } else {
-                // TODO: Implement actual password change logic
-                Toast.makeText(getContext(), "Mật khẩu đã được thay đổi", Toast.LENGTH_SHORT).show();
+                return;
             }
+
+            if (!PasswordUtils.verifyPassword(currentPassword, currentUser.getPasswordHash())) {
+                Toast.makeText(getContext(), "Mật khẩu hiện tại không đúng", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            if (!newPassword.equals(confirmPassword)) {
+                Toast.makeText(getContext(), "Mật khẩu xác nhận không khớp", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            // Update password
+            String hashedNewPassword = PasswordUtils.hashPassword(newPassword);
+            currentUser.setPasswordHash(hashedNewPassword);
+
+            // Save to database
+            new Thread(() -> {
+                userRepository.updateUser(currentUser);
+                getActivity().runOnUiThread(() -> {
+                    // Update session
+                    sessionManager.updateUserData(currentUser);
+
+                    Toast.makeText(getContext(), "Mật khẩu đã được thay đổi", Toast.LENGTH_SHORT).show();
+                    dialog.dismiss();
+                });
+            }).start();
         });
 
-        builder.setNegativeButton("Hủy", null);
-        builder.show();
+        dialog.show();
     }
 
     private void showSettingsDialog() {
