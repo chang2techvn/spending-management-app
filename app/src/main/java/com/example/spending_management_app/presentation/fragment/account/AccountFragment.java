@@ -2,6 +2,7 @@ package com.example.spending_management_app.presentation.fragment.account;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,17 +14,26 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
+import com.bumptech.glide.Glide;
 import com.example.spending_management_app.R;
+import com.example.spending_management_app.data.local.entity.UserEntity;
 import com.example.spending_management_app.databinding.FragmentAccountBinding;
+import com.example.spending_management_app.presentation.activity.LoginActivity;
+import com.example.spending_management_app.utils.SessionManager;
 
 public class AccountFragment extends Fragment {
 
     private FragmentAccountBinding binding;
+    private SessionManager sessionManager;
+    private UserEntity currentUser;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
         binding = FragmentAccountBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
+
+        // Initialize session manager
+        sessionManager = new SessionManager(getContext());
 
         // Setup account data
         setupAccountData();
@@ -35,9 +45,30 @@ public class AccountFragment extends Fragment {
     }
 
     private void setupAccountData() {
-        // Set user information
-        binding.userName.setText("Nguyễn Văn A");
-        binding.userEmail.setText("nguyenvana@example.com");
+        // Get current user from session
+        currentUser = sessionManager.getUserData();
+
+        if (currentUser != null) {
+            // Set user information
+            binding.userName.setText(currentUser.getName());
+            binding.userEmail.setText(currentUser.getEmailOrPhone());
+
+            // Load user avatar
+            if (currentUser.getAvatar() != null && !currentUser.getAvatar().isEmpty()) {
+                Glide.with(this)
+                    .load(currentUser.getAvatar())
+                    .placeholder(R.drawable.ic_launcher_foreground)
+                    .error(R.drawable.ic_launcher_foreground)
+                    .circleCrop()
+                    .into(binding.userAvatar);
+            } else {
+                binding.userAvatar.setImageResource(R.drawable.ic_launcher_foreground);
+            }
+        } else {
+            // Fallback if no user data
+            binding.userName.setText("Người dùng");
+            binding.userEmail.setText("Chưa đăng nhập");
+        }
     }
 
     private void setupClickListeners() {
@@ -168,9 +199,14 @@ public class AccountFragment extends Fragment {
         builder.setMessage("Bạn có chắc chắn muốn đăng xuất?");
 
         builder.setPositiveButton("Đăng xuất", (dialog, which) -> {
-            // TODO: Implement actual logout logic
-            Toast.makeText(getContext(), "Đã đăng xuất", Toast.LENGTH_SHORT).show();
-            // Navigate to login screen or close app
+            // Perform actual logout
+            sessionManager.logout();
+
+            // Navigate to login screen
+            Intent intent = new Intent(getActivity(), LoginActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
+            getActivity().finish();
         });
 
         builder.setNegativeButton("Hủy", null);

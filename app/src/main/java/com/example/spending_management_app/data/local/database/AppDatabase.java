@@ -13,13 +13,15 @@ import com.example.spending_management_app.data.local.dao.BudgetHistoryDao;
 import com.example.spending_management_app.data.local.dao.CategoryBudgetDao;
 import com.example.spending_management_app.data.local.dao.RecurringExpenseDao;
 import com.example.spending_management_app.data.local.dao.TransactionDao;
+import com.example.spending_management_app.data.local.dao.UserDao;
+import com.example.spending_management_app.data.local.entity.UserEntity;
 import com.example.spending_management_app.data.local.entity.BudgetEntity;
 import com.example.spending_management_app.data.local.entity.BudgetHistoryEntity;
 import com.example.spending_management_app.data.local.entity.CategoryBudgetEntity;
 import com.example.spending_management_app.data.local.entity.RecurringExpenseEntity;
 import com.example.spending_management_app.data.local.entity.TransactionEntity;
 
-@Database(entities = {TransactionEntity.class, BudgetEntity.class, RecurringExpenseEntity.class, CategoryBudgetEntity.class, BudgetHistoryEntity.class}, version = 4)
+@Database(entities = {TransactionEntity.class, BudgetEntity.class, RecurringExpenseEntity.class, CategoryBudgetEntity.class, BudgetHistoryEntity.class, UserEntity.class}, version = 5)
 @TypeConverters(DateConverter.class)
 public abstract class AppDatabase extends RoomDatabase {
     private static AppDatabase instance;
@@ -39,4 +41,5 @@ public abstract class AppDatabase extends RoomDatabase {
     public abstract RecurringExpenseDao recurringExpenseDao();
     public abstract CategoryBudgetDao categoryBudgetDao();
     public abstract BudgetHistoryDao budgetHistoryDao();
+    public abstract UserDao userDao();
 }

@@ -23,6 +23,7 @@ import androidx.navigation.Navigation;
 import com.example.spending_management_app.R;
 import com.example.spending_management_app.databinding.ActivityMainBinding;
 import com.example.spending_management_app.presentation.dialog.AiChatBottomSheet;
+import com.example.spending_management_app.utils.SessionManager;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -41,6 +42,13 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // Check authentication first
+        SessionManager sessionManager = new SessionManager(this);
+        if (!sessionManager.isLoggedIn()) {
+            navigateToLogin();
+            return;
+        }
 
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
@@ -234,12 +242,10 @@ public class MainActivity extends AppCompatActivity {
         aiChatBottomSheet.show(getSupportFragmentManager(), aiChatBottomSheet.getTag());
     }
     
-    public void openExpenseBulkManagement() {
-        AiChatBottomSheet aiChatBottomSheet = new AiChatBottomSheet();
-        Bundle args = new Bundle();
-        args.putString("mode", "expense_bulk_management");
-        args.putString("initial_prompt", "expense_bulk");
-        aiChatBottomSheet.setArguments(args);
-        aiChatBottomSheet.show(getSupportFragmentManager(), aiChatBottomSheet.getTag());
+    private void navigateToLogin() {
+        Intent intent = new Intent(this, LoginActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        finish();
     }
 }

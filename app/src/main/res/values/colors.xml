@@ -10,6 +10,10 @@
     <color name="nav_item_color">#FF666666</color>
     <color name="blue_600">#FF1976D2</color>
 
+    <!-- Text colors -->
+    <color name="text_primary">#FF212121</color>
+    <color name="text_secondary">#FF757575</color>
+
     <!-- Transaction colors -->
     <color name="income_color">#FF4CAF50</color>
     <color name="expense_color">#FFF44336</color>
