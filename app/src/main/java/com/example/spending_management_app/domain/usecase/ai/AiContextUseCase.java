@@ -174,8 +174,30 @@ public class AiContextUseCase {
             systemInstruction.put("parts", systemParts);
             json.put("system_instruction", systemInstruction);
 
-            // User message
+            // Build conversation history
             JSONArray contents = new JSONArray();
+            
+            // Add previous messages (excluding the current analyzing message and welcome messages)
+            for (int i = 0; i < analyzingIndex; i++) {
+                AiChatBottomSheet.ChatMessage msg = messages.get(i);
+                // Skip welcome messages or system messages that are not part of conversation
+                if (msg.message.startsWith("📊") || msg.message.startsWith("💰") || 
+                    msg.message.startsWith("📅") || msg.message.contains("Đang phân tích") ||
+                    msg.message.contains("Lỗi") || msg.message.contains("Offline")) {
+                    continue;
+                }
+                
+                JSONObject contentObj = new JSONObject();
+                JSONArray parts = new JSONArray();
+                JSONObject part = new JSONObject();
+                part.put("text", msg.message);
+                parts.put(part);
+                contentObj.put("parts", parts);
+                contentObj.put("role", msg.isUser ? "user" : "model");
+                contents.put(contentObj);
+            }
+            
+            // Add current user query
             JSONObject userContent = new JSONObject();
             JSONArray userParts = new JSONArray();
             JSONObject userPart = new JSONObject();
@@ -184,6 +206,7 @@ public class AiContextUseCase {
             userContent.put("parts", userParts);
             userContent.put("role", "user");
             contents.put(userContent);
+            
             json.put("contents", contents);
 
             RequestBody body = RequestBody.create(json.toString(), MediaType.parse("application/json"));
@@ -442,7 +465,7 @@ public class AiContextUseCase {
         messagesRecycler.smoothScrollToPosition(messages.size() - 1);
 
         // Use GeminiAI service with callback
-        GeminiApiService.sendPromptWithBudgetContext(userQuery, budgetContext, new GeminiApiService.AIResponseCallback() {
+        GeminiApiService.sendPromptWithBudgetContext(userQuery, budgetContext, messages, analyzingIndex, new GeminiApiService.AIResponseCallback() {
             @Override
             public void onSuccess(String formattedResponse) {
                 // Update UI with AI response
