@@ -1,4 +1,4 @@
-package com.example.spending_management_app.presentation.component.ui;
+package com.example.spending_management_app.presentation.fragment.statistics;
 
 import android.content.Context;
 import android.widget.TextView;

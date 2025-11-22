@@ -1,4 +1,4 @@
-package com.example.spending_management_app.presentation.dialog;
+package com.example.spending_management_app.presentation.fragment.history;
 
 import android.app.DatePickerDialog;
 import android.os.Bundle;

@@ -5,10 +5,10 @@ import android.content.Context;
 import com.example.spending_management_app.data.local.entity.TransactionEntity;
 import com.example.spending_management_app.domain.repository.ExpenseRepository;
 import com.example.spending_management_app.presentation.dialog.AiChatBottomSheet;
-import com.example.spending_management_app.domain.usecase.budget.BudgetAmountParser;
+import com.example.spending_management_app.utils.BudgetAmountParser;
 import com.example.spending_management_app.utils.CategoryIconHelper;
 import com.example.spending_management_app.utils.DateParser;
-import com.example.spending_management_app.domain.usecase.ai.ExtractorHelper;
+import com.example.spending_management_app.utils.ExtractorHelper;
 import com.example.spending_management_app.utils.ToastHelper;
 
 import java.util.ArrayList;

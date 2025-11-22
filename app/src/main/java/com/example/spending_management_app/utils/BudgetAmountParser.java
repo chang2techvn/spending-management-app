@@ -1,4 +1,4 @@
-package com.example.spending_management_app.domain.usecase.budget;
+package com.example.spending_management_app.utils;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

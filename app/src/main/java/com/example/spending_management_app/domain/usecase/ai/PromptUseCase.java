@@ -7,6 +7,7 @@ import android.util.Log;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.spending_management_app.presentation.dialog.AiChatBottomSheet;
+import com.example.spending_management_app.utils.ExtractorHelper;
 import com.example.spending_management_app.utils.TextFormatHelper;
 import com.example.spending_management_app.domain.usecase.expense.ExpenseUseCase;
 

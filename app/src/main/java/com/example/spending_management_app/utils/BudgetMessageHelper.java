@@ -1,4 +1,4 @@
-package com.example.spending_management_app.domain.usecase.budget;
+package com.example.spending_management_app.utils;
 
 public final class BudgetMessageHelper {
     private BudgetMessageHelper() {

@@ -1,4 +1,4 @@
-package com.example.spending_management_app.domain.usecase.ai;
+package com.example.spending_management_app.utils;
 
 import java.util.ArrayList;
 import java.util.List;

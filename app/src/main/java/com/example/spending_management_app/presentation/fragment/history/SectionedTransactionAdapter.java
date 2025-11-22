@@ -1,4 +1,4 @@
-package com.example.spending_management_app.presentation.adapter;
+package com.example.spending_management_app.presentation.fragment.history;
 
 import android.content.Context;
 import android.view.LayoutInflater;

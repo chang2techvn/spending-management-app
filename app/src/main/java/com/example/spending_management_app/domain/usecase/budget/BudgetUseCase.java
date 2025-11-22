@@ -10,6 +10,7 @@ import com.example.spending_management_app.domain.repository.BudgetRepository;
 import com.example.spending_management_app.domain.usecase.ai.AiContextUseCase;
 import com.example.spending_management_app.domain.usecase.ai.PromptUseCase;
 import com.example.spending_management_app.presentation.dialog.AiChatBottomSheet;
+import com.example.spending_management_app.utils.BudgetAmountParser;
 import com.example.spending_management_app.utils.DateParser;
 import com.example.spending_management_app.utils.ToastHelper;
 

@@ -1,6 +1,6 @@
 package com.example.spending_management_app.domain.usecase.category;
 
-import com.example.spending_management_app.domain.usecase.budget.BudgetAmountParser;
+import com.example.spending_management_app.utils.BudgetAmountParser;
 
 import java.util.ArrayList;
 import java.util.List;

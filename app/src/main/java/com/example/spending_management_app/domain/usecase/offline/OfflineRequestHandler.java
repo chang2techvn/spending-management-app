@@ -7,11 +7,11 @@ import com.example.spending_management_app.data.local.database.AppDatabase;
 import com.example.spending_management_app.data.local.entity.BudgetEntity;
 import com.example.spending_management_app.data.local.entity.TransactionEntity;
 import com.example.spending_management_app.data.local.entity.CategoryBudgetEntity;
-import com.example.spending_management_app.domain.usecase.budget.BudgetAmountParser;
+import com.example.spending_management_app.utils.BudgetAmountParser;
 import com.example.spending_management_app.domain.usecase.budget.BudgetHistoryLogger;
 import com.example.spending_management_app.utils.CategoryHelper;
 import com.example.spending_management_app.utils.DateParser;
-import com.example.spending_management_app.domain.usecase.expense.ExpenseDescriptionParser;
+import com.example.spending_management_app.utils.ExpenseDescriptionParser;
 
 import java.util.Calendar;
 import java.util.Date;

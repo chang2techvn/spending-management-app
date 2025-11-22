@@ -14,8 +14,6 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.example.spending_management_app.data.local.entity.BudgetHistoryEntity;
 import com.example.spending_management_app.databinding.FragmentHistoryBinding;
-import com.example.spending_management_app.presentation.adapter.SectionedTransactionAdapter;
-import com.example.spending_management_app.presentation.dialog.DateRangePickerDialog;
 import com.example.spending_management_app.domain.model.Transaction;
 import com.example.spending_management_app.data.local.database.AppDatabase;
 import com.example.spending_management_app.data.local.entity.TransactionEntity;

@@ -16,7 +16,6 @@ import com.example.spending_management_app.data.local.entity.MonthlySpending;
 import com.example.spending_management_app.data.local.dao.TransactionDao;
 import com.example.spending_management_app.data.local.entity.TransactionEntity;
 import com.example.spending_management_app.databinding.FragmentStatisticsBinding;
-import com.example.spending_management_app.presentation.component.ui.MonthMarkerView;
 import com.example.spending_management_app.presentation.viewmodel.statistics.StatisticsViewModel;
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.components.XAxis;
