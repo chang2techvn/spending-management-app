@@ -14,16 +14,18 @@ import com.google.android.material.textfield.TextInputLayout;
 import com.google.android.material.textfield.TextInputEditText;
 import android.text.TextWatcher;
 import android.text.Editable;
+import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.Toast;
+import android.widget.AutoCompleteTextView;
+import androidx.appcompat.widget.SwitchCompat;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
+import android.widget.Toast;
 
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
@@ -268,22 +270,51 @@ public class AccountFragment extends Fragment {
     }
 
     private void showSettingsDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(getContext(), R.style.RoundedDialog4Corners);
-        builder.setTitle("Cài đặt");
+        Dialog dialog = new Dialog(getContext(), R.style.RoundedDialog4Corners);
+        View dialogView = LayoutInflater.from(getContext()).inflate(R.layout.dialog_settings, null);
+        dialog.setContentView(dialogView);
 
-        String[] settings = {"Thông báo", "Ngôn ngữ", "Chủ đề", "Bảo mật"};
-        boolean[] checkedItems = {true, false, false, true};
+        // Find views
+        SwitchCompat notificationSwitch = dialogView.findViewById(R.id.notification_switch);
+        AutoCompleteTextView languageDropdown = dialogView.findViewById(R.id.language_dropdown);
+        AutoCompleteTextView currencyDropdown = dialogView.findViewById(R.id.currency_dropdown);
 
-        builder.setMultiChoiceItems(settings, checkedItems, (dialog, which, isChecked) -> {
-            checkedItems[which] = isChecked;
+        // Setup language dropdown
+        ArrayAdapter<String> languageAdapter = new ArrayAdapter<>(getContext(),
+            android.R.layout.simple_dropdown_item_1line, new String[]{"Việt", "Anh"});
+        languageDropdown.setAdapter(languageAdapter);
+
+        // Setup currency dropdown
+        ArrayAdapter<String> currencyAdapter = new ArrayAdapter<>(getContext(),
+            android.R.layout.simple_dropdown_item_1line, new String[]{"VND", "USD"});
+        currencyDropdown.setAdapter(currencyAdapter);
+
+        // Load current settings (for demo, set defaults)
+        // In real app, load from SharedPreferences
+        notificationSwitch.setChecked(true); // Default on
+        languageDropdown.setText("Việt", false); // Default Vietnamese
+        currencyDropdown.setText("VND", false); // Default VND
+
+        // Cancel button
+        dialogView.findViewById(R.id.btn_cancel).setOnClickListener(v -> dialog.dismiss());
+
+        // Save button
+        dialogView.findViewById(R.id.btn_save).setOnClickListener(v -> {
+            boolean notificationsEnabled = notificationSwitch.isChecked();
+            String selectedLanguage = languageDropdown.getText().toString();
+            String selectedCurrency = currencyDropdown.getText().toString();
+
+            // Save settings (for demo, just show toast)
+            // In real app, save to SharedPreferences or database
+            Toast.makeText(getContext(),
+                "Thông báo: " + (notificationsEnabled ? "Bật" : "Tắt") +
+                ", Ngôn ngữ: " + selectedLanguage +
+                ", Tiền tệ: " + selectedCurrency, Toast.LENGTH_LONG).show();
+
+            dialog.dismiss();
         });
 
-        builder.setPositiveButton("Lưu", (dialog, which) -> {
-            Toast.makeText(getContext(), "Cài đặt đã được lưu", Toast.LENGTH_SHORT).show();
-        });
-
-        builder.setNegativeButton("Hủy", null);
-        builder.show();
+        dialog.show();
     }
 
     private void navigateToHelpSupport() {
