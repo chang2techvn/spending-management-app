@@ -34,6 +34,7 @@ import com.example.spending_management_app.R;
 import com.example.spending_management_app.service.GeminiAI;
 import com.example.spending_management_app.service.AiContextService;
 import com.example.spending_management_app.service.ExpenseBulkService;
+import com.example.spending_management_app.service.PromptService;
 import com.example.spending_management_app.service.WelcomeMessageService;
 import com.example.spending_management_app.utils.FragmentRefreshHelper;
 import com.example.spending_management_app.utils.TextFormatHelper;
@@ -392,7 +393,7 @@ public class AiChatBottomSheet extends DialogFragment {
                     });
                 } catch (Exception e) {
                     getActivity().runOnUiThread(() -> {
-                        sendPromptToAI(text);
+                        PromptService.sendPromptToAI(text, getActivity(), messages, chatAdapter, messagesRecycler, textToSpeech, this::updateNetworkStatus);
                     });
                 }
             });
@@ -400,7 +401,7 @@ public class AiChatBottomSheet extends DialogFragment {
         }
 
         // Normal send to AI for expense tracking
-        sendPromptToAI(text);
+        PromptService.sendPromptToAI(text, getActivity(), messages, chatAdapter, messagesRecycler, textToSpeech, this::updateNetworkStatus);
     }
     
     // Handle offline requests using OfflineRequestHandler
@@ -513,7 +514,7 @@ public class AiChatBottomSheet extends DialogFragment {
             } catch (Exception e) {
                 android.util.Log.e("AiChatBottomSheet", "Error getting budget context", e);
                 getActivity().runOnUiThread(() -> {
-                    sendPromptToAI(text);
+                    PromptService.sendPromptToAI(text, getActivity(), messages, chatAdapter, messagesRecycler, textToSpeech, this::updateNetworkStatus);
                 });
             }
         });
@@ -787,156 +788,6 @@ public class AiChatBottomSheet extends DialogFragment {
                         false, "Bây giờ"));
                 chatAdapter.notifyItemChanged(analyzingIndex);
             });
-        }
-    }
-    
-
-    private void sendPromptToAI(String text) {
-        // Add temporary "Đang phân tích..." message
-        int analyzingIndex = messages.size();
-        messages.add(new ChatMessage("Đang phân tích...", false, "Bây giờ"));
-        chatAdapter.notifyItemInserted(messages.size() - 1);
-        messagesRecycler.smoothScrollToPosition(messages.size() - 1);
-
-        // Prepare JSON for Gemini API with system instruction
-        try {
-            JSONObject json = new JSONObject();
-
-            // Get current date for AI context
-            java.util.Calendar currentCalendar = java.util.Calendar.getInstance();
-            int currentDay = currentCalendar.get(java.util.Calendar.DAY_OF_MONTH);
-            int currentMonth = currentCalendar.get(java.util.Calendar.MONTH) + 1; // Calendar.MONTH is 0-based
-            int currentYear = currentCalendar.get(java.util.Calendar.YEAR);
-            
-            // Calculate yesterday's date
-            java.util.Calendar yesterdayCalendar = java.util.Calendar.getInstance();
-            yesterdayCalendar.add(java.util.Calendar.DAY_OF_MONTH, -1);
-            int yesterdayDay = yesterdayCalendar.get(java.util.Calendar.DAY_OF_MONTH);
-            int yesterdayMonth = yesterdayCalendar.get(java.util.Calendar.MONTH) + 1;
-            int yesterdayYear = yesterdayCalendar.get(java.util.Calendar.YEAR);
-            
-            String currentDateInfo = String.format("Hôm nay là ngày %d/%d/%d", currentDay, currentMonth, currentYear);
-
-            // System instruction
-            JSONObject systemInstruction = new JSONObject();
-            JSONArray systemParts = new JSONArray();
-            JSONObject systemPart = new JSONObject();
-            
-            // Use helper class for system instruction
-            String instruction = AiSystemInstructions.getExpenseTrackingInstruction(
-                currentDateInfo, currentDay, currentMonth, currentYear,
-                yesterdayDay, yesterdayMonth, yesterdayYear
-            );
-            systemPart.put("text", instruction);
-            systemParts.put(systemPart);
-            systemInstruction.put("parts", systemParts);
-            json.put("system_instruction", systemInstruction);
-
-            // User message
-            JSONArray contents = new JSONArray();
-            JSONObject userContent = new JSONObject();
-            JSONArray userParts = new JSONArray();
-            JSONObject userPart = new JSONObject();
-            userPart.put("text", text);
-            userParts.put(userPart);
-            userContent.put("parts", userParts);
-            userContent.put("role", "user");
-            contents.put(userContent);
-            json.put("contents", contents);
-
-            RequestBody body = RequestBody.create(json.toString(), MediaType.parse("application/json"));
-            Request request = new Request.Builder()
-                    .url("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyAsDEIa1N6Dn_rCXYiRCXuUAY-E1DQ0Yv8")
-                    .post(body)
-                    .build();
-
-            client.newCall(request).enqueue(new Callback() {
-                @Override
-                public void onFailure(Call call, IOException e) {
-                    getActivity().runOnUiThread(() -> {
-                        // Replace analyzing message with error
-                        messages.set(analyzingIndex, new ChatMessage("Lỗi kết nối AI.", false, "Bây giờ"));
-                        chatAdapter.notifyItemChanged(analyzingIndex);
-                        // Update network status
-                        updateNetworkStatus();
-                    });
-                }
-
-                @Override
-                public void onResponse(Call call, Response response) throws IOException {
-                    if (response.isSuccessful()) {
-                        try {
-                            String responseBody = response.body().string();
-                            JSONObject jsonResponse = new JSONObject(responseBody);
-                            JSONArray candidates = jsonResponse.getJSONArray("candidates");
-                            JSONObject candidate = candidates.getJSONObject(0);
-                            JSONObject content = candidate.getJSONObject("content");
-                            JSONArray parts = content.getJSONArray("parts");
-                            String aiText = parts.getJSONObject(0).getString("text").trim();
-
-                            // Check if response contains JSON - extract ALL JSON objects
-                            List<String> allJsonParts = ExtractorHelper.extractAllJsonFromText(aiText);
-                            String displayText = ExtractorHelper.extractDisplayText(aiText);
-
-                            android.util.Log.d("AiChatBottomSheet", "AI full response: " + aiText);
-                            android.util.Log.d("AiChatBottomSheet", "Number of JSON objects found: " + allJsonParts.size());
-                            android.util.Log.d("AiChatBottomSheet", "Display text: " + displayText);
-
-                            getActivity().runOnUiThread(() -> {
-                                // Replace analyzing message with display text
-                                android.util.Log.d("AiChatBottomSheet", "Updating message at index: " + analyzingIndex + " with: " + displayText);
-                                
-                                // Format markdown text để dễ đọc hơn
-                                String formattedDisplayText = TextFormatHelper.formatMarkdownText(displayText);
-                                
-                                messages.set(analyzingIndex, new ChatMessage(formattedDisplayText, false, "Bây giờ"));
-                                chatAdapter.notifyItemChanged(analyzingIndex);
-                                Log.d("AiChatBottomSheet", "AI response: " + formattedDisplayText);
-
-                                messagesRecycler.smoothScrollToPosition(messages.size() - 1);
-                                textToSpeech.speak(formattedDisplayText, TextToSpeech.QUEUE_FLUSH, null, null);
-
-                                // Process ALL JSON objects found
-                                if (!allJsonParts.isEmpty()) {
-                                    android.util.Log.d("AiChatBottomSheet", "Processing " + allJsonParts.size() + " JSON objects");
-                                    
-                                    for (String jsonPart : allJsonParts) {
-                                        try {
-                                            android.util.Log.d("AiChatBottomSheet", "Routing to saveExpenseDirectly");
-                                            saveExpenseDirectly(jsonPart);
-                                        } catch (Exception e) {
-                                            android.util.Log.e("AiChatBottomSheet", "Error processing JSON: " + jsonPart, e);
-                                        }
-                                    }
-                                } else {
-                                    android.util.Log.d("AiChatBottomSheet", "No JSON found in AI response");
-                                }
-                                
-                                // Update network status after successful response
-                                updateNetworkStatus();
-                            });
-                        } catch (Exception e) {
-                            getActivity().runOnUiThread(() -> {
-                                // Replace analyzing message with error
-                                messages.set(analyzingIndex, new ChatMessage("Lỗi xử lý phản hồi AI.", false, "Bây giờ"));
-                                chatAdapter.notifyItemChanged(analyzingIndex);
-                                updateNetworkStatus();
-                            });
-                        }
-                    } else {
-                        getActivity().runOnUiThread(() -> {
-                            // Replace analyzing message with error
-                            messages.set(analyzingIndex, new ChatMessage("Lỗi từ AI: " + response.code(), false, "Bây giờ"));
-                            chatAdapter.notifyItemChanged(analyzingIndex);
-                            updateNetworkStatus();
-                        });
-                    }
-                }
-            });
-        } catch (Exception e) {
-            // Replace analyzing message with error
-            messages.set(analyzingIndex, new ChatMessage("Lỗi gửi tin nhắn.", false, "Bây giờ"));
-            chatAdapter.notifyItemChanged(analyzingIndex);
         }
     }
 
