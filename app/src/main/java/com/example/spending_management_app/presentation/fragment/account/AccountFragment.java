@@ -1,23 +1,32 @@
 package com.example.spending_management_app.presentation.fragment.account;
 
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
+import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import com.bumptech.glide.Glide;
 import com.example.spending_management_app.R;
+import com.example.spending_management_app.data.local.database.AppDatabase;
 import com.example.spending_management_app.data.local.entity.UserEntity;
+import com.example.spending_management_app.data.repository.UserRepositoryImpl;
 import com.example.spending_management_app.databinding.FragmentAccountBinding;
+import com.example.spending_management_app.domain.repository.UserRepository;
 import com.example.spending_management_app.presentation.activity.LoginActivity;
 import com.example.spending_management_app.utils.SessionManager;
 
@@ -26,6 +35,8 @@ public class AccountFragment extends Fragment {
     private FragmentAccountBinding binding;
     private SessionManager sessionManager;
     private UserEntity currentUser;
+    private Uri selectedAvatarUri;
+    private UserRepository userRepository;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
@@ -34,6 +45,9 @@ public class AccountFragment extends Fragment {
 
         // Initialize session manager
         sessionManager = new SessionManager(getContext());
+
+        // Initialize repository
+        userRepository = new UserRepositoryImpl(AppDatabase.getInstance(getContext()));
 
         // Setup account data
         setupAccountData();
@@ -84,41 +98,85 @@ public class AccountFragment extends Fragment {
     }
 
     private void showEditProfileDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(getContext(), R.style.RoundedDialog4Corners);
-        builder.setTitle("Chỉnh sửa hồ sơ");
+        Dialog dialog = new Dialog(getContext(), R.style.RoundedDialog4Corners);
+        View dialogView = LayoutInflater.from(getContext()).inflate(R.layout.dialog_edit_profile, null);
+        dialog.setContentView(dialogView);
 
-        // Create input fields
-        LinearLayout layout = new LinearLayout(getContext());
-        layout.setOrientation(LinearLayout.VERTICAL);
-        layout.setPadding(32, 16, 32, 16);
+        // Initialize views
+        ImageView userAvatar = dialogView.findViewById(R.id.user_avatar);
+        ImageButton editAvatarButton = dialogView.findViewById(R.id.edit_avatar_button);
+        EditText nameInput = dialogView.findViewById(R.id.name_input);
+        EditText emailPhoneInput = dialogView.findViewById(R.id.email_phone_input);
 
-        final EditText nameInput = new EditText(getContext());
-        nameInput.setHint("Tên đầy đủ");
-        nameInput.setText("Nguyễn Văn A");
-        layout.addView(nameInput);
+        // Set current data
+        if (currentUser != null) {
+            nameInput.setText(currentUser.getName());
+            emailPhoneInput.setText(currentUser.getEmailOrPhone());
 
-        final EditText emailInput = new EditText(getContext());
-        emailInput.setHint("Email");
-        emailInput.setText("nguyenvana@example.com");
-        layout.addView(emailInput);
-
-        builder.setView(layout);
-
-        builder.setPositiveButton("Lưu", (dialog, which) -> {
-            String newName = nameInput.getText().toString().trim();
-            String newEmail = emailInput.getText().toString().trim();
-
-            if (!newName.isEmpty() && !newEmail.isEmpty()) {
-                binding.userName.setText(newName);
-                binding.userEmail.setText(newEmail);
-                Toast.makeText(getContext(), "Hồ sơ đã được cập nhật", Toast.LENGTH_SHORT).show();
+            if (currentUser.getAvatar() != null && !currentUser.getAvatar().isEmpty()) {
+                Glide.with(this)
+                    .load(currentUser.getAvatar())
+                    .placeholder(R.drawable.ic_launcher_foreground)
+                    .error(R.drawable.ic_launcher_foreground)
+                    .circleCrop()
+                    .into(userAvatar);
             } else {
+                userAvatar.setImageResource(R.drawable.ic_launcher_foreground);
+            }
+        }
+
+        // Edit avatar click listener
+        editAvatarButton.setOnClickListener(v -> {
+            Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+            startActivityForResult(intent, 1001);
+        });
+
+        // Cancel button
+        dialogView.findViewById(R.id.btn_cancel).setOnClickListener(v -> dialog.dismiss());
+
+        // Save button
+        dialogView.findViewById(R.id.btn_save).setOnClickListener(v -> {
+            String newName = nameInput.getText().toString().trim();
+            String newEmailPhone = emailPhoneInput.getText().toString().trim();
+
+            if (newName.isEmpty() || newEmailPhone.isEmpty()) {
                 Toast.makeText(getContext(), "Vui lòng điền đầy đủ thông tin", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            // Update user entity
+            if (currentUser != null) {
+                currentUser.setName(newName);
+                currentUser.setEmailOrPhone(newEmailPhone);
+                if (selectedAvatarUri != null) {
+                    currentUser.setAvatar(selectedAvatarUri.toString());
+                }
+
+                // Save to database
+                new Thread(() -> {
+                    userRepository.updateUser(currentUser);
+                    getActivity().runOnUiThread(() -> {
+                        // Update session
+                        sessionManager.updateUserData(currentUser);
+
+                        // Update UI
+                        binding.userName.setText(newName);
+                        binding.userEmail.setText(newEmailPhone);
+                        if (selectedAvatarUri != null) {
+                            Glide.with(this)
+                                .load(selectedAvatarUri)
+                                .circleCrop()
+                                .into(binding.userAvatar);
+                        }
+
+                        Toast.makeText(getContext(), "Hồ sơ đã được cập nhật", Toast.LENGTH_SHORT).show();
+                        dialog.dismiss();
+                    });
+                }).start();
             }
         });
 
-        builder.setNegativeButton("Hủy", null);
-        builder.show();
+        dialog.show();
     }
 
     private void showChangePasswordDialog() {
@@ -214,8 +272,11 @@ public class AccountFragment extends Fragment {
     }
 
     @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        binding = null;
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == 1001 && resultCode == getActivity().RESULT_OK && data != null) {
+            selectedAvatarUri = data.getData();
+            // Note: The avatar will be updated in the dialog when save is clicked
+        }
     }
 }
