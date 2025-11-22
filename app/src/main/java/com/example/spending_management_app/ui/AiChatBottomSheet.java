@@ -4,23 +4,16 @@ import static android.app.Activity.RESULT_OK;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
-
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Locale;
 
 import android.speech.RecognizerIntent;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.Gravity;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.speech.tts.TextToSpeech;
-import android.util.Log;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -31,45 +24,23 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.spending_management_app.R;
-import com.example.spending_management_app.service.CategoryBudgetParserService;
-import com.example.spending_management_app.service.GeminiAI;
 import com.example.spending_management_app.service.AiContextService;
 import com.example.spending_management_app.service.ExpenseBulkService;
 import com.example.spending_management_app.service.PromptService;
 import com.example.spending_management_app.service.WelcomeMessageService;
 import com.example.spending_management_app.service.BudgetService;
 import com.example.spending_management_app.service.CategoryBudgetService;
+import com.example.spending_management_app.service.RequestRouterService;
 import com.example.spending_management_app.utils.FragmentRefreshHelper;
-import com.example.spending_management_app.utils.TextFormatHelper;
-import com.example.spending_management_app.utils.DateParser;
-import com.example.spending_management_app.utils.ExtractorHelper;
-import com.example.spending_management_app.utils.BudgetAmountParser;
 import com.example.spending_management_app.utils.BudgetMessageHelper;
-import com.example.spending_management_app.utils.CategoryHelper;
 import com.example.spending_management_app.utils.ExpenseMessageHelper;
-import com.example.spending_management_app.utils.CategoryIconHelper;
-import com.example.spending_management_app.utils.AiSystemInstructions;
 import com.example.spending_management_app.utils.ToastHelper;
 
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
-import org.json.JSONArray;
-import org.json.JSONObject;
-import java.io.IOException;
-import com.example.spending_management_app.database.AppDatabase;
-import com.example.spending_management_app.database.BudgetEntity;
-import com.example.spending_management_app.database.TransactionEntity;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Date;
 import java.util.concurrent.Executors;
-import java.util.regex.Pattern;
-import java.util.regex.Matcher;
+
 
 public class AiChatBottomSheet extends DialogFragment {
 
@@ -345,66 +316,49 @@ public class AiChatBottomSheet extends DialogFragment {
     }
 
     private void sendToAI(String text) {
-        // Check network connectivity first
-        boolean isOnline = isNetworkAvailable();
-        
-        // Check if this is budget management mode or category budget management mode or expense bulk management mode
-        Bundle args = getArguments();
-        boolean isBudgetMode = args != null && "budget_management".equals(args.getString("mode"));
-        boolean isCategoryBudgetMode = args != null && "category_budget_management".equals(args.getString("mode"));
-        boolean isExpenseBulkMode = args != null && "expense_bulk_management".equals(args.getString("mode"));
-        
-        // If offline, try to handle with regex first
-        if (!isOnline) {
-            boolean handled = handleOfflineRequest(text, isBudgetMode, isCategoryBudgetMode, isExpenseBulkMode);
-            if (handled) {
-                return;
+        RequestRouterService.routeRequest(text, getContext(), getActivity(), getArguments(),
+                                         messages, chatAdapter, messagesRecycler, textToSpeech,
+                                         this::updateNetworkStatus, new RequestRouterService.RequestRouterCallback() {
+            @Override
+            public void refreshHomeFragment() {
+                AiChatBottomSheet.this.refreshHomeFragment();
             }
-            // If not handled by regex, show error
-            messages.add(new ChatMessage("❌ Chức năng này cần kết nối internet. Vui lòng kiểm tra kết nối mạng của bạn.", false, "Bây giờ"));
-            chatAdapter.notifyItemInserted(messages.size() - 1);
-            messagesRecycler.smoothScrollToPosition(messages.size() - 1);
-            return;
-        }
-        
-        // Handle expense bulk management
-        if (isExpenseBulkMode) {
-            handleExpenseBulkRequest(text);
-            return;
-        }
-        
-        // Handle category budget management
-        if (isCategoryBudgetMode) {
-            CategoryBudgetService.handleCategoryBudgetRequest(text, getContext(), getActivity(), messages, chatAdapter, messagesRecycler, this::refreshHomeFragment, this::refreshCategoryBudgetWelcomeMessage);
-            return;
-        }
-        
-        // Check if user is asking for budget analysis, view, or delete
-        if (isBudgetMode || BudgetMessageHelper.isBudgetQuery(text)) {
-            handleBudgetQuery(text);
-            return;
-        }
-        
-        // Check if user is asking for financial analysis or reports
-        if (!isBudgetMode && ExpenseMessageHelper.isFinancialQuery(text)) {
-            // Get comprehensive financial data from database
-            Executors.newSingleThreadExecutor().execute(() -> {
-                try {
-                    String financialContext = AiContextService.getFinancialContext(getContext());
-                    getActivity().runOnUiThread(() -> {
-                        AiContextService.sendPromptToAIWithContext(text, financialContext, getActivity(), messages, chatAdapter, messagesRecycler, textToSpeech, this::updateNetworkStatus);
-                    });
-                } catch (Exception e) {
-                    getActivity().runOnUiThread(() -> {
-                        PromptService.sendPromptToAI(text, getActivity(), messages, chatAdapter, messagesRecycler, textToSpeech, this::updateNetworkStatus);
-                    });
-                }
-            });
-            return;
-        }
 
-        // Normal send to AI for expense tracking
-        PromptService.sendPromptToAI(text, getActivity(), messages, chatAdapter, messagesRecycler, textToSpeech, this::updateNetworkStatus);
+            @Override
+            public void refreshExpenseWelcomeMessage() {
+                AiChatBottomSheet.this.refreshExpenseWelcomeMessage();
+            }
+
+            @Override
+            public void refreshCategoryBudgetWelcomeMessage() {
+                AiChatBottomSheet.this.refreshCategoryBudgetWelcomeMessage();
+            }
+
+            @Override
+            public boolean handleOfflineRequest(String text, boolean isBudgetMode, boolean isCategoryBudgetMode, boolean isExpenseBulkMode) {
+                return AiChatBottomSheet.this.handleOfflineRequest(text, isBudgetMode, isCategoryBudgetMode, isExpenseBulkMode);
+            }
+
+            @Override
+            public void handleBudgetQuery(String text) {
+                AiChatBottomSheet.this.handleBudgetQuery(text);
+            }
+
+            @Override
+            public void handleExpenseBulkRequest(String text) {
+                AiChatBottomSheet.this.handleExpenseBulkRequest(text);
+            }
+
+            @Override
+            public boolean isNetworkAvailable() {
+                return AiChatBottomSheet.this.isNetworkAvailable();
+            }
+
+            @Override
+            public void updateNetworkStatus() {
+                AiChatBottomSheet.this.updateNetworkStatus();
+            }
+        });
     }
     
     // Handle offline requests using OfflineRequestHandler
@@ -466,165 +420,16 @@ public class AiChatBottomSheet extends DialogFragment {
 
     // Handle budget queries (view, analyze, add, edit, delete)
     private void handleBudgetQuery(String text) {
-        String lowerText = text.toLowerCase();
-        
-        // Check if user wants to delete budget
-        if (lowerText.contains("xóa") || lowerText.contains("xoá")) {
-            handleDeleteBudget(text);
-            return;
-        }
-        
-        // Check if user wants to add/edit/increase/decrease budget
-        // Include: set, add, edit, increase, decrease keywords
-        if (lowerText.contains("thêm") || lowerText.contains("đặt") || 
-            lowerText.contains("sửa") || lowerText.contains("thay đổi") ||
-            lowerText.contains("thiết lập") ||
-            lowerText.contains("tăng") || lowerText.contains("nâng") ||
-            lowerText.contains("giảm") || lowerText.contains("hạ") ||
-            lowerText.contains("cộng") || lowerText.contains("trừ") ||
-            lowerText.contains("bớt") || lowerText.contains("cắt")) {
-            BudgetService.handleBudgetRequest(text, getContext(), getActivity(), messages, chatAdapter, messagesRecycler, this::refreshHomeFragment);
-            return;
-        }
-        
-        // User wants to view or analyze budget - get budget data and send to AI
-        Executors.newSingleThreadExecutor().execute(() -> {
-            try {
-                String budgetContext = AiContextService.getBudgetContext(getContext());
-                
-                // Detect if user wants detailed analysis/consultation or just viewing
-                boolean needsDetailedAnalysis = lowerText.contains("phân tích") || 
-                                               lowerText.contains("tư vấn") || 
-                                               lowerText.contains("đánh giá") ||
-                                               lowerText.contains("so sánh") ||
-                                               lowerText.contains("xu hướng") ||
-                                               lowerText.contains("dự báo") ||
-                                               lowerText.contains("nhận xét") ||
-                                               lowerText.contains("góp ý");
-                
-                // Add context prefix to help AI understand user's intent
-                String queryWithContext = text;
-                if (needsDetailedAnalysis) {
-                    queryWithContext = "[YÊU CẦU PHÂN TÍCH CHI TIẾT] " + text;
-                } else {
-                    queryWithContext = "[CHỈ XEM THÔNG TIN] " + text;
-                }
-                
-                String finalQuery = queryWithContext;
-                getActivity().runOnUiThread(() -> {
-                    AiContextService.sendPromptToAIWithBudgetContext(finalQuery, budgetContext, messages, chatAdapter, messagesRecycler, textToSpeech, this::updateNetworkStatus);
-                });
-            } catch (Exception e) {
-                android.util.Log.e("AiChatBottomSheet", "Error getting budget context", e);
-                getActivity().runOnUiThread(() -> {
-                    PromptService.sendPromptToAI(text, getActivity(), messages, chatAdapter, messagesRecycler, textToSpeech, this::updateNetworkStatus);
-                });
-            }
-        });
+        BudgetService.handleBudgetQuery(text, getContext(), getActivity(), messages, chatAdapter, messagesRecycler, textToSpeech, this::updateNetworkStatus, this::refreshHomeFragment);
     }
     
-
-
-
-    private void saveExpenseDirectly(String jsonString) {
-        android.util.Log.d("AiChatBottomSheet", "saveExpenseDirectly called with: " + jsonString);
-        
-        try {
-            // Parse JSON từ AI response
-            JSONObject json = new JSONObject(jsonString);
-            android.util.Log.d("AiChatBottomSheet", "JSON parsed successfully");
-
-            if (json != null) {
-                // Lấy giá trị từ JSON
-                String name = json.optString("name", "");
-                double amount = json.optDouble("amount", 0.0);
-                String category = json.optString("category", "");
-                String currency = json.optString("currency", "VND");
-                String type = json.optString("type", "expense");
-                int day = json.optInt("day", Calendar.getInstance().get(Calendar.DAY_OF_MONTH));
-                int month = json.optInt("month", Calendar.getInstance().get(Calendar.MONTH) + 1);
-                int year = json.optInt("year", Calendar.getInstance().get(Calendar.YEAR));
-
-                android.util.Log.d("AiChatBottomSheet", "Extracted data: name=" + name + ", amount=" + amount + ", category=" + category);
-
-                // Tạo Calendar object
-                Calendar calendar = Calendar.getInstance();
-                calendar.set(year, month - 1, day); // Month is 0-based
-
-                // Tạo TransactionEntity với constructor đúng
-                long transactionAmount = type.equals("expense") ? -Math.abs((long)amount) : (long)amount;
-                TransactionEntity transaction = new TransactionEntity(
-                    name,                    // description
-                    category,                // category
-                    transactionAmount,       // amount (negative for expense)
-                    calendar.getTime(),      // date
-                    type                     // type
-                );
-
-                android.util.Log.d("AiChatBottomSheet", "Transaction entity created, starting save process");
-
-                // Lưu vào database trong background thread
-                new Thread(() -> {
-                    android.util.Log.d("AiChatBottomSheet", "Background thread started for database save");
-                    try {
-                        AppDatabase.getInstance(getContext()).transactionDao().insert(transaction);
-                        android.util.Log.d("AiChatBottomSheet", "Database save successful");
-                        
-                        // Hiển thị toast trên main thread với layer cao nhất
-                        requireActivity().runOnUiThread(() -> {
-                            android.util.Log.d("AiChatBottomSheet", "Back on UI thread, preparing toast");
-                            String toastMessage = String.format("✅ Đã thêm %s %,.0f %s - %s", 
-                                type.equals("expense") ? "chi tiêu" : "thu nhập",
-                                amount, currency, category);
-                            
-                            android.util.Log.d("AiChatBottomSheet", "Toast message: " + toastMessage);
-                            
-                            // Hiển thị 1 toast duy nhất ở TOP với UI đẹp
-                            ToastHelper.showToastOnTop(requireActivity(), toastMessage);
-                            
-                            // Refresh HomeFragment if available
-                            refreshHomeFragment();
-                            
-                            // Also refresh HistoryFragment if it exists
-                            refreshHistoryFragment();
-                        });
-
-                        // Hiển thị message trong chat trên main thread
-                        requireActivity().runOnUiThread(() -> {
-                            // Chỉ hiển thị toast, không thêm message nữa vì AI đã trả về display text rồi
-                            android.util.Log.d("AiChatBottomSheet", "Skipping additional chat message - AI already provided response");
-                        });
-
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        requireActivity().runOnUiThread(() -> {
-                            String errorMessage = "❌ Có lỗi xảy ra khi lưu dữ liệu: " + e.getMessage();
-                            ToastHelper.showErrorToast(getActivity(), errorMessage);
-                            android.util.Log.e("AiChatBottomSheet", "Error saving expense", e);
-                        });
-                    }
-                }).start();
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            String errorMessage = "❌ Có lỗi xảy ra khi xử lý dữ liệu: " + e.getMessage();
-            ToastHelper.showErrorToast(getActivity(), errorMessage);
-            android.util.Log.e("AiChatBottomSheet", "Error processing data", e);
-        }
-    }
-
 
     // Method to refresh HomeFragment after successful transaction save
     // Method to refresh HomeFragment - delegates to FragmentRefreshHelper
     private void refreshHomeFragment() {
         FragmentRefreshHelper.refreshHomeFragment(getActivity());
     }
-    
-    // Method to refresh HistoryFragment - delegates to FragmentRefreshHelper
-    private void refreshHistoryFragment() {
-        FragmentRefreshHelper.refreshHistoryFragment(getActivity());
-    }
+
 
     // Method to refresh expense welcome message - delegates to FragmentRefreshHelper
     private void refreshExpenseWelcomeMessage() {
@@ -716,102 +521,6 @@ public class AiChatBottomSheet extends DialogFragment {
         }
     }
 
-    // Handle delete budget request
-    private void handleDeleteBudget(String text) {
-        // Add analyzing message
-        int analyzingIndex = messages.size();
-        messages.add(new ChatMessage("Đang xử lý yêu cầu xóa...", false, "Bây giờ"));
-        chatAdapter.notifyItemInserted(messages.size() - 1);
-        messagesRecycler.smoothScrollToPosition(messages.size() - 1);
-        
-        // Extract month and year from text
-        int[] monthYear = DateParser.extractMonthYear(text);
-        int targetMonth = monthYear[0];
-        int targetYear = monthYear[1];
-        
-        Executors.newSingleThreadExecutor().execute(() -> {
-            try {
-                // Create calendar for target month
-                Calendar targetCal = Calendar.getInstance();
-                targetCal.set(Calendar.YEAR, targetYear);
-                targetCal.set(Calendar.MONTH, targetMonth - 1);
-                targetCal.set(Calendar.DAY_OF_MONTH, 1);
-                targetCal.set(Calendar.HOUR_OF_DAY, 0);
-                targetCal.set(Calendar.MINUTE, 0);
-                targetCal.set(Calendar.SECOND, 0);
-                targetCal.set(Calendar.MILLISECOND, 0);
-                Date startOfMonth = targetCal.getTime();
-                
-                targetCal.set(Calendar.DAY_OF_MONTH, targetCal.getActualMaximum(Calendar.DAY_OF_MONTH));
-                targetCal.set(Calendar.HOUR_OF_DAY, 23);
-                targetCal.set(Calendar.MINUTE, 59);
-                targetCal.set(Calendar.SECOND, 59);
-                Date endOfMonth = targetCal.getTime();
-                
-                // Check if budget exists
-                List<BudgetEntity> existingBudgets = AppDatabase.getInstance(getContext())
-                        .budgetDao()
-                        .getBudgetsByDateRangeOrdered(startOfMonth, endOfMonth);
-                
-                if (existingBudgets != null && !existingBudgets.isEmpty()) {
-                    // Get the budget amount before deleting
-                    long budgetAmount = existingBudgets.get(0).monthlyLimit;
-                    
-                    // Delete budget
-                    AppDatabase.getInstance(getContext())
-                            .budgetDao()
-                            .deleteBudgetsByDateRange(startOfMonth, endOfMonth);
-                    
-                    // Log budget history
-                    com.example.spending_management_app.utils.BudgetHistoryLogger.logMonthlyBudgetDeleted(
-                            getContext(), budgetAmount, startOfMonth);
-                    
-                    SimpleDateFormat monthYearFormat = new SimpleDateFormat("MM/yyyy", new Locale("vi", "VN"));
-                    String monthYearStr = monthYearFormat.format(startOfMonth);
-                    
-                    if (getActivity() != null) {
-                        getActivity().runOnUiThread(() -> {
-                            String responseMessage = "✅ Đã xóa ngân sách tháng " + monthYearStr + "!\n\n" +
-                                    "Bạn có thể thiết lập lại bất cứ lúc nào. 💰";
-                            
-                            messages.set(analyzingIndex, new ChatMessage(responseMessage, false, "Bây giờ"));
-                            chatAdapter.notifyItemChanged(analyzingIndex);
-                            messagesRecycler.smoothScrollToPosition(messages.size() - 1);
-                            
-                            ToastHelper.showToastOnTop(getActivity(), "✅ Đã xóa ngân sách tháng " + monthYearStr);
-                            refreshHomeFragment();
-                        });
-                    }
-                } else {
-                    SimpleDateFormat monthYearFormat = new SimpleDateFormat("MM/yyyy", new Locale("vi", "VN"));
-                    String monthYearStr = monthYearFormat.format(startOfMonth);
-                    
-                    if (getActivity() != null) {
-                        getActivity().runOnUiThread(() -> {
-                            String responseMessage = "⚠️ Không tìm thấy ngân sách tháng " + monthYearStr + " để xóa!";
-                            
-                            messages.set(analyzingIndex, new ChatMessage(responseMessage, false, "Bây giờ"));
-                            chatAdapter.notifyItemChanged(analyzingIndex);
-                        });
-                    }
-                }
-                
-            } catch (Exception e) {
-                android.util.Log.e("AiChatBottomSheet", "Error deleting budget", e);
-                
-                if (getActivity() != null) {
-                    getActivity().runOnUiThread(() -> {
-                        messages.set(analyzingIndex, new ChatMessage(
-                                "❌ Có lỗi xảy ra khi xóa ngân sách. Vui lòng thử lại!", 
-                                false, "Bây giờ"));
-                        chatAdapter.notifyItemChanged(analyzingIndex);
-                        ToastHelper.showErrorToast(getActivity(), "Lỗi xóa ngân sách");
-                    });
-                }
-            }
-        });
-    }
-    
     // Method to refresh category budget welcome message - delegates to FragmentRefreshHelper
     private void refreshCategoryBudgetWelcomeMessage() {
         FragmentRefreshHelper.refreshCategoryBudgetWelcomeMessage(getActivity(),
