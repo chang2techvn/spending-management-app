@@ -7,10 +7,14 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.navigation.fragment.NavHostFragment;
 
-import com.example.spending_management_app.MainActivity;
+import com.example.spending_management_app.presentation.activity.MainActivity;
 import com.example.spending_management_app.R;
-import com.example.spending_management_app.database.AppDatabase;
-import com.example.spending_management_app.database.TransactionEntity;
+import com.example.spending_management_app.data.local.database.AppDatabase;
+import com.example.spending_management_app.data.local.entity.TransactionEntity;
+import com.example.spending_management_app.data.local.entity.BudgetEntity;
+import com.example.spending_management_app.data.local.entity.CategoryBudgetEntity;
+import com.example.spending_management_app.presentation.fragment.history.HistoryFragment;
+import com.example.spending_management_app.presentation.fragment.home.HomeFragment;
 
 import java.text.SimpleDateFormat;
 import java.util.List;
@@ -52,9 +56,9 @@ public class FragmentRefreshHelper {
                     
                     // First try current fragment
                     Fragment currentFragment = childFragmentManager.getPrimaryNavigationFragment();
-                    if (currentFragment instanceof com.example.spending_management_app.ui.home.HomeFragment) {
-                        com.example.spending_management_app.ui.home.HomeFragment homeFragment = 
-                            (com.example.spending_management_app.ui.home.HomeFragment) currentFragment;
+                    if (currentFragment instanceof HomeFragment) {
+                        HomeFragment homeFragment =
+                            (HomeFragment) currentFragment;
                         homeFragment.refreshRecentTransactions();
                         Log.d(TAG, "HomeFragment refreshed (current fragment)");
                         return;
@@ -62,9 +66,9 @@ public class FragmentRefreshHelper {
                     
                     // If not current, search in all fragments
                     for (Fragment fragment : childFragmentManager.getFragments()) {
-                        if (fragment instanceof com.example.spending_management_app.ui.home.HomeFragment) {
-                            com.example.spending_management_app.ui.home.HomeFragment homeFragment = 
-                                (com.example.spending_management_app.ui.home.HomeFragment) fragment;
+                        if (fragment instanceof HomeFragment) {
+                            HomeFragment homeFragment =
+                                (HomeFragment) fragment;
                             homeFragment.refreshRecentTransactions();
                             Log.d(TAG, "HomeFragment refreshed (found in fragments list)");
                             return;
@@ -94,9 +98,9 @@ public class FragmentRefreshHelper {
                 
                 if (navHostFragment != null) {
                     Fragment currentFragment = navHostFragment.getChildFragmentManager().getPrimaryNavigationFragment();
-                    if (currentFragment instanceof com.example.spending_management_app.ui.history.HistoryFragment) {
-                        com.example.spending_management_app.ui.history.HistoryFragment historyFragment = 
-                            (com.example.spending_management_app.ui.history.HistoryFragment) currentFragment;
+                    if (currentFragment instanceof HistoryFragment) {
+                        HistoryFragment historyFragment =
+                            (HistoryFragment) currentFragment;
                         historyFragment.refreshTransactions();
                         Log.d(TAG, "HistoryFragment refreshed after transaction save");
                     }
@@ -187,14 +191,14 @@ public class FragmentRefreshHelper {
                 java.util.Date endOfMonth = cal.getTime();
                 
                 // Get monthly budget for current month
-                List<com.example.spending_management_app.database.BudgetEntity> monthlyBudgets = 
+                List<BudgetEntity> monthlyBudgets =
                         AppDatabase.getInstance(activity.getApplicationContext()).budgetDao()
                                 .getBudgetsByDateRange(startOfMonth, endOfMonth);
                 long monthlyBudget = (monthlyBudgets != null && !monthlyBudgets.isEmpty()) 
                         ? monthlyBudgets.get(0).getMonthlyLimit() : 0;
                 
                 // Get all category budgets for current month
-                List<com.example.spending_management_app.database.CategoryBudgetEntity> categoryBudgets = 
+                List<CategoryBudgetEntity> categoryBudgets =
                         AppDatabase.getInstance(activity.getApplicationContext())
                                 .categoryBudgetDao()
                                 .getAllCategoryBudgetsForMonth(startOfMonth, endOfMonth);
@@ -214,7 +218,7 @@ public class FragmentRefreshHelper {
                 java.util.Map<String, Long> budgetMap = new java.util.HashMap<>();
                 long totalCategoryBudget = 0;
                 if (categoryBudgets != null) {
-                    for (com.example.spending_management_app.database.CategoryBudgetEntity budget : categoryBudgets) {
+                    for (CategoryBudgetEntity budget : categoryBudgets) {
                         budgetMap.put(budget.getCategory(), budget.getBudgetAmount());
                         totalCategoryBudget += budget.getBudgetAmount();
                     }
