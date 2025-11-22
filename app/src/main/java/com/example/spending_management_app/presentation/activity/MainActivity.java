@@ -4,6 +4,7 @@ import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.os.Handler;
 import android.speech.RecognizerIntent;
 import android.view.View;
 import android.widget.ImageView;
@@ -24,6 +25,7 @@ import com.example.spending_management_app.databinding.ActivityMainBinding;
 import com.example.spending_management_app.presentation.dialog.AiChatBottomSheet;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -32,6 +34,8 @@ public class MainActivity extends AppCompatActivity {
     private LinearLayout navHome, navStatistics, navHistory, navAccount;
     private View navAiAssistant;
     private View homeHeader;
+    private Handler greetingUpdateHandler;
+    private Runnable greetingUpdateRunnable;
     private static final int VOICE_REQUEST_CODE = 1001;
 
     @Override
@@ -67,6 +71,36 @@ public class MainActivity extends AppCompatActivity {
                 homeHeader.setVisibility(View.GONE);
             }
         });
+
+        // Update greeting based on current time
+        updateGreeting();
+
+        // Schedule greeting update every minute for real-time
+        greetingUpdateHandler = new Handler();
+        greetingUpdateRunnable = () -> {
+            updateGreeting();
+            greetingUpdateHandler.postDelayed(greetingUpdateRunnable, 60000); // 1 minute
+        };
+        greetingUpdateHandler.post(greetingUpdateRunnable);
+    }
+
+    private void updateGreeting() {
+        TextView greetingTextView = findViewById(R.id.greeting_text);
+        greetingTextView.setText(getGreeting());
+    }
+
+    private String getGreeting() {
+        Calendar calendar = Calendar.getInstance();
+        int hour = calendar.get(Calendar.HOUR_OF_DAY);
+        if (hour >= 5 && hour < 12) {
+            return "Chào buổi sáng";
+        } else if (hour >= 12 && hour < 18) {
+            return "Chào buổi chiều";
+        } else if (hour >= 18 && hour < 22) {
+            return "Chào buổi tối";
+        } else {
+            return "Chào buổi đêm";
+        }
     }
 
     private void setupBottomNavigation() {
@@ -148,6 +182,15 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        if (greetingUpdateHandler != null) {
+            greetingUpdateHandler.removeCallbacks(greetingUpdateRunnable);
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        updateGreeting();
     }
 
     @Override
