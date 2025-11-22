@@ -19,7 +19,7 @@ import com.example.spending_management_app.presentation.dialog.DateRangePickerDi
 import com.example.spending_management_app.domain.model.Transaction;
 import com.example.spending_management_app.data.local.database.AppDatabase;
 import com.example.spending_management_app.data.local.entity.TransactionEntity;
-import com.example.spending_management_app.presentation.viewmodel.HistoryViewModel;
+import com.example.spending_management_app.presentation.viewmodel.history.HistoryViewModel;
 import com.google.android.material.tabs.TabLayout;
 
 import java.util.ArrayList;

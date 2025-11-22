@@ -1,4 +1,4 @@
-package com.example.spending_management_app.presentation.viewmodel;
+package com.example.spending_management_app.presentation.viewmodel.account;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;

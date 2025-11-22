@@ -1,16 +1,16 @@
-package com.example.spending_management_app.presentation.viewmodel;
+package com.example.spending_management_app.presentation.viewmodel.history;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
-public class StatisticsViewModel extends ViewModel {
+public class HistoryViewModel extends ViewModel {
 
     private final MutableLiveData<String> mText;
 
-    public StatisticsViewModel() {
+    public HistoryViewModel() {
         mText = new MutableLiveData<>();
-        mText.setValue("This is statistics fragment");
+        mText.setValue("This is history fragment");
     }
 
     public LiveData<String> getText() {

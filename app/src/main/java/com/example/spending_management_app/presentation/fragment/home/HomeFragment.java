@@ -23,7 +23,7 @@ import com.example.spending_management_app.data.local.entity.BudgetEntity;
 import com.example.spending_management_app.data.local.entity.TransactionEntity;
 import com.example.spending_management_app.presentation.adapter.TransactionAdapter;
 import com.example.spending_management_app.presentation.dialog.BudgetManagementDialog;
-import com.example.spending_management_app.presentation.viewmodel.HomeViewModel;
+import com.example.spending_management_app.presentation.viewmodel.home.HomeViewModel;
 
 import java.util.ArrayList;
 import java.util.Calendar;
