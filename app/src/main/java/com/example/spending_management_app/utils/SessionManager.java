@@ -15,6 +15,7 @@ public class SessionManager {
     private static final String PREF_NAME = "user_session";
     private static final String KEY_IS_LOGGED_IN = "is_logged_in";
     private static final String KEY_USER_DATA = "user_data";
+    private static final String KEY_REMEMBER_ME = "remember_me";
 
     private SharedPreferences pref;
     private SharedPreferences.Editor editor;
@@ -32,7 +33,15 @@ public class SessionManager {
      * Create login session
      */
     public void createLoginSession(UserEntity user) {
+        createLoginSession(user, false);
+    }
+
+    /**
+     * Create login session with remember me option
+     */
+    public void createLoginSession(UserEntity user, boolean rememberMe) {
         editor.putBoolean(KEY_IS_LOGGED_IN, true);
+        editor.putBoolean(KEY_REMEMBER_ME, rememberMe);
         editor.putString(KEY_USER_DATA, gson.toJson(user));
         editor.commit();
     }
@@ -56,11 +65,27 @@ public class SessionManager {
     }
 
     /**
+     * Check if remember me is enabled
+     */
+    public boolean isRememberMeEnabled() {
+        return pref.getBoolean(KEY_REMEMBER_ME, false);
+    }
+
+    /**
      * Logout user and clear session
      */
     public void logout() {
         editor.clear();
         editor.commit();
+    }
+
+    /**
+     * Clear session on app close (if not remember me)
+     */
+    public void clearSessionIfNotRemembered() {
+        if (!isRememberMeEnabled()) {
+            logout();
+        }
     }
 
     /**

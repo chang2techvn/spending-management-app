@@ -1,13 +1,19 @@
 package com.example.spending_management_app.presentation.activity;
 
+import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.Intent;
+import android.text.InputType;
 import android.text.method.PasswordTransformationMethod;
 import android.os.Bundle;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -39,6 +45,8 @@ public class LoginActivity extends AppCompatActivity {
     private Button signinButton;
     private ProgressBar progressBar;
     private ImageView passwordVisibilityToggle;
+    private CheckBox rememberButton;
+    private TextView forgotText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -81,6 +89,8 @@ public class LoginActivity extends AppCompatActivity {
         signinButton = binding.signinButton;
         progressBar = binding.progressBar;
         passwordVisibilityToggle = binding.passwordVisibilityToggle;
+        rememberButton = binding.rememberButton;
+        forgotText = binding.forgotText;
     }
 
     private void setupListeners() {
@@ -92,6 +102,7 @@ public class LoginActivity extends AppCompatActivity {
         });
 
         passwordVisibilityToggle.setOnClickListener(v -> togglePasswordVisibility());
+        forgotText.setOnClickListener(v -> showForgotPasswordDialog());
     }
 
     private void observeViewModel() {
@@ -135,7 +146,8 @@ public class LoginActivity extends AppCompatActivity {
         // Get user data and save to session
         authViewModel.getCurrentUser().observe(this, user -> {
             if (user != null) {
-                sessionManager.createLoginSession(user);
+                boolean rememberMe = rememberButton.isChecked();
+                sessionManager.createLoginSession(user, rememberMe);
                 navigateToMain();
             }
         });
@@ -175,5 +187,49 @@ public class LoginActivity extends AppCompatActivity {
             passwordVisibilityToggle.setImageResource(R.drawable.ic_view);
         }
         passwordInput.setSelection(passwordInput.getText().length());
+    }
+
+    private void showForgotPasswordDialog() {
+        Dialog dialog = new Dialog(this);
+        dialog.setContentView(R.layout.dialog_forgot_password);
+        dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        dialog.setCancelable(true);
+
+        // Set dialog size
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setLayout(
+                (int) (getResources().getDisplayMetrics().widthPixels * 0.9),
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            );
+        }
+
+        // Initialize dialog views
+        EditText emailInput = dialog.findViewById(R.id.emailInput);
+        TextView errorText = dialog.findViewById(R.id.errorText);
+        Button sendButton = dialog.findViewById(R.id.sendButton);
+        Button cancelButton = dialog.findViewById(R.id.cancelButton);
+
+        // Set click listeners
+        sendButton.setOnClickListener(v -> {
+            String emailOrPhone = emailInput.getText().toString().trim();
+            if (emailOrPhone.isEmpty()) {
+                errorText.setText("Vui lòng nhập email hoặc số điện thoại");
+                errorText.setVisibility(View.VISIBLE);
+            } else {
+                errorText.setVisibility(View.GONE);
+                sendPasswordReset(emailOrPhone);
+                dialog.dismiss();
+            }
+        });
+
+        cancelButton.setOnClickListener(v -> dialog.dismiss());
+
+        dialog.show();
+    }
+
+    private void sendPasswordReset(String emailOrPhone) {
+        // TODO: Implement actual password reset logic
+        // For now, just show a success message
+        Toast.makeText(this, "Đã gửi hướng dẫn đặt lại mật khẩu đến " + emailOrPhone, Toast.LENGTH_LONG).show();
     }
 }
