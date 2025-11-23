@@ -162,7 +162,7 @@ public class SectionedTransactionAdapter extends RecyclerView.Adapter<RecyclerVi
             // Display localized category name
             categoryTextView.setText(CategoryUtils.getLocalizedCategoryName(itemView.getContext(), transaction.getCategory()));
             dateTextView.setText(transaction.getFormattedDate());
-            amountTextView.setText(transaction.getFormattedAmount());
+            amountTextView.setText(transaction.getFormattedAmount(itemView.getContext()));
 
             // Set amount color based on type
             if (transaction.getAmount() >= 0) {

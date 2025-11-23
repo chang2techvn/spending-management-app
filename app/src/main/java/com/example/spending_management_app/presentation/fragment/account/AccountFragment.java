@@ -43,6 +43,8 @@ import com.example.spending_management_app.domain.repository.UserRepository;
 import com.example.spending_management_app.utils.LocaleHelper;
 import com.example.spending_management_app.utils.PasswordUtils;
 import com.example.spending_management_app.utils.SessionManager;
+import com.example.spending_management_app.utils.SettingsHelper;
+import com.example.spending_management_app.domain.usecase.currency.CurrencyConversionUseCase;
 
 public class AccountFragment extends Fragment {
 
@@ -310,9 +312,23 @@ public class AccountFragment extends Fragment {
             // Convert display text to language code
             String languageCode = selectedLanguage.equals(getString(R.string.vietnamese)) ? "vi" : "en";
 
-            // Save settings
-            // For demo, just show toast
-            // In real app, save notifications and currency to SharedPreferences
+            // Persist selected currency
+            SettingsHelper.setSelectedCurrency(getContext(), selectedCurrency);
+
+            // If user changed currency, fetch latest exchange rate using AI (fallback)
+            CurrencyConversionUseCase.fetchAndStoreRate(getContext(), selectedCurrency, (success, rate, msg) -> {
+                if (success) {
+                    // rate stored and currency updated in settings inside usecase
+                    // notify user on UI thread
+                    if (getActivity() != null) {
+                        getActivity().runOnUiThread(() -> Toast.makeText(getContext(), getString(R.string.settings_saved), Toast.LENGTH_SHORT).show());
+                    }
+                } else {
+                    if (getActivity() != null) {
+                        getActivity().runOnUiThread(() -> Toast.makeText(getContext(), "Lấy tỷ giá thất bại: " + msg, Toast.LENGTH_SHORT).show());
+                    }
+                }
+            });
 
             // Apply language change
             if (!languageCode.equals(LocaleHelper.getLanguage(getContext()))) {
@@ -323,9 +339,6 @@ public class AccountFragment extends Fragment {
                 startActivity(intent);
                 getActivity().finishAffinity();
             }
-
-            Toast.makeText(getContext(),
-                getString(R.string.settings_saved), Toast.LENGTH_SHORT).show();
 
             dialog.dismiss();
         });

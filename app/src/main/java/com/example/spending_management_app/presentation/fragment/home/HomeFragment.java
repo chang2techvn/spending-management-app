@@ -23,6 +23,7 @@ import com.example.spending_management_app.data.local.database.AppDatabase;
 import com.example.spending_management_app.data.local.entity.BudgetEntity;
 import com.example.spending_management_app.data.local.entity.TransactionEntity;
 import com.example.spending_management_app.presentation.viewmodel.home.HomeViewModel;
+import com.example.spending_management_app.utils.CurrencyFormatter;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -113,7 +114,7 @@ public class HomeFragment extends Fragment {
                         if (monthlyBudgets != null && !monthlyBudgets.isEmpty()) {
                             BudgetEntity budget = monthlyBudgets.get(0);
                             budgetValue = budget.getMonthlyLimit();
-                            binding.monthlyIncome.setText(String.format(Locale.getDefault(), "%,d", budgetValue) + " VND");
+                            binding.monthlyIncome.setText(CurrencyFormatter.formatCurrency(getContext(), budgetValue));
                             android.util.Log.d("HomeFragment", "Budget displayed: " + budgetValue);
                         } else {
                             binding.monthlyIncome.setText("Chưa thiết lập");
@@ -122,11 +123,11 @@ public class HomeFragment extends Fragment {
                         
                         // Set monthly expense (absolute value, should be negative)
                         long expenseValue = totalExpense != null ? Math.abs(totalExpense) : 0;
-                        binding.monthlyExpense.setText(String.format(Locale.getDefault(), "-%,d", expenseValue) + " VND");
+                        binding.monthlyExpense.setText("-" + CurrencyFormatter.formatCurrency(getContext(), expenseValue));
                         
                         // Calculate and set remaining balance (budget - expense)
                         long remainingBalance = budgetValue - expenseValue;
-                        binding.currentBalance.setText(String.format(Locale.getDefault(), "%,d", remainingBalance) + " VND");
+                        binding.currentBalance.setText(CurrencyFormatter.formatCurrency(getContext(), remainingBalance));
                         
                         android.util.Log.d("HomeFragment", "Balance updated - Budget: " + budgetValue + 
                                 ", Expense: " + expenseValue + ", Remaining: " + remainingBalance);
@@ -138,9 +139,9 @@ public class HomeFragment extends Fragment {
                 // Fallback to sample data
                 if (getActivity() != null) {
                     getActivity().runOnUiThread(() -> {
-                        binding.monthlyIncome.setText("12,500,000 VND");
-                        binding.monthlyExpense.setText("-5,500,000 VND");
-                        binding.currentBalance.setText("7,000,000 VND");
+                        binding.monthlyIncome.setText(CurrencyFormatter.formatCurrency(getContext(), 12500000));
+                        binding.monthlyExpense.setText("-" + CurrencyFormatter.formatCurrency(getContext(), 5500000));
+                        binding.currentBalance.setText(CurrencyFormatter.formatCurrency(getContext(), 7000000));
                     });
                 }
             }
@@ -552,11 +553,9 @@ public class HomeFragment extends Fragment {
         amountView.setLayoutParams(amountParams);
         
         if (budget > 0) {
-            amountView.setText(String.format(Locale.getDefault(), 
-                    "%,d/%,d VND", spending, budget));
+            amountView.setText(CurrencyFormatter.formatCurrency(getContext(), spending) + "/" + CurrencyFormatter.formatCurrency(getContext(), budget));
         } else {
-            amountView.setText(String.format(Locale.getDefault(), 
-                    "%,d VND (Chưa đặt ngân sách)", spending));
+            amountView.setText(CurrencyFormatter.formatCurrency(getContext(), spending) + " (Chưa đặt ngân sách)");
         }
         amountView.setTextColor(0xFF757575);
         amountView.setTextSize(12);

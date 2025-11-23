@@ -40,6 +40,68 @@ public final class GeminiApiService {
         void onSuccess(String formattedResponse);
         void onFailure(String errorMessage);
     }
+
+    /**
+     * Send a simple one-shot prompt to Gemini and get textual response.
+     */
+    public static void sendSimplePrompt(Context context, String prompt, AIResponseCallback callback) {
+        OkHttpClient client = new OkHttpClient();
+        Handler mainHandler = new Handler(Looper.getMainLooper());
+
+        try {
+            JSONObject json = new JSONObject();
+
+            // Put prompt as user content
+            JSONArray contents = new JSONArray();
+            JSONObject userContent = new JSONObject();
+            JSONArray userParts = new JSONArray();
+            JSONObject userPart = new JSONObject();
+            userPart.put("text", prompt);
+            userParts.put(userPart);
+            userContent.put("parts", userParts);
+            userContent.put("role", "user");
+            contents.put(userContent);
+            json.put("contents", contents);
+
+            RequestBody body = RequestBody.create(json.toString(), MediaType.parse("application/json"));
+            Request request = new Request.Builder()
+                    .url("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=" + BuildConfig.GEMINI_API_KEY)
+                    .post(body)
+                    .build();
+
+            client.newCall(request).enqueue(new Callback() {
+                @Override
+                public void onFailure(Call call, IOException e) {
+                    mainHandler.post(() -> callback.onFailure("Lỗi kết nối AI."));
+                }
+
+                @Override
+                public void onResponse(Call call, Response response) throws IOException {
+                    if (response.isSuccessful()) {
+                        try {
+                            String responseBody = response.body().string();
+                            JSONObject jsonResponse = new JSONObject(responseBody);
+                            JSONArray candidates = jsonResponse.getJSONArray("candidates");
+                            JSONObject candidate = candidates.getJSONObject(0);
+                            JSONObject content = candidate.getJSONObject("content");
+                            JSONArray parts = content.getJSONArray("parts");
+                            String aiText = parts.getJSONObject(0).getString("text").trim();
+
+                            String formattedText = TextFormatHelper.formatMarkdownText(aiText);
+
+                            mainHandler.post(() -> callback.onSuccess(formattedText));
+                        } catch (Exception e) {
+                            mainHandler.post(() -> callback.onFailure("Lỗi xử lý phản hồi AI."));
+                        }
+                    } else {
+                        mainHandler.post(() -> callback.onFailure("Lỗi từ AI: " + response.code()));
+                    }
+                }
+            });
+        } catch (Exception e) {
+            mainHandler.post(() -> callback.onFailure("Lỗi gửi tin nhắn."));
+        }
+    }
     
     /**
      * Send prompt to AI with budget context

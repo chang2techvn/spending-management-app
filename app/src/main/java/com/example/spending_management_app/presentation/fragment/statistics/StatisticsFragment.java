@@ -18,6 +18,7 @@ import com.example.spending_management_app.data.local.entity.TransactionEntity;
 import com.example.spending_management_app.databinding.FragmentStatisticsBinding;
 import com.example.spending_management_app.presentation.viewmodel.statistics.StatisticsViewModel;
 import com.example.spending_management_app.utils.CategoryUtils;
+import com.example.spending_management_app.utils.CurrencyFormatter;
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.components.YAxis;
@@ -324,49 +325,11 @@ public class StatisticsFragment extends Fragment {
     }
 
     private String formatCurrency(long amount) {
-        String amountStr = String.valueOf(Math.abs(amount));
-        StringBuilder formatted = new StringBuilder();
-        int count = 0;
-        for (int i = amountStr.length() - 1; i >= 0; i--) {
-            formatted.insert(0, amountStr.charAt(i));
-            count++;
-            if (count % 3 == 0 && i > 0) {
-                formatted.insert(0, ",");
-            }
-        }
-        return formatted.toString() + " VND";
+        return CurrencyFormatter.formatCurrency(getContext(), amount);
     }
     
     private String formatCurrencyShort(long amount) {
-        amount = Math.abs(amount);
-        
-        if (amount >= 1_000_000_000) {
-            // Tỷ (billion)
-            double billions = amount / 1_000_000_000.0;
-            if (billions >= 10) {
-                return String.format(java.util.Locale.getDefault(), "%.0ftỷ", billions);
-            } else {
-                return String.format(java.util.Locale.getDefault(), "%.1ftỷ", billions);
-            }
-        } else if (amount >= 1_000_000) {
-            // Triệu (million)
-            double millions = amount / 1_000_000.0;
-            if (millions >= 10) {
-                return String.format(java.util.Locale.getDefault(), "%.0ftriệu", millions);
-            } else {
-                return String.format(java.util.Locale.getDefault(), "%.1ftriệu", millions);
-            }
-        } else if (amount >= 1_000) {
-            // Nghìn (thousand)
-            double thousands = amount / 1_000.0;
-            if (thousands >= 10) {
-                return String.format(java.util.Locale.getDefault(), "%.0fn", thousands);
-            } else {
-                return String.format(java.util.Locale.getDefault(), "%.1fn", thousands);
-            }
-        } else {
-            return String.format(java.util.Locale.getDefault(), "%d", amount);
-        }
+        return CurrencyFormatter.formatCurrencyShort(getContext(), amount);
     }
     
     private void loadCategorySpendingForYear(String year) {
@@ -591,7 +554,7 @@ public class StatisticsFragment extends Fragment {
         );
         amountParams.topMargin = (int) (4 * getResources().getDisplayMetrics().density);
         amountView.setLayoutParams(amountParams);
-        amountView.setText(String.format(java.util.Locale.getDefault(), "%,d VND", spending));
+    amountView.setText(formatCurrency(spending));
         amountView.setTextColor(0xFF757575);
         amountView.setTextSize(12);
         

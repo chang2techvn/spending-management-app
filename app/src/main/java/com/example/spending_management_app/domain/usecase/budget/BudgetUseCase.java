@@ -13,6 +13,7 @@ import com.example.spending_management_app.presentation.dialog.AiChatBottomSheet
 import com.example.spending_management_app.utils.BudgetAmountParser;
 import com.example.spending_management_app.utils.DateParser;
 import com.example.spending_management_app.utils.ToastHelper;
+import com.example.spending_management_app.utils.CurrencyFormatter;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -231,8 +232,8 @@ public class BudgetUseCase {
                     final long finalAmount = calculatedFinalAmount;
                     final String actionType = determinedActionType;
 
-                    String formattedFinalAmount = String.format("%,d", finalAmount);
-                    String formattedChangeAmount = String.format("%,d", amount);
+                    String formattedFinalAmount = CurrencyFormatter.formatCurrency(context, finalAmount);
+                    String formattedChangeAmount = CurrencyFormatter.formatCurrency(context, amount);
                     SimpleDateFormat monthYearFormat = new SimpleDateFormat("MM/yyyy", new Locale("vi", "VN"));
                     String monthYearStr = monthYearFormat.format(budgetDate);
 
@@ -244,24 +245,24 @@ public class BudgetUseCase {
 
                             if (isUpdate) {
                                 if (actionType.equals("increase")) {
-                                    responseMessage = "✅ Đã nâng ngân sách tháng " + monthYearStr + " thêm " + formattedChangeAmount + " VND!\n\n" +
-                                            "💰 Ngân sách mới: " + formattedFinalAmount + " VND\n\n" +
+                                    responseMessage = "✅ Đã nâng ngân sách tháng " + monthYearStr + " thêm " + formattedChangeAmount + "!\n\n" +
+                                            "💰 Ngân sách mới: " + formattedFinalAmount + "\n\n" +
                                             "Chúc bạn quản lý tài chính tốt! 💪";
-                                    toastMessage = "✅ Đã nâng ngân sách tháng " + monthYearStr + ": +" + formattedChangeAmount + " VND";
+                                    toastMessage = "✅ Đã nâng ngân sách tháng " + monthYearStr + ": +" + formattedChangeAmount;
                                 } else if (actionType.equals("decrease")) {
-                                    responseMessage = "✅ Đã giảm ngân sách tháng " + monthYearStr + " xuống " + formattedChangeAmount + " VND!\n\n" +
-                                            "💰 Ngân sách mới: " + formattedFinalAmount + " VND\n\n" +
+                                    responseMessage = "✅ Đã giảm ngân sách tháng " + monthYearStr + " xuống " + formattedChangeAmount + "!\n\n" +
+                                            "💰 Ngân sách mới: " + formattedFinalAmount + "\n\n" +
                                             "Chúc bạn chi tiêu hợp lý! 💰";
-                                    toastMessage = "✅ Đã giảm ngân sách tháng " + monthYearStr + ": -" + formattedChangeAmount + " VND";
+                                    toastMessage = "✅ Đã giảm ngân sách tháng " + monthYearStr + ": -" + formattedChangeAmount;
                                 } else {
-                                    responseMessage = "✅ Đã cập nhật ngân sách tháng " + monthYearStr + " thành " + formattedFinalAmount + " VND!\n\n" +
+                                    responseMessage = "✅ Đã cập nhật ngân sách tháng " + monthYearStr + " thành " + formattedFinalAmount + "!\n\n" +
                                             "Chúc bạn quản lý tài chính tốt! 💪";
-                                    toastMessage = "✅ Đã cập nhật ngân sách tháng " + monthYearStr + ": " + formattedFinalAmount + " VND";
+                                    toastMessage = "✅ Đã cập nhật ngân sách tháng " + monthYearStr + ": " + formattedFinalAmount;
                                 }
                             } else {
-                                responseMessage = "✅ Đã thiết lập ngân sách tháng " + monthYearStr + " là " + formattedFinalAmount + " VND!\n\n" +
+                                responseMessage = "✅ Đã thiết lập ngân sách tháng " + monthYearStr + " là " + formattedFinalAmount + "!\n\n" +
                                         "Chúc bạn chi tiêu hợp lý! 💰";
-                                toastMessage = "✅ Đã thiết lập ngân sách tháng " + monthYearStr + ": " + formattedFinalAmount + " VND";
+                                toastMessage = "✅ Đã thiết lập ngân sách tháng " + monthYearStr + ": " + formattedFinalAmount;
                             }
 
                             messages.set(analyzingIndex, new AiChatBottomSheet.ChatMessage(responseMessage, false, "Bây giờ"));

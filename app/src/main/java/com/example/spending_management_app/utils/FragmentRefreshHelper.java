@@ -15,6 +15,7 @@ import com.example.spending_management_app.data.local.entity.BudgetEntity;
 import com.example.spending_management_app.data.local.entity.CategoryBudgetEntity;
 import com.example.spending_management_app.presentation.fragment.history.HistoryFragment;
 import com.example.spending_management_app.presentation.fragment.home.HomeFragment;
+import com.example.spending_management_app.utils.CurrencyFormatter;
 
 import java.text.SimpleDateFormat;
 import java.util.List;
@@ -135,12 +136,12 @@ public class FragmentRefreshHelper {
 
                     for (TransactionEntity transaction : recentTransactions) {
                         String emoji = CategoryIconHelper.getIconEmoji(transaction.category);
-                        String formattedAmount = String.format("%,d", Math.abs(transaction.amount));
+                        String formattedAmount = CurrencyFormatter.formatCurrency(activity, Math.abs(transaction.amount));
                         String dateStr = dateFormat.format(transaction.date);
 
                         welcomeMessage.append(emoji).append(" ")
                                 .append(transaction.description)
-                                .append(": ").append(formattedAmount).append(" VND")
+                                .append(": ").append(formattedAmount)
                                 .append(" - ").append(dateStr)
                                 .append("\n");
                     }
@@ -255,14 +256,14 @@ public class FragmentRefreshHelper {
                 
                 // Show monthly budget info
                 if (monthlyBudget > 0) {
-                    message.append(String.format(context.getString(com.example.spending_management_app.R.string.monthly_budget_label_short) + " %,d VND\n", monthlyBudget));
-                    message.append(String.format(context.getString(com.example.spending_management_app.R.string.total_category_budget_label) + " %,d VND\n", totalCategoryBudget));
+                    message.append(context.getString(com.example.spending_management_app.R.string.monthly_budget_label_short)).append(" ").append(CurrencyFormatter.formatCurrency(context, monthlyBudget)).append("\n");
+                    message.append(context.getString(com.example.spending_management_app.R.string.total_category_budget_label)).append(" ").append(CurrencyFormatter.formatCurrency(context, totalCategoryBudget)).append("\n");
                     
                     long remaining = monthlyBudget - totalCategoryBudget;
                     if (remaining >= 0) {
-                        message.append(String.format(context.getString(com.example.spending_management_app.R.string.remaining_budget_label) + " %,d VND\n\n", remaining));
+                        message.append(context.getString(com.example.spending_management_app.R.string.remaining_budget_label)).append(" ").append(CurrencyFormatter.formatCurrency(context, remaining)).append("\n\n");
                     } else {
-                        message.append(String.format(context.getString(com.example.spending_management_app.R.string.exceeded_budget_label) + " %,d VND\n\n", Math.abs(remaining)));
+                        message.append(context.getString(com.example.spending_management_app.R.string.exceeded_budget_label)).append(" ").append(CurrencyFormatter.formatCurrency(context, Math.abs(remaining))).append("\n\n");
                     }
                 } else {
                     message.append(context.getString(com.example.spending_management_app.R.string.no_monthly_budget_set));
@@ -271,8 +272,8 @@ public class FragmentRefreshHelper {
                 for (CategoryInfo info : allCategoryInfo) {
                     String localizedCategory = com.example.spending_management_app.utils.CategoryUtils.getLocalizedCategoryName(context, info.category);
                     if (info.amount > 0) {
-                        message.append(String.format("%s: %,d VND\n", 
-                                localizedCategory, info.amount));
+                        message.append(String.format("%s: %s\n", 
+                                localizedCategory, CurrencyFormatter.formatCurrency(context, info.amount)));
                     } else {
                         message.append(String.format("%s: %s\n", 
                                 localizedCategory, context.getString(com.example.spending_management_app.R.string.not_set)));

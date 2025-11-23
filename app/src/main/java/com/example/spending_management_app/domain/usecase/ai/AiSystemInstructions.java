@@ -30,7 +30,7 @@ public class AiSystemInstructions {
         if ("en".equals(appLanguage)) {
             languageInstruction = "RESPOND IN ENGLISH ONLY. Use English category names and English date formats. Use " + appCurrency + " as currency.";
         } else {
-            languageInstruction = "TRẢ LỜI BẰNG TIẾNG VIỆT HOÀN TOÀN. Sử dụng tên danh mục tiếng Việt và định dạng ngày tiếng Việt. Sử dụng VND làm đơn vị tiền.";
+            languageInstruction = "TRẢ LỜI BẰNG TIẾNG VIỆT HOÀN TOÀN. Sử dụng tên danh mục tiếng Việt và định dạng ngày tiếng Việt. Sử dụng " + appCurrency + " làm đơn vị tiền.";
         }
         
         return "Bạn là trợ lý ghi chi tiêu thông minh. " + currentDateInfo + ".\n\n" +
@@ -75,7 +75,7 @@ public class AiSystemInstructions {
         if ("en".equals(appLanguage)) {
             languageInstruction = "RESPOND IN ENGLISH ONLY. Use English category names and English date formats. Use " + appCurrency + " as currency.";
         } else {
-            languageInstruction = "TRẢ LỜI BẰNG TIẾNG VIỆT HOÀN TOÀN. Sử dụng tên danh mục tiếng Việt và định dạng ngày tiếng Việt. Sử dụng VND làm đơn vị tiền.";
+            languageInstruction = "TRẢ LỜI BẰNG TIẾNG VIỆT HOÀN TOÀN. Sử dụng tên danh mục tiếng Việt và định dạng ngày tiếng Việt. Sử dụng " + appCurrency + " làm đơn vị tiền.";
         }
         
         return "Bạn là trợ lý tài chính thông minh. " + currentDateInfo + ".\n\n" +
@@ -127,7 +127,7 @@ public class AiSystemInstructions {
         if ("en".equals(appLanguage)) {
             languageInstruction = "RESPOND IN ENGLISH ONLY. Use English date formats and " + appCurrency + " as currency. All responses must be in English.";
         } else {
-            languageInstruction = "TRẢ LỜI BẰNG TIẾNG VIỆT HOÀN TOÀN. Sử dụng định dạng ngày tiếng Việt và VND làm đơn vị tiền. Tất cả phản hồi phải bằng tiếng Việt.";
+            languageInstruction = "TRẢ LỜI BẰNG TIẾNG VIỆT HOÀN TOÀN. Sử dụng định dạng ngày tiếng Việt và " + appCurrency + " làm đơn vị tiền. Tất cả phản hồi phải bằng tiếng Việt.";
         }
         
         return "Bạn là chuyên gia tư vấn ngân sách tài chính. " + currentDateInfo + ".\n\n" +

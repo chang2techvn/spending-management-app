@@ -10,6 +10,7 @@ import com.example.spending_management_app.data.local.entity.CategoryBudgetEntit
 import com.example.spending_management_app.utils.BudgetAmountParser;
 import com.example.spending_management_app.domain.usecase.budget.BudgetHistoryLogger;
 import com.example.spending_management_app.utils.CategoryHelper;
+import com.example.spending_management_app.utils.CurrencyFormatter;
 import com.example.spending_management_app.utils.DateParser;
 import com.example.spending_management_app.utils.ExpenseDescriptionParser;
 
@@ -183,15 +184,15 @@ public class OfflineRequestHandler {
                             .transactionDao()
                             .insert(transaction);
                     
-                    String formattedAmount = String.format("%,d", finalAmount);
+                    String formattedAmount = CurrencyFormatter.formatCurrency(context, finalAmount);
                     String successMsg = "✅ Đã thêm chi tiêu (Offline)\n\n" +
                             "📝 " + finalDesc + "\n" +
-                            "💰 " + formattedAmount + " VND\n" +
+                            "💰 " + formattedAmount + "\n" +
                             "📂 " + finalCategory;
                     
                     if (callback != null) {
                         callback.onSuccess(successMsg);
-                        callback.onToast("Đã thêm: " + finalDesc + " - " + formattedAmount + " VND", false);
+                        callback.onToast("Đã thêm: " + finalDesc + " - " + formattedAmount, false);
                         callback.refreshHomeFragment();
                         callback.refreshExpenseWelcomeMessage();
                     }
@@ -350,11 +351,11 @@ public class OfflineRequestHandler {
                                 context, newAmount, startDate);
                     }
                     
-                    String formattedAmount = String.format("%,d", newAmount);
+                    String formattedAmount = CurrencyFormatter.formatCurrency(context, newAmount);
                     
                     if (callback != null) {
-                        callback.onSuccess("✅ Đã cập nhật ngân sách tháng (Offline)\n\n💰 " + formattedAmount + " VND");
-                        callback.onToast("Ngân sách đã được cập nhật: " + formattedAmount + " VND", false);
+                        callback.onSuccess("✅ Đã cập nhật ngân sách tháng (Offline)\n\n💰 " + formattedAmount);
+                        callback.onToast("Ngân sách đã được cập nhật: " + formattedAmount, false);
                         callback.refreshHomeFragment();
                     }
                 } catch (Exception e) {
@@ -514,12 +515,12 @@ public class OfflineRequestHandler {
                                 context, finalCategory, finalAmount);
                     }
                     
-                    String formattedAmount = String.format("%,d", finalAmount);
+                    String formattedAmount = CurrencyFormatter.formatCurrency(context, finalAmount);
                     
                     if (callback != null) {
                         callback.onSuccess("✅ Đã cập nhật ngân sách danh mục (Offline)\n\n" +
-                                "📂 " + finalCategory + "\n💰 " + formattedAmount + " VND");
-                        callback.onToast("Ngân sách '" + finalCategory + "' đã được cập nhật: " + formattedAmount + " VND", false);
+                                "📂 " + finalCategory + "\n💰 " + formattedAmount);
+                        callback.onToast("Ngân sách '" + finalCategory + "' đã được cập nhật: " + formattedAmount, false);
                         callback.refreshCategoryBudgetWelcomeMessage();
                         callback.refreshHomeFragment();
                     }

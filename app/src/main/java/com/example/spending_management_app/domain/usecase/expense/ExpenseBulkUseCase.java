@@ -10,6 +10,7 @@ import com.example.spending_management_app.utils.CategoryIconHelper;
 import com.example.spending_management_app.utils.DateParser;
 import com.example.spending_management_app.utils.ExtractorHelper;
 import com.example.spending_management_app.utils.ToastHelper;
+import com.example.spending_management_app.utils.CurrencyFormatter;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -281,8 +282,8 @@ public class ExpenseBulkUseCase {
                             if (transaction != null) {
                                 expenseRepository.delete(transaction);
                                 resultMessage.append("✅ Xóa: ").append(transaction.description)
-                                        .append(" (").append(String.format("%,d", Math.abs(transaction.amount)))
-                                        .append(" VND)\n");
+                                        .append(" (").append(CurrencyFormatter.formatCurrency(context, Math.abs(transaction.amount)))
+                                        .append(")\n");
                                 counts[0]++;
                             } else {
                                 resultMessage.append("⚠️ Không tìm thấy chi tiêu #").append(op.transactionId).append("\n");
@@ -309,7 +310,7 @@ public class ExpenseBulkUseCase {
                             String icon = CategoryIconHelper.getIconEmoji(op.category);
                             resultMessage.append("✅ Thêm ").append(icon).append(" ")
                                     .append(op.description).append(": ")
-                                    .append(String.format("%,d", op.amount)).append(" VND")
+                                    .append(CurrencyFormatter.formatCurrency(context, op.amount))
                                     .append(" (").append(op.category).append(")\n");
                             counts[0]++;
                         }

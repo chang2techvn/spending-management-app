@@ -13,6 +13,7 @@ import com.example.spending_management_app.presentation.dialog.AiChatBottomSheet
 import com.example.spending_management_app.domain.usecase.budget.BudgetHistoryLogger;
 import com.example.spending_management_app.utils.CategoryIconHelper;
 import com.example.spending_management_app.utils.ToastHelper;
+import com.example.spending_management_app.utils.CurrencyFormatter;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -220,8 +221,8 @@ public class CategoryBudgetUseCase {
                                 if (newTotal > monthlyBudgetLimit) {
                                     String icon = CategoryIconHelper.getIconEmoji(op.category);
                                     long available = monthlyBudgetLimit - currentTotal;
-                                    resultMessage.append(String.format("⚠️ %s %s: Vượt ngân sách tháng %,d VND (Ngân sách còn lại: %,d VND)\n",
-                                            icon, op.category, monthlyBudgetLimit, available));
+                                    resultMessage.append(String.format("⚠️ %s %s: Vượt ngân sách tháng %s (Ngân sách còn lại: %s)\n",
+                                            icon, op.category, CurrencyFormatter.formatCurrency(context, monthlyBudgetLimit), CurrencyFormatter.formatCurrency(context, available)));
                                     counts[1]++;
                                     continue;
                                 }
@@ -247,10 +248,10 @@ public class CategoryBudgetUseCase {
                             }
 
                             String icon = CategoryIconHelper.getIconEmoji(op.category);
-                            String formattedAmount = String.format("%,d", op.amount);
+                            String formattedAmount = CurrencyFormatter.formatCurrency(context, op.amount);
                             String action = isUpdate ? "Sửa" : "Thêm";
                             resultMessage.append("✅ ").append(action).append(" ").append(icon).append(" ")
-                                    .append(op.category).append(": ").append(formattedAmount).append(" VND\n");
+                                    .append(op.category).append(": ").append(formattedAmount).append("\n");
                             counts[0]++;
                         }
                     } catch (Exception e) {
@@ -280,13 +281,13 @@ public class CategoryBudgetUseCase {
                     }
 
                     long remaining = monthlyBudgetLimit - totalUsed;
-                    resultMessage.append("\n\n💰 Ngân sách tháng: ").append(String.format("%,d", monthlyBudgetLimit)).append(" VND");
-                    resultMessage.append("\n📈 Đã phân bổ: ").append(String.format("%,d", totalUsed)).append(" VND");
+                    resultMessage.append("\n\n💰 Ngân sách tháng: ").append(CurrencyFormatter.formatCurrency(context, monthlyBudgetLimit));
+                    resultMessage.append("\n📈 Đã phân bổ: ").append(CurrencyFormatter.formatCurrency(context, totalUsed));
 
                     if (remaining >= 0) {
-                        resultMessage.append("\n✅ Còn lại: ").append(String.format("%,d", remaining)).append(" VND");
+                        resultMessage.append("\n✅ Còn lại: ").append(CurrencyFormatter.formatCurrency(context, remaining));
                     } else {
-                        resultMessage.append("\n⚠️ Vượt quá: ").append(String.format("%,d", Math.abs(remaining))).append(" VND");
+                        resultMessage.append("\n⚠️ Vượt quá: ").append(CurrencyFormatter.formatCurrency(context, Math.abs(remaining)));
                     }
                 }
 

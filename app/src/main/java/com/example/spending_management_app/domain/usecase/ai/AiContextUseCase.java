@@ -17,6 +17,7 @@ import com.example.spending_management_app.data.local.entity.CategoryBudgetEntit
 import com.example.spending_management_app.presentation.dialog.AiChatBottomSheet;
 import com.example.spending_management_app.utils.LocaleHelper;
 import com.example.spending_management_app.utils.TextFormatHelper;
+import com.example.spending_management_app.utils.CurrencyFormatter;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -98,15 +99,15 @@ public class AiContextUseCase {
 
             // Build context string
             contextBuilder.append("THÔNG TIN TÀI CHÍNH THÁNG NÀY:\n");
-            contextBuilder.append("- Tổng thu nhập: ").append(String.format(Locale.getDefault(), "%,d", totalIncome)).append(" VND\n");
-            contextBuilder.append("- Tổng chi tiêu: ").append(String.format(Locale.getDefault(), "%,d", totalExpense)).append(" VND\n");
-            contextBuilder.append("- Số dư ước tính: ").append(String.format(Locale.getDefault(), "%,d", (totalIncome - totalExpense))).append(" VND\n");
+            contextBuilder.append("- Tổng thu nhập: ").append(CurrencyFormatter.formatCurrency(context, totalIncome)).append("\n");
+            contextBuilder.append("- Tổng chi tiêu: ").append(CurrencyFormatter.formatCurrency(context, totalExpense)).append("\n");
+            contextBuilder.append("- Số dư ước tính: ").append(CurrencyFormatter.formatCurrency(context, (totalIncome - totalExpense))).append("\n");
             
             if (!monthlyBudgets.isEmpty()) {
                 BudgetEntity budget = monthlyBudgets.get(0);
                 long remaining = budget.getMonthlyLimit() - totalExpense;
-                contextBuilder.append("- Ngân sách tháng: ").append(String.format(Locale.getDefault(), "%,d", budget.getMonthlyLimit())).append(" VND\n");
-                contextBuilder.append("- Còn lại: ").append(String.format(Locale.getDefault(), "%,d", remaining)).append(" VND\n");
+                contextBuilder.append("- Ngân sách tháng: ").append(CurrencyFormatter.formatCurrency(context, budget.getMonthlyLimit())).append("\n");
+                contextBuilder.append("- Còn lại: ").append(CurrencyFormatter.formatCurrency(context, remaining)).append("\n");
                 contextBuilder.append("- Tỷ lệ sử dụng: ").append(String.format("%.1f", (double)totalExpense/budget.getMonthlyLimit()*100)).append("%\n");
             }
             
@@ -114,8 +115,8 @@ public class AiContextUseCase {
             for (java.util.Map.Entry<String, Long> entry : expensesByCategory.entrySet()) {
                 double percentage = totalExpense > 0 ? (double)entry.getValue()/totalExpense*100 : 0;
                 contextBuilder.append("- ").append(entry.getKey()).append(": ")
-                       .append(String.format(Locale.getDefault(), "%,d", entry.getValue()))
-                       .append(" VND (").append(String.format("%.1f", percentage)).append("%)\n");
+                       .append(CurrencyFormatter.formatCurrency(context, entry.getValue()))
+                       .append(" (").append(String.format("%.1f", percentage)).append("%)\n");
             }
             
             contextBuilder.append("\nGAO DỊCH GẦN ĐÂY:\n");
@@ -128,7 +129,7 @@ public class AiContextUseCase {
             for (TransactionEntity t : recentTransactions) {
                 contextBuilder.append("- ").append(dateFormat.format(t.date)).append(": ")
                        .append(t.description).append(" (").append(t.category).append(") - ")
-                       .append(String.format(Locale.getDefault(), "%,d", Math.abs(t.amount))).append(" VND\n");
+                       .append(CurrencyFormatter.formatCurrency(context, Math.abs(t.amount))).append("\n");
             }
 
         } catch (Exception e) {
@@ -329,11 +330,11 @@ public class AiContextUseCase {
                 contextBuilder.append("\nDanh sách ngân sách theo tháng:\n");
                 for (String month : sortedMonths) {
                     BudgetEntity budget = budgetsByMonth.get(month);
-                    String formattedAmount = String.format(Locale.getDefault(), "%,d", budget.monthlyLimit);
+                    String formattedAmount = CurrencyFormatter.formatCurrency(context, budget.monthlyLimit);
                     
                     String marker = month.equals(currentMonth) ? " (Tháng hiện tại)" : "";
                     contextBuilder.append("- Tháng ").append(month).append(marker).append(": ")
-                           .append(formattedAmount).append(" VND\n");
+                           .append(formattedAmount).append("\n");
                 }
                 
                 // Calculate statistics
@@ -362,18 +363,18 @@ public class AiContextUseCase {
                 
                 contextBuilder.append("\nThống kê ngân sách:\n");
                 contextBuilder.append("- Tổng số tháng đã thiết lập: ").append(sortedMonths.size()).append("\n");
-                contextBuilder.append("- Ngân sách trung bình: ").append(String.format(Locale.getDefault(), "%,d", avgBudget)).append(" VND\n");
-                contextBuilder.append("- Ngân sách cao nhất: ").append(String.format(Locale.getDefault(), "%,d", maxBudget))
-                       .append(" VND (Tháng ").append(maxMonth).append(")\n");
-                contextBuilder.append("- Ngân sách thấp nhất: ").append(String.format(Locale.getDefault(), "%,d", minBudget))
-                       .append(" VND (Tháng ").append(minMonth).append(")\n");
+                contextBuilder.append("- Ngân sách trung bình: ").append(CurrencyFormatter.formatCurrency(context, avgBudget)).append("\n");
+                contextBuilder.append("- Ngân sách cao nhất: ").append(CurrencyFormatter.formatCurrency(context, maxBudget))
+                       .append(" (Tháng ").append(maxMonth).append(")\n");
+                contextBuilder.append("- Ngân sách thấp nhất: ").append(CurrencyFormatter.formatCurrency(context, minBudget))
+                       .append(" (Tháng ").append(minMonth).append(")\n");
                 
                 // Current month budget status
                 if (budgetsByMonth.containsKey(currentMonth)) {
                     BudgetEntity currentBudget = budgetsByMonth.get(currentMonth);
                     contextBuilder.append("\nNgân sách tháng hiện tại: ")
-                           .append(String.format(Locale.getDefault(), "%,d", currentBudget.monthlyLimit))
-                           .append(" VND\n");
+                           .append(CurrencyFormatter.formatCurrency(context, currentBudget.monthlyLimit))
+                           .append("\n");
                 } else {
                     contextBuilder.append("\nNgân sách tháng hiện tại: Chưa thiết lập\n");
                 }
@@ -416,8 +417,8 @@ public class AiContextUseCase {
                     }
                     
                     contextBuilder.append("Tổng ngân sách đã phân bổ: ")
-                           .append(String.format(Locale.getDefault(), "%,d", totalCategoryBudget))
-                           .append(" VND\n\n");
+                           .append(CurrencyFormatter.formatCurrency(context, totalCategoryBudget))
+                           .append("\n\n");
                     
                     // Sort by amount (highest first)
                     categoryBudgets.sort((a, b) -> Long.compare(b.getBudgetAmount(), a.getBudgetAmount()));
@@ -425,9 +426,8 @@ public class AiContextUseCase {
                     // List all category budgets
                     contextBuilder.append("Chi tiết ngân sách từng danh mục:\n");
                     for (CategoryBudgetEntity budget : categoryBudgets) {
-                        String formattedAmount = String.format(Locale.getDefault(), "%,d", budget.getBudgetAmount());
                         contextBuilder.append("- ").append(budget.getCategory()).append(": ")
-                               .append(formattedAmount).append(" VND\n");
+                               .append(CurrencyFormatter.formatCurrency(context, budget.getBudgetAmount())).append("\n");
                     }
                     
                     // Calculate percentage for top categories

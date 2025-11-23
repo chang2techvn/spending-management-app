@@ -17,6 +17,7 @@ import com.example.spending_management_app.data.local.entity.CategoryBudgetEntit
 import com.example.spending_management_app.presentation.dialog.AiChatBottomSheet;
 import com.example.spending_management_app.utils.CategoryUtils;
 import com.example.spending_management_app.utils.CategoryIconHelper;
+import com.example.spending_management_app.utils.CurrencyFormatter;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -161,14 +162,14 @@ public class BudgetManagementDialog extends DialogFragment {
                 
                 // Show monthly budget info
                 if (monthlyBudget > 0) {
-                    message.append(String.format(getString(R.string.monthly_budget_label_short) + " %,d VND\n", monthlyBudget));
-                    message.append(String.format(getString(R.string.total_category_budget_label) + " %,d VND\n", totalCategoryBudget));
+                    message.append(CurrencyFormatter.formatCurrency(getContext(), monthlyBudget));
+                    message.append(CurrencyFormatter.formatCurrency(getContext(), totalCategoryBudget));
                     
                     long remaining = monthlyBudget - totalCategoryBudget;
                     if (remaining >= 0) {
-                        message.append(String.format(getString(R.string.remaining_budget_label) + " %,d VND\n\n", remaining));
+                        message.append(CurrencyFormatter.formatCurrency(getContext(), remaining));
                     } else {
-                        message.append(String.format(getString(R.string.exceeded_budget_label) + " %,d VND\n\n", Math.abs(remaining)));
+                        message.append(CurrencyFormatter.formatCurrency(getContext(), Math.abs(remaining)));
                     }
                 } else {
                     message.append(getString(R.string.no_monthly_budget_set));
@@ -178,8 +179,8 @@ public class BudgetManagementDialog extends DialogFragment {
                     String icon = CategoryIconHelper.getIconEmoji(info.category);
                     String localizedCategory = getLocalizedCategoryName(info.category);
                     if (info.amount > 0) {
-                        message.append(String.format("%s %s: %,d VND\n", 
-                                icon, localizedCategory, info.amount));
+                        message.append(String.format("%s %s: %s\n", 
+                                icon, localizedCategory, CurrencyFormatter.formatCurrency(getContext(), info.amount)));
                     } else {
                         message.append(String.format("%s %s: %s\n", 
                                 icon, localizedCategory, getString(R.string.not_set)));

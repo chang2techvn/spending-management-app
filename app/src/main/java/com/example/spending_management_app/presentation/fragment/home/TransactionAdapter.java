@@ -46,7 +46,7 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
         holder.titleTextView.setText(transaction.getDescription());
         holder.categoryTextView.setText(CategoryUtils.getLocalizedCategoryName(context, transaction.getCategory()));
         holder.dateTextView.setText(transaction.getFormattedDate());
-        holder.amountTextView.setText(transaction.getFormattedAmount());
+        holder.amountTextView.setText(transaction.getFormattedAmount(context));
 
         // Set amount color based on type
         if (transaction.getAmount() >= 0) {

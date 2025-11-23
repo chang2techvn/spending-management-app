@@ -13,6 +13,7 @@ import com.example.spending_management_app.presentation.dialog.AiChatBottomSheet
 import com.example.spending_management_app.utils.CategoryHelper;
 import com.example.spending_management_app.utils.CategoryIconHelper;
 import com.example.spending_management_app.utils.CategoryUtils;
+import com.example.spending_management_app.utils.CurrencyFormatter;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -115,9 +116,9 @@ public class WelcomeMessageUseCase {
                     for (int i = startIndex; i < sortedMonths.size(); i++) {
                         String month = sortedMonths.get(i);
                         BudgetEntity budget = budgetsByMonth.get(month);
-                        String formattedAmount = String.format("%,d", budget.monthlyLimit);
+                        String formattedAmount = CurrencyFormatter.formatCurrency(context, budget.monthlyLimit);
                         welcomeMessage.append("💰 Tháng ").append(month).append(": ")
-                                .append(formattedAmount).append(" VND\n");
+                                .append(formattedAmount).append("\n");
                     }
                     welcomeMessage.append("\n");
                 }
@@ -133,11 +134,11 @@ public class WelcomeMessageUseCase {
 
                 if (!currentMonthBudgets.isEmpty()) {
                     BudgetEntity currentBudget = currentMonthBudgets.get(0);
-                    String formattedAmount = String.format("%,d", currentBudget.monthlyLimit);
+                    String formattedAmount = CurrencyFormatter.formatCurrency(context, currentBudget.monthlyLimit);
                     String currentMonth = monthFormat.format(currentBudget.date);
                     welcomeMessage.append(context.getString(com.example.spending_management_app.R.string.current_month_budget_label))
                             .append(" (").append(currentMonth).append("): ")
-                            .append(formattedAmount).append(" VND\n\n");
+                            .append(formattedAmount).append("\n\n");
                 } else {
                     welcomeMessage.append(context.getString(com.example.spending_management_app.R.string.current_month_budget_label))
                             .append(": ").append(context.getString(com.example.spending_management_app.R.string.budget_not_set)).append("\n\n");
@@ -217,11 +218,11 @@ public class WelcomeMessageUseCase {
 
                     for (TransactionEntity transaction : recentTransactions) {
                         String emoji = CategoryHelper.getEmojiForCategory(transaction.category);
-                        String formattedAmount = String.format("%,d", Math.abs(transaction.amount));
+                        String formattedAmount = CurrencyFormatter.formatCurrency(context, Math.abs(transaction.amount));
                         String localizedCategory = CategoryUtils.getLocalizedCategoryName(context, transaction.category);
                         welcomeMessage.append(emoji).append(" ")
                                 .append(transaction.description).append(": ")
-                                .append(formattedAmount).append(" VND")
+                                .append(formattedAmount)
                                 .append(" (").append(localizedCategory).append(")")
                                 .append("\n");
                     }
@@ -304,12 +305,12 @@ public class WelcomeMessageUseCase {
 
                     for (TransactionEntity transaction : recentTransactions) {
                         String emoji = CategoryIconHelper.getIconEmoji(transaction.category);
-                        String formattedAmount = String.format("%,d", Math.abs(transaction.amount));
+                        String formattedAmount = CurrencyFormatter.formatCurrency(context, Math.abs(transaction.amount));
                         String dateStr = dateFormat.format(transaction.date);
 
                         welcomeMessage.append(emoji).append(" ")
                                 .append(transaction.description)
-                                .append(": ").append(formattedAmount).append(" VND")
+                                .append(": ").append(formattedAmount)
                                 .append(" - ").append(dateStr)
                                 .append("\n");
                     }
