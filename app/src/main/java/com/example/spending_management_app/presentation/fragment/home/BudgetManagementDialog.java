@@ -156,41 +156,36 @@ public class BudgetManagementDialog extends DialogFragment {
                 
                 // Build message to display
                 StringBuilder message = new StringBuilder();
-                message.append("📊 Ngân sách theo danh mục hiện tại:\n\n");
+                message.append(getString(R.string.category_budget_title));
                 
                 // Show monthly budget info
                 if (monthlyBudget > 0) {
-                    message.append(String.format("💰 Ngân sách tháng: %,d VND\n", monthlyBudget));
-                    message.append(String.format("📈 Tổng ngân sách danh mục: %,d VND\n", totalCategoryBudget));
+                    message.append(String.format(getString(R.string.monthly_budget_label_short) + " %,d VND\n", monthlyBudget));
+                    message.append(String.format(getString(R.string.total_category_budget_label) + " %,d VND\n", totalCategoryBudget));
                     
                     long remaining = monthlyBudget - totalCategoryBudget;
                     if (remaining >= 0) {
-                        message.append(String.format("✅ Còn lại: %,d VND\n\n", remaining));
+                        message.append(String.format(getString(R.string.remaining_budget_label) + " %,d VND\n\n", remaining));
                     } else {
-                        message.append(String.format("⚠️ Vượt quá: %,d VND\n\n", Math.abs(remaining)));
+                        message.append(String.format(getString(R.string.exceeded_budget_label) + " %,d VND\n\n", Math.abs(remaining)));
                     }
                 } else {
-                    message.append("⚠️ Chưa thiết lập ngân sách tháng\n");
-                    message.append("💡 Hãy thêm ngân sách tháng trước!\n\n");
+                    message.append(getString(R.string.no_monthly_budget_set));
                 }
                 
                 for (CategoryBudgetInfo info : allCategoryInfo) {
-                    String icon = getIconEmoji(info.category);
+                    String localizedCategory = getLocalizedCategoryName(info.category);
                     if (info.amount > 0) {
-                        message.append(String.format("%s %s: %,d VND\n", 
-                                icon, info.category, info.amount));
+                        message.append(String.format("%s: %,d VND\n", 
+                                localizedCategory, info.amount));
                     } else {
-                        message.append(String.format("%s %s: Chưa thiết lập\n", 
-                                icon, info.category));
+                        message.append(String.format("%s: %s\n", 
+                                localizedCategory, getString(R.string.not_set)));
                     }
                 }
                 
-                message.append("\n💡 Hướng dẫn:\n");
-                message.append("        • Đặt: 'Đặt ngân sách ăn uống 2 triệu'\n");
-                message.append("        • Sửa: 'Sửa ngân sách di chuyển 1 triệu'\n");
-                message.append("        • Xóa: 'Xóa ngân sách cafe'\n");
-                message.append("        • Nhiều: 'Thêm 500k ăn uống và 300k di chuyển'\n");
-                message.append("\n⚠️ Lưu ý: Tổng ngân sách danh mục không vượt quá ngân sách tháng");
+                message.append(getString(R.string.category_budget_instructions_header));
+                message.append(getString(R.string.category_budget_instructions));
                 
                 String finalMessage = message.toString();
                 
@@ -226,13 +221,7 @@ public class BudgetManagementDialog extends DialogFragment {
                         android.util.Log.d("BudgetDialog", "Showing default message due to error");
                         
                         // Show error or default message
-                        String defaultMessage = "📊 Ngân sách theo danh mục\n\n" +
-                                "💡 Hướng dẫn:\n" +
-                                "• Đặt: 'Đặt ngân sách ăn uống 2 triệu'\n" +
-                                "• Sửa: 'Sửa ngân sách di chuyển 1 triệu'\n" +
-                                "• Xóa: 'Xóa ngân sách cafe'\n" +
-                                "• Nhiều: 'Thêm 500k ăn uống và 300k di chuyển'\n\n" +
-                                "📂 Danh mục: Ăn uống, Di chuyển, Tiện ích, Y tế, Nhà ở, Mua sắm, v.v.";
+                        String defaultMessage = getString(R.string.default_category_budget_message);
                         
                         AiChatBottomSheet aiChatBottomSheet = new AiChatBottomSheet();
                         Bundle args = new Bundle();
@@ -253,11 +242,6 @@ public class BudgetManagementDialog extends DialogFragment {
         });
     }
     
-    private String getIconEmoji(String category) {
-        String localized = CategoryUtils.getLocalizedCategoryName(getContext(), category);
-        return CategoryUtils.getIconForCategory(localized);
-    }
-
     private String getLocalizedCategoryName(String category) {
         return CategoryUtils.getLocalizedCategoryName(getContext(), category);
     }

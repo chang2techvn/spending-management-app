@@ -103,6 +103,7 @@
     <string name="monthly_overview">Monthly Overview</string>
     <string name="food_category">🍽️ Food</string>
     <string name="transport_category">🚗 Transport</string>
+    <string name="shopping_category">🛍️ Shopping</string>
     <string name="entertainment_category">🎬 Entertainment</string>
     <string name="utilities_category">⚡ Utilities</string>
     <string name="healthcare_category">🏥 Healthcare</string>
@@ -110,7 +111,7 @@
     <string name="education_category">📚 Education</string>
     <string name="books_category">📖 Books &amp; Learning</string>
     <string name="sports_category">⚽ Sports</string>
-    <string name="beauty_category">� Beauty &amp; Health</string>
+    <string name="beauty_category">💆 Beauty &amp; Health</string>
     <string name="travel_category">✈️ Travel</string>
     <string name="cafe_category">☕ Cafe &amp; Dining Out</string>
     <string name="gifts_category">🎁 Gifts &amp; Charity</string>
@@ -143,6 +144,23 @@
     <string name="spending_by_category">Spending by category</string>
     <string name="other_category">📱 Other</string>
     <string name="home_subtitle">Today is a good day to save</string>
+    <string name="loading">Loading...</string>
+    <string name="loading_budget_info">Loading budget information...</string>
+    <string name="welcome_greeting">Hello! 👋</string>
+    <string name="now_label">Now</string>
+    <string name="offline_mode_header">⚠️ OFFLINE MODE</string>
+    <string name="offline_mode_details">You can:\n✅ Add, edit, delete expenses\n✅ Manage budgets\n❌ AI analysis and advice are unavailable\n\n</string>
+    <string name="budget_history_title">📊 Budget history (last 6 months):</string>
+    <string name="current_month_budget_label">📅 Current month budget</string>
+    <string name="budget_not_set">Not set</string>
+    <string name="budget_instructions">💡 To manage budgets, tell me:</string>
+    <string name="example_budget_command">For example: "Add budget 15,000,000" or "Update budget to 20,000,000"</string>
+    <string name="recent_transactions_title">📋 Recent transactions:</string>
+    <string name="add_transaction_instructions">💡 To add a new expense, tell me:</string>
+    <string name="example_add_transaction">For example: "Yesterday I spent 50k on gas" or "On 10/11 bought coffee 25k"</string>
+    <string name="expense_bulk_title">📋 Bulk expense manager</string>
+    <string name="expense_bulk_details">💳 Recent expenses:</string>
+    <string name="expense_bulk_guidance">💡 Guidance:\n• Add: \'Yesterday breakfast 25k and coffee 30k\'\n• Delete: \'Delete transaction #123\' (find ID in History)</string>
     <string name="compare_with_last_month">Compare with last month</string>
     <string name="last_month_label">Last month</string>
     <string name="this_month_label">This month</string>
@@ -253,6 +271,7 @@
     <!-- AI Chat -->
     <string name="ai_assistant_title">AI Assistant</string>
     <string name="ai_status_active">Active</string>
+    <string name="ai_status_offline">Offline</string>
     <string name="ai_input_hint">Type a message or hold AI button to speak...</string>
 
     <!-- Register -->
@@ -264,4 +283,14 @@
     <string name="or_text"> or </string>
     <string name="login_link_text">Already have an account? Sign In</string>
     <string name="budget_category">💰 Budget</string>
+    <string name="category_budget_title">📊 Current category budgets:\n\n</string>
+    <string name="monthly_budget_label_short">💰 Monthly budget:</string>
+    <string name="total_category_budget_label">📈 Total category budget:</string>
+    <string name="remaining_budget_label">✅ Remaining:</string>
+    <string name="exceeded_budget_label">⚠️ Exceeded:</string>
+    <string name="no_monthly_budget_set">⚠️ Monthly budget not set\n💡 Please add monthly budget first!\n\n</string>
+    <string name="not_set">Not set</string>
+    <string name="category_budget_instructions_header">\n💡 Instructions:\n</string>
+    <string name="category_budget_instructions">        • Add: \'Add 500k food and 300k transportation\'\n        • Edit: \'Update food 700k, shopping 400k\'\n        • Delete: \'Delete food and transportation budgets\'\n\n⚠️ Note: Total category budget should not exceed monthly budget</string>
+    <string name="default_category_budget_message">📊 Category Budget\n\n💡 Instructions:\n• Set: \'Set food budget 2 million\'\n• Edit: \'Edit transportation budget 1 million\'\n• Delete: \'Delete cafe budget\'\n• Multiple: \'Add 500k food and 300k transportation\'\n\n📂 Categories: Food, Transportation, Utilities, Healthcare, Housing, Shopping, etc.</string>
 </resources>

@@ -253,6 +253,7 @@
     <!-- AI Chat -->
     <string name="ai_assistant_title">Trợ lý AI</string>
     <string name="ai_status_active">Đang hoạt động</string>
+    <string name="ai_status_offline">Offline</string>
     <string name="ai_input_hint">Nhập tin nhắn hoặc giữ nút AI để nói...</string>
 
     <!-- Register -->
@@ -264,4 +265,31 @@
     <string name="or_text"> hoặc </string>
     <string name="login_link_text">Đã có tài khoản? Đăng nhập</string>
     <string name="budget_category">💰 Ngân sách</string>
+    <string name="loading">Đang tải...</string>
+    <string name="loading_budget_info">Đang tải thông tin ngân sách...</string>
+    <string name="welcome_greeting">Chào bạn! 👋</string>
+    <string name="now_label">Bây giờ</string>
+    <string name="offline_mode_header">⚠️ CHẾ ĐỘ OFFLINE</string>
+    <string name="offline_mode_details">Bạn có thể:\n✅ Thêm, sửa, xóa chi tiêu\n✅ Quản lý ngân sách\n❌ Không thể phân tích và tư vấn với AI\n\n</string>
+    <string name="budget_history_title">📊 Ngân sách 6 tháng gần đây:</string>
+    <string name="current_month_budget_label">📅 Ngân sách tháng này</string>
+    <string name="budget_not_set">Chưa thiết lập</string>
+    <string name="budget_instructions">💡 Để quản lý ngân sách, hãy cho tôi biết:</string>
+    <string name="example_budget_command">Ví dụ: "Thêm ngân sách 15 triệu" hoặc "Sửa ngân sách lên 20 triệu"</string>
+    <string name="recent_transactions_title">📋 Chi tiêu gần đây:</string>
+    <string name="add_transaction_instructions">💡 Để thêm chi tiêu mới, hãy cho tôi biết:</string>
+    <string name="example_add_transaction">Ví dụ: "Hôm qua tôi đổ xăng 50k" hoặc "Ngày 10/11 mua cafe 25k"</string>
+    <string name="expense_bulk_title">📋 Quản lý chi tiêu hàng loạt</string>
+    <string name="expense_bulk_details">💳 Chi tiêu gần đây:</string>
+    <string name="expense_bulk_guidance">💡 Hướng dẫn:\n• Thêm: \'Hôm qua ăn sáng 25k và cafe 30k\'\n• Xóa: \'Xóa chi tiêu #123\' (tìm ID ở trang Lịch sử)</string>
+    <string name="category_budget_title">📊 Ngân sách theo danh mục hiện tại:\n\n</string>
+    <string name="monthly_budget_label_short">💰 Ngân sách tháng:</string>
+    <string name="total_category_budget_label">📈 Tổng ngân sách danh mục:</string>
+    <string name="remaining_budget_label">✅ Còn lại:</string>
+    <string name="exceeded_budget_label">⚠️ Vượt quá:</string>
+    <string name="no_monthly_budget_set">⚠️ Chưa thiết lập ngân sách tháng\n💡 Hãy thêm ngân sách tháng trước!\n\n</string>
+    <string name="not_set">Chưa thiết lập</string>
+    <string name="category_budget_instructions_header">\n💡 Hướng dẫn:\n</string>
+    <string name="category_budget_instructions">        • Thêm: \'Thêm 500 ngàn ăn uống và 300 ngàn di chuyển\'\n        • Sửa: \'Sửa ăn uống 700 ngàn, mua sắm 400 ngàn\'\n        • Xóa: \'Xóa ngân sách ăn uống và di chuyển\'\n\n⚠️ Lưu ý: Tổng ngân sách danh mục không vượt quá ngân sách tháng</string>
+    <string name="default_category_budget_message">📊 Ngân sách theo danh mục\n\n💡 Hướng dẫn:\n• Đặt: \'Đặt ngân sách ăn uống 2 triệu\'\n• Sửa: \'Sửa ngân sách di chuyển 1 triệu\'\n• Xóa: \'Xóa ngân sách cafe\'\n• Nhiều: \'Thêm 500k ăn uống và 300k di chuyển\'\n\n📂 Danh mục: Ăn uống, Di chuyển, Tiện ích, Y tế, Nhà ở, Mua sắm, v.v.</string>
 </resources>

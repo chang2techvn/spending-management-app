@@ -317,8 +317,11 @@ public class AccountFragment extends Fragment {
             // Apply language change
             if (!languageCode.equals(LocaleHelper.getLanguage(getContext()))) {
                 LocaleHelper.setLocale(getContext(), languageCode);
-                // Recreate activity to apply language change
-                getActivity().recreate();
+                // Restart app to apply language change
+                Intent intent = getActivity().getPackageManager().getLaunchIntentForPackage(getActivity().getPackageName());
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
+                getActivity().finishAffinity();
             }
 
             Toast.makeText(getContext(),

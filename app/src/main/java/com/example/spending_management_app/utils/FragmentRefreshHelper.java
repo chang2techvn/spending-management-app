@@ -167,10 +167,11 @@ public class FragmentRefreshHelper {
     
     /**
      * Refresh category budget welcome message with current budget data
+     * @param context The context for string resources
      * @param activity The activity for UI thread operations
      * @param callback Callback to update the welcome message
      */
-    public static void refreshCategoryBudgetWelcomeMessage(Activity activity, FragmentRefreshCallback callback) {
+    public static void refreshCategoryBudgetWelcomeMessage(android.content.Context context, Activity activity, FragmentRefreshCallback callback) {
         // Refresh the first message (welcome message) with updated category budget data
         Executors.newSingleThreadExecutor().execute(() -> {
             try {
@@ -250,40 +251,36 @@ public class FragmentRefreshHelper {
                 
                 // Build updated message
                 StringBuilder message = new StringBuilder();
-                message.append("📊 Ngân sách theo danh mục hiện tại:\n\n");
+                message.append(context.getString(com.example.spending_management_app.R.string.category_budget_title));
                 
                 // Show monthly budget info
                 if (monthlyBudget > 0) {
-                    message.append(String.format("💰 Ngân sách tháng: %,d VND\n", monthlyBudget));
-                    message.append(String.format("📈 Tổng ngân sách danh mục: %,d VND\n", totalCategoryBudget));
+                    message.append(String.format(context.getString(com.example.spending_management_app.R.string.monthly_budget_label_short) + " %,d VND\n", monthlyBudget));
+                    message.append(String.format(context.getString(com.example.spending_management_app.R.string.total_category_budget_label) + " %,d VND\n", totalCategoryBudget));
                     
                     long remaining = monthlyBudget - totalCategoryBudget;
                     if (remaining >= 0) {
-                        message.append(String.format("✅ Còn lại: %,d VND\n\n", remaining));
+                        message.append(String.format(context.getString(com.example.spending_management_app.R.string.remaining_budget_label) + " %,d VND\n\n", remaining));
                     } else {
-                        message.append(String.format("⚠️ Vượt quá: %,d VND\n\n", Math.abs(remaining)));
+                        message.append(String.format(context.getString(com.example.spending_management_app.R.string.exceeded_budget_label) + " %,d VND\n\n", Math.abs(remaining)));
                     }
                 } else {
-                    message.append("⚠️ Chưa thiết lập ngân sách tháng\n");
-                    message.append("💡 Hãy thêm ngân sách tháng trước!\n\n");
+                    message.append(context.getString(com.example.spending_management_app.R.string.no_monthly_budget_set));
                 }
                 
                 for (CategoryInfo info : allCategoryInfo) {
-                    String icon = CategoryIconHelper.getIconEmoji(info.category);
+                    String localizedCategory = com.example.spending_management_app.utils.CategoryUtils.getLocalizedCategoryName(context, info.category);
                     if (info.amount > 0) {
-                        message.append(String.format("%s %s: %,d VND\n", 
-                                icon, info.category, info.amount));
+                        message.append(String.format("%s: %,d VND\n", 
+                                localizedCategory, info.amount));
                     } else {
-                        message.append(String.format("%s %s: Chưa thiết lập\n", 
-                                icon, info.category));
+                        message.append(String.format("%s: %s\n", 
+                                localizedCategory, context.getString(com.example.spending_management_app.R.string.not_set)));
                     }
                 }
                 
-                message.append("\n💡 Hướng dẫn:\n");
-                message.append("        • Thêm: 'Thêm 500 ngàn ăn uống và 300 ngàn di chuyển'\n");
-                message.append("        • Sửa: 'Sửa ăn uống 700 ngàn, mua sắm 400 ngàn'\n");
-                message.append("        • Xóa: 'Xóa ngân sách ăn uống và di chuyển'\n");
-                message.append("\n⚠️ Lưu ý: Tổng ngân sách danh mục không vượt quá ngân sách tháng");
+                message.append(context.getString(com.example.spending_management_app.R.string.category_budget_instructions_header));
+                message.append(context.getString(com.example.spending_management_app.R.string.category_budget_instructions));
                 
                 String finalMessage = message.toString();
                 
