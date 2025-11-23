@@ -7,14 +7,15 @@ import android.util.Log;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.spending_management_app.BuildConfig;
+import com.example.spending_management_app.data.remote.api.GeminiApiService;
 import com.example.spending_management_app.domain.repository.BudgetRepository;
 import com.example.spending_management_app.domain.repository.CategoryBudgetRepository;
 import com.example.spending_management_app.domain.repository.ExpenseRepository;
 import com.example.spending_management_app.data.local.entity.BudgetEntity;
 import com.example.spending_management_app.data.local.entity.TransactionEntity;
 import com.example.spending_management_app.data.local.entity.CategoryBudgetEntity;
-import com.example.spending_management_app.data.remote.api.GeminiApiService;
 import com.example.spending_management_app.presentation.dialog.AiChatBottomSheet;
+import com.example.spending_management_app.utils.LocaleHelper;
 import com.example.spending_management_app.utils.TextFormatHelper;
 
 import org.json.JSONArray;
@@ -138,10 +139,10 @@ public class AiContextUseCase {
     }
 
     // Send prompt to AI with financial context
-    public static void sendPromptToAIWithContext(String userQuery, String financialContext, 
-            android.app.Activity activity, List<AiChatBottomSheet.ChatMessage> messages, 
-            AiChatBottomSheet.ChatAdapter chatAdapter, RecyclerView messagesRecycler, 
-            TextToSpeech textToSpeech, Runnable updateNetworkStatus) {
+    public static void sendPromptToAIWithContext(String userQuery, String financialContext,
+                                                 android.app.Activity activity, List<AiChatBottomSheet.ChatMessage> messages,
+                                                 AiChatBottomSheet.ChatAdapter chatAdapter, RecyclerView messagesRecycler,
+                                                 TextToSpeech textToSpeech, Runnable updateNetworkStatus) {
         // Add temporary "Đang phân tích..." message
         int analyzingIndex = messages.size();
         messages.add(new AiChatBottomSheet.ChatMessage("Đang phân tích dữ liệu tài chính...", false, "Bây giờ"));
@@ -165,9 +166,13 @@ public class AiContextUseCase {
             JSONArray systemParts = new JSONArray();
             JSONObject systemPart = new JSONObject();
             
+            // Get app language and currency
+            String appLanguage = LocaleHelper.getLanguage(activity.getApplicationContext());
+            String appCurrency = "VND"; // Currently hardcoded, can be made configurable later
+            
             // Use helper class for financial analysis instruction
             String enhancedInstruction = AiSystemInstructions.getFinancialAnalysisInstruction(
-                currentDateInfo, financialContext
+                currentDateInfo, financialContext, appLanguage, appCurrency
             );
             
             systemPart.put("text", enhancedInstruction);
@@ -456,7 +461,7 @@ public class AiContextUseCase {
      * Send prompt to AI with budget context using GeminiAI service
      * This method uses callback pattern to handle UI updates
      */
-    public void sendPromptToAIWithBudgetContext(String userQuery, String budgetContext,
+    public void sendPromptToAIWithBudgetContext(Context context, String userQuery, String budgetContext,
             List<AiChatBottomSheet.ChatMessage> messages, AiChatBottomSheet.ChatAdapter chatAdapter, 
             RecyclerView messagesRecycler, TextToSpeech textToSpeech, Runnable updateNetworkStatus) {
         // Add temporary "Đang phân tích..." message
@@ -466,7 +471,7 @@ public class AiContextUseCase {
         messagesRecycler.smoothScrollToPosition(messages.size() - 1);
 
         // Use GeminiAI service with callback
-        GeminiApiService.sendPromptWithBudgetContext(userQuery, budgetContext, messages, analyzingIndex, new GeminiApiService.AIResponseCallback() {
+        GeminiApiService.sendPromptWithBudgetContext(context, userQuery, budgetContext, messages, analyzingIndex, new GeminiApiService.AIResponseCallback() {
             @Override
             public void onSuccess(String formattedResponse) {
                 // Update UI with AI response

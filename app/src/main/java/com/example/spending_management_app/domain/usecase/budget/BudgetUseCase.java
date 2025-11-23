@@ -449,7 +449,7 @@ public class BudgetUseCase {
 
                 String finalQuery = queryWithContext;
                 activity.runOnUiThread(() -> {
-                    aiContextUseCase.sendPromptToAIWithBudgetContext(finalQuery, budgetContext, messages, chatAdapter, messagesRecycler, textToSpeech, updateNetworkStatusCallback);
+                    aiContextUseCase.sendPromptToAIWithBudgetContext(context, finalQuery, budgetContext, messages, chatAdapter, messagesRecycler, textToSpeech, updateNetworkStatusCallback);
                 });
             } catch (Exception e) {
                 android.util.Log.e("BudgetService", "Error getting budget context", e);

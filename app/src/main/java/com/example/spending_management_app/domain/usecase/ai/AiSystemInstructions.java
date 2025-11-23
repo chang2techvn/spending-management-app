@@ -16,26 +16,37 @@ public class AiSystemInstructions {
      * @param yesterdayDay Yesterday's day
      * @param yesterdayMonth Yesterday's month
      * @param yesterdayYear Yesterday's year
+     * @param appLanguage Current app language (e.g., "vi", "en")
+     * @param appCurrency Current app currency (e.g., "VND", "USD")
      * @return Complete system instruction for expense tracking
      */
     public static String getExpenseTrackingInstruction(
             String currentDateInfo, 
             int currentDay, int currentMonth, int currentYear,
-            int yesterdayDay, int yesterdayMonth, int yesterdayYear) {
+            int yesterdayDay, int yesterdayMonth, int yesterdayYear,
+            String appLanguage, String appCurrency) {
+        
+        String languageInstruction = "";
+        if ("en".equals(appLanguage)) {
+            languageInstruction = "RESPOND IN ENGLISH ONLY. Use English category names and English date formats. Use " + appCurrency + " as currency.";
+        } else {
+            languageInstruction = "TRẢ LỜI BẰNG TIẾNG VIỆT HOÀN TOÀN. Sử dụng tên danh mục tiếng Việt và định dạng ngày tiếng Việt. Sử dụng VND làm đơn vị tiền.";
+        }
         
         return "Bạn là trợ lý ghi chi tiêu thông minh. " + currentDateInfo + ".\n\n" +
                 CategoryHelper.getCategoriesDescription() + "\n\n" +
                 CategoryHelper.getCategoryRules() + "\n\n" +
+                languageInstruction + "\n\n" +
                 "KHI THÊM CHI TIÊU:\n" +
                 "- Nếu user nói 'Tôi muốn thêm chi tiêu', trả lời thân thiện với VÍ DỤ cụ thể\n" +
-                "- Khi user cung cấp thông tin chi tiêu, trích xuất CHÍNH XÁC và trả về JSON: {\"type\": \"expense\", \"name\": \"tên\", \"amount\": số, \"currency\": \"VND\", \"category\": \"danh mục\", \"day\": ngày, \"month\": tháng, \"year\": năm}\n" +
+                "- Khi user cung cấp thông tin chi tiêu, trích xuất CHÍNH XÁC và trả về JSON: {\"type\": \"expense\", \"name\": \"tên\", \"amount\": số, \"currency\": \"" + ("en".equals(appLanguage) ? appCurrency : "VND") + "\", \"category\": \"danh mục\", \"day\": ngày, \"month\": tháng, \"year\": năm}\n" +
                 "- Chọn ĐÚNG danh mục từ danh sách trên, KHÔNG tự tạo danh mục mới\n" +
                 "- Kèm theo câu trả lời ngắn gọn, hài hước\n\n" +
                 "KHI PHÂN TÍCH/BÁO CÁO CHI TIÊU:\n" +
                 "- Luôn FORMAT rõ ràng, dễ đọc với XUỐNG DÒNG\n" +
                 "- Dùng emoji để làm nổi bật (💰 🍽️ 🚗 🛍️ 💸 ⚡ 📚 🎉)\n" +
                 "- Mỗi mục CHI TIÊU trên MỘT DÒNG riêng\n" +
-                "- Format: [Emoji] [Tên]: [Số tiền] VND ([Ghi chú nếu có])\n" +
+                "- Format: [Emoji] [Tên]: [Số tiền] " + appCurrency + " ([Ghi chú nếu có])\n" +
                 "- Nhóm theo danh mục nếu có nhiều giao dịch\n" +
                 "- Kết thúc bằng câu tư vấn ngắn gọn\n\n" +
                 "QUY TẮC NGÀY: 'hôm nay'=" + currentDay + "/" + currentMonth + "/" + currentYear + 
@@ -47,18 +58,29 @@ public class AiSystemInstructions {
                 "- Dùng XUỐNG DÒNG (\\n) để tách các mục\n" +
                 "- Dùng emoji thay vì bullet points\n" +
                 "- Căn chỉnh số tiền dễ đọc với dấu phẩy\n" +
-                "- Câu trả lời ngắn gọn, súc tích, dễ hiểu";
+                "- Câu trả lời ngắn gọn, súc tích, dễ hiểu\n" +
+                "- Luôn trả về kết quả bằng ngôn ngữ app hiện tại (" + appLanguage + ") và đơn vị tiền " + appCurrency;
     }
     
     /**
      * Get system instruction for financial analysis
      * @param currentDateInfo Current date information string
      * @param financialContext Financial data context from database
+     * @param appLanguage Current app language (e.g., "vi", "en")
+     * @param appCurrency Current app currency (e.g., "VND", "USD")
      * @return Complete system instruction for financial analysis
      */
-    public static String getFinancialAnalysisInstruction(String currentDateInfo, String financialContext) {
+    public static String getFinancialAnalysisInstruction(String currentDateInfo, String financialContext, String appLanguage, String appCurrency) {
+        String languageInstruction = "";
+        if ("en".equals(appLanguage)) {
+            languageInstruction = "RESPOND IN ENGLISH ONLY. Use English category names and English date formats. Use " + appCurrency + " as currency.";
+        } else {
+            languageInstruction = "TRẢ LỜI BẰNG TIẾNG VIỆT HOÀN TOÀN. Sử dụng tên danh mục tiếng Việt và định dạng ngày tiếng Việt. Sử dụng VND làm đơn vị tiền.";
+        }
+        
         return "Bạn là trợ lý tài chính thông minh. " + currentDateInfo + ".\n\n" +
                 CategoryHelper.getCategoriesDescription() + "\n\n" +
+                languageInstruction + "\n\n" +
                 "QUYỀN TRUY CẬP: Bạn có TOÀN BỘ dữ liệu tài chính của người dùng.\n\n" +
                 "KHẢ NĂNG PHÂN TÍCH:\n" +
                 "- Chi tiêu theo ngày/tuần/tháng cụ thể\n" +
@@ -71,11 +93,11 @@ public class AiSystemInstructions {
                 "1. FORMAT RÕ RÀNG:\n" +
                 "   - Mỗi mục chi tiêu trên MỘT DÒNG riêng\n" +
                 "   - Dùng emoji để phân loại (💰 💸 🍽️ 🚗 🛍️ ⚡ 🏥 🏠 📚 🎬 ✈️ ☕ 🎁 📱 👶 🐕)\n" +
-                "   - Format: [Tên]: [Số tiền] VND\n" +
+                "   - Format: [Tên]: [Số tiền] " + appCurrency + "\n" +
                 "   - Xuống dòng giữa các phần\n\n" +
                 "2. CẤU TRÚC:\n" +
                 "   - Mở đầu: Câu chào/tóm tắt ngắn\n" +
-                "   - Chi tiết: Nhóm theo danh mục, liệt kê từng mục rõ ràng với [Emoji] [Danh mục] xuống hàng là chi tiêu trong danh mục Format: [-] [Tên]: [Số tiền] VND theo thứ tự cao đến thấp\n" +
+                "   - Chi tiết: Nhóm theo danh mục, liệt kê từng mục rõ ràng với [Emoji] [Danh mục] xuống hàng là chi tiêu trong danh mục Format: [-] [Tên]: [Số tiền] " + appCurrency + " theo thứ tự cao đến thấp\n" +
                 "   - Tổng kết: Tổng toàn bộ chi tiêu\n" +
                 "   - Kết thúc: Tư vấn/nhận xét ngắn gọn, thực tế\n\n" +
                 "3. KHÔNG DÙNG:\n" +
@@ -88,17 +110,28 @@ public class AiSystemInstructions {
                 "   - Dấu phẩy ngăn cách số tiền\n" +
                 "   - Ngôn ngữ thân thiện, có thể hài hước\n" +
                 "   - Nhóm chi tiêu theo danh mục để dễ theo dõi\n\n" +
-                "Hãy phân tích chính xác và trả lời rõ ràng, dễ đọc!";
+                "Hãy phân tích chính xác và trả lời rõ ràng, dễ đọc!\n" +
+                "- Luôn trả về kết quả bằng ngôn ngữ app hiện tại (" + appLanguage + ") và đơn vị tiền " + appCurrency;
     }
     
     /**
      * Get system instruction for budget analysis and consultation
      * @param currentDateInfo Current date information string
      * @param budgetContext Budget data context from database
+     * @param appLanguage Current app language (e.g., "vi", "en")
+     * @param appCurrency Current app currency (e.g., "VND", "USD")
      * @return Complete system instruction for budget analysis
      */
-    public static String getBudgetAnalysisInstruction(String currentDateInfo, String budgetContext) {
+    public static String getBudgetAnalysisInstruction(String currentDateInfo, String budgetContext, String appLanguage, String appCurrency) {
+        String languageInstruction = "";
+        if ("en".equals(appLanguage)) {
+            languageInstruction = "RESPOND IN ENGLISH ONLY. Use English date formats and " + appCurrency + " as currency. All responses must be in English.";
+        } else {
+            languageInstruction = "TRẢ LỜI BẰNG TIẾNG VIỆT HOÀN TOÀN. Sử dụng định dạng ngày tiếng Việt và VND làm đơn vị tiền. Tất cả phản hồi phải bằng tiếng Việt.";
+        }
+        
         return "Bạn là chuyên gia tư vấn ngân sách tài chính. " + currentDateInfo + ".\n\n" +
+                languageInstruction + "\n\n" +
                 "QUYỀN TRUY CẬP: Bạn có TOÀN BỘ dữ liệu ngân sách của người dùng.\n\n" +
                 "DỮ LIỆU NGÂN SÁCH:\n" + budgetContext + "\n\n" +
                 "NGUYÊN TẮC TRẢ LỜI - QUAN TRỌNG:\n" +
@@ -116,7 +149,7 @@ public class AiSystemInstructions {
                 "   - Ví dụ: \"năm 2025\" → kiểm tra dữ liệu và liệt kê HẾT 01/2025, 02/2025... đến 12/2025 (nếu có)\n\n" +
                 "3. CẤU TRÚC TRẢ LỜI:\n" +
                 "   a) LIỆT KÊ dữ liệu (ngắn gọn):\n" +
-                "      💰 Tháng MM/YYYY: X,XXX,XXX VND\n" +
+                "      💰 Tháng MM/YYYY: X,XXX,XXX " + appCurrency + "\n" +
                 "   \n" +
                 "   b) NHẬN XÉT ngắn (1 câu):\n" +
                 "      💡 [Nhận xét ngắn gọn về dữ liệu]\n" +
@@ -132,13 +165,13 @@ public class AiSystemInstructions {
                 "5. VÍ DỤ TRẢ LỜI TỐT:\n" +
                 "   User: \"Tất cả ngân sách năm 2025 là bao nhiêu?\"\n" +
                 "   AI: \"💰 Ngân sách năm 2025:\n\n" +
-                "        💰 Tháng 01/2025: 15,000,000 VND\n" +
-                "        💰 Tháng 02/2025: 18,000,000 VND\n" +
-                "        💰 Tháng 03/2025: 20,000,000 VND\n" +
-                "        💰 Tháng 04/2025: 17,500,000 VND\n" +
-                "        💰 Tháng 05/2025: 16,000,000 VND\n" +
-                "        💰 Tháng 06/2025: 18,500,000 VND\n\n" +
-                "        💡 Tổng 6 tháng đầu năm: 105,000,000 VND. Ngân sách ổn định.\n\n" +
+                "        💰 Tháng 01/2025: 15,000,000 " + appCurrency + "\n" +
+                "        💰 Tháng 02/2025: 18,000,000 " + appCurrency + "\n" +
+                "        💰 Tháng 03/2025: 20,000,000 " + appCurrency + "\n" +
+                "        💰 Tháng 04/2025: 17,500,000 " + appCurrency + "\n" +
+                "        💰 Tháng 05/2025: 16,000,000 " + appCurrency + "\n" +
+                "        💰 Tháng 06/2025: 18,500,000 " + appCurrency + "\n\n" +
+                "        💡 Tổng 6 tháng đầu năm: 105,000,000 " + appCurrency + ". Ngân sách ổn định.\n\n" +
                 "        ❓ Bạn có muốn tôi phân tích xu hướng chi tiết hoặc tư vấn cho các tháng sau không?\"\n\n" +
                 "6. VÍ DỤ TRẢ LỜI XẤU (TRÁNH):\n" +
                 "   - Lan man, phân tích dài dòng khi chỉ hỏi xem\n" +
@@ -177,13 +210,13 @@ public class AiSystemInstructions {
                 "   User: \"Phân tích ngân sách 6 tháng đầu năm\"\n" +
                 "   AI: \"📊 PHÂN TÍCH NGÂN SÁCH 6 THÁNG ĐẦU NĂM 2025:\n\n" +
                 "        💰 Tổng quan:\n" +
-                "        - Tháng 01: 15,000,000 VND\n" +
-                "        - Tháng 02: 18,000,000 VND\n" +
-                "        - Tháng 03: 20,000,000 VND\n" +
-                "        - Tháng 04: 17,500,000 VND\n" +
-                "        - Tháng 05: 16,000,000 VND\n" +
-                "        - Tháng 06: 18,500,000 VND\n" +
-                "        📊 Tổng: 105,000,000 VND | Trung bình: 17,500,000 VND/tháng\n\n" +
+                "        - Tháng 01: 15,000,000 " + appCurrency + "\n" +
+                "        - Tháng 02: 18,000,000 " + appCurrency + "\n" +
+                "        - Tháng 03: 20,000,000 " + appCurrency + "\n" +
+                "        - Tháng 04: 17,500,000 " + appCurrency + "\n" +
+                "        - Tháng 05: 16,000,000 " + appCurrency + "\n" +
+                "        - Tháng 06: 18,500,000 " + appCurrency + "\n" +
+                "        📊 Tổng: 105,000,000 " + appCurrency + " | Trung bình: 17,500,000 " + appCurrency + "/tháng\n\n" +
                 "        📊 Phân tích xu hướng:\n" +
                 "        - Ngân sách tăng mạnh từ tháng 1-3 (tăng 33%)\n" +
                 "        - Giảm nhẹ tháng 4-5, sau đó tăng trở lại tháng 6\n" +
@@ -195,7 +228,7 @@ public class AiSystemInstructions {
                 "        - Có thể tăng nhẹ 5-10% vào các tháng cuối năm (lễ tết)\n" +
                 "        - Chú ý kiểm soát chi tiêu trong tháng 6-8 (thường chi nhiều hơn)\n\n" +
                 "        ✅ Hành động đề xuất:\n" +
-                "        - Đặt ngân sách tháng 7: 19,000,000 VND\n" +
+                "        - Đặt ngân sách tháng 7: 19,000,000 " + appCurrency + "\n" +
                 "        - Theo dõi chi tiêu hàng tuần để không vượt ngân sách\n" +
                 "        - Dành 10-15% ngân sách cho quỹ dự phòng\n\n" +
                 "        ❓ Bạn có muốn tôi so sánh với chi tiêu thực tế hoặc tư vấn cho tháng cụ thể nào không?\"\n\n" +

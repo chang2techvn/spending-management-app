@@ -1,10 +1,12 @@
 package com.example.spending_management_app.data.remote.api;
 
+import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
 
 import com.example.spending_management_app.BuildConfig;
 import com.example.spending_management_app.domain.usecase.ai.AiSystemInstructions;
+import com.example.spending_management_app.utils.LocaleHelper;
 import com.example.spending_management_app.utils.TextFormatHelper;
 
 import org.json.JSONArray;
@@ -42,6 +44,7 @@ public final class GeminiApiService {
     /**
      * Send prompt to AI with budget context
      * 
+     * @param context Application context for getting app language
      * @param userQuery The user's query
      * @param budgetContext The budget context data
      * @param messages The list of chat messages for conversation history
@@ -49,6 +52,7 @@ public final class GeminiApiService {
      * @param callback Callback for handling response
      */
     public static void sendPromptWithBudgetContext(
+            Context context,
             String userQuery, 
             String budgetContext,
             java.util.List<com.example.spending_management_app.presentation.dialog.AiChatBottomSheet.ChatMessage> messages,
@@ -73,7 +77,11 @@ public final class GeminiApiService {
             JSONArray systemParts = new JSONArray();
             JSONObject systemPart = new JSONObject();
 
-            String instruction = AiSystemInstructions.getBudgetAnalysisInstruction(currentDateInfo, budgetContext);
+            // Get app language and currency
+            String appLanguage = LocaleHelper.getLanguage(context);
+            String appCurrency = "VND"; // Currently hardcoded, can be made configurable later
+
+            String instruction = AiSystemInstructions.getBudgetAnalysisInstruction(currentDateInfo, budgetContext, appLanguage, appCurrency);
 
             systemPart.put("text", instruction);
             systemParts.put(systemPart);
