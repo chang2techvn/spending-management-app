@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:background="#FAFAFA"
     android:fillViewport="true"
-    tools:context=".ui.statistics.StatisticsFragment">
+    tools:context=".presentation.fragment.statistics.StatisticsFragment">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -57,39 +57,62 @@
                 android:orientation="vertical"
                 android:padding="16dp">
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Chi tiêu theo tháng"
-                    android:textColor="#212121"
-                    android:textSize="18sp"
-                    android:textStyle="bold" />
-
-                <!-- Chart Placeholder -->
+                <!-- Header with title and year dropdown -->
                 <LinearLayout
-                    android:id="@+id/chart_placeholder"
                     android:layout_width="match_parent"
-                    android:layout_height="200dp"
-                    android:layout_marginTop="16dp"
-                    android:background="#F5F5F5"
-                    android:gravity="center"
-                    android:orientation="vertical">
-
-                    <ImageView
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
-                        android:src="@drawable/ic_bar_chart"
-                        android:tint="#9E9E9E" />
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
 
                     <TextView
-                        android:layout_width="wrap_content"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:text="Biểu đồ chi tiêu"
-                        android:textColor="#9E9E9E"
-                        android:textSize="14sp" />
+                        android:layout_weight="1"
+                        android:text="Chi tiêu theo tháng"
+                        android:textColor="#212121"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+
+                    <!-- Custom Year Dropdown -->
+                    <LinearLayout
+                        android:id="@+id/year_dropdown_container"
+                        android:layout_width="wrap_content"
+                        android:layout_height="36dp"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:background="@drawable/year_dropdown_background"
+                        android:paddingStart="12dp"
+                        android:paddingEnd="10dp"
+                        android:clickable="true"
+                        android:focusable="true">
+
+                        <TextView
+                            android:id="@+id/year_text"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="2025"
+                            android:textColor="#212121"
+                            android:textSize="15sp"
+                            android:textStyle="bold"
+                            android:layout_marginEnd="6dp" />
+
+                        <ImageView
+                            android:id="@+id/dropdown_icon"
+                            android:layout_width="14dp"
+                            android:layout_height="14dp"
+                            android:src="@drawable/ic_arrow_drop_down"
+                            android:tint="#757575" />
+
+                    </LinearLayout>
 
                 </LinearLayout>
+
+                <!-- Line Chart -->
+                <com.github.mikephil.charting.charts.LineChart
+                    android:id="@+id/monthly_spending_chart"
+                    android:layout_width="match_parent"
+                    android:layout_height="250dp"
+                    android:layout_marginTop="16dp" />
 
             </LinearLayout>
 
@@ -98,25 +121,26 @@
         <!-- Summary Cards -->
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
+            android:layout_height="85dp"
+            android:layout_gravity="center_vertical"
             android:layout_marginHorizontal="16dp"
-            android:layout_marginBottom="16dp">
+            android:layout_marginBottom="16dp"
+            android:orientation="horizontal">
 
             <androidx.cardview.widget.CardView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
                 android:layout_marginEnd="8dp"
+                android:layout_weight="1"
                 app:cardCornerRadius="12dp"
                 app:cardElevation="2dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_height="match_parent"
+                    android:gravity="center"
                     android:orientation="vertical"
-                    android:padding="16dp"
-                    android:gravity="center">
+                    android:padding="16dp">
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -129,11 +153,11 @@
                         android:id="@+id/total_expense"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
                         android:text="5,500,000 VND"
                         android:textColor="#F44336"
                         android:textSize="16sp"
-                        android:textStyle="bold"
-                        android:layout_marginTop="4dp" />
+                        android:textStyle="bold" />
 
                 </LinearLayout>
 
@@ -142,17 +166,17 @@
             <androidx.cardview.widget.CardView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
                 android:layout_marginStart="8dp"
+                android:layout_weight="1"
                 app:cardCornerRadius="12dp"
                 app:cardElevation="2dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:gravity="center"
                     android:orientation="vertical"
-                    android:padding="16dp"
-                    android:gravity="center">
+                    android:padding="16dp">
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -165,11 +189,11 @@
                         android:id="@+id/total_income"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
                         android:text="8,000,000 VND"
                         android:textColor="#4CAF50"
                         android:textSize="16sp"
-                        android:textStyle="bold"
-                        android:layout_marginTop="4dp" />
+                        android:textStyle="bold" />
 
                 </LinearLayout>
 
@@ -187,6 +211,7 @@
             app:cardElevation="2dp">
 
             <LinearLayout
+                android:id="@+id/category_spending_container"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
@@ -448,6 +473,7 @@
                             android:textSize="12sp" />
 
                         <TextView
+                            android:id="@+id/last_month_spending"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="4,200,000 VND"
@@ -473,6 +499,7 @@
                             android:textSize="12sp" />
 
                         <TextView
+                            android:id="@+id/this_month_spending"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="5,500,000 VND"
@@ -498,6 +525,7 @@
                             android:textSize="12sp" />
 
                         <TextView
+                            android:id="@+id/difference_spending"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="+1,300,000"
