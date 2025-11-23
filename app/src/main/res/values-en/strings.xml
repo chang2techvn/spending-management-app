@@ -103,8 +103,30 @@
     <string name="monthly_overview">Monthly Overview</string>
     <string name="food_category">🍽️ Food</string>
     <string name="transport_category">🚗 Transport</string>
-    <string name="shopping_category">🛍️ Shopping</string>
-    <string name="home_subtitle">Today is a good day to save</string>
+    <string name="entertainment_category">🎬 Entertainment</string>
+    <string name="utilities_category">⚡ Utilities</string>
+    <string name="healthcare_category">🏥 Healthcare</string>
+    <string name="housing_category">🏠 Housing</string>
+    <string name="education_category">📚 Education</string>
+    <string name="books_category">📖 Books &amp; Learning</string>
+    <string name="sports_category">⚽ Sports</string>
+    <string name="beauty_category">� Beauty &amp; Health</string>
+    <string name="travel_category">✈️ Travel</string>
+    <string name="cafe_category">☕ Cafe &amp; Dining Out</string>
+    <string name="gifts_category">🎁 Gifts &amp; Charity</string>
+    <string name="events_category">🎉 Events &amp; Parties</string>
+    <string name="phone_category">📱 Phone &amp; Internet</string>
+    <string name="services_category">💳 Services &amp; Subscriptions</string>
+    <string name="software_category">💻 Software &amp; Apps</string>
+    <string name="banking_category">🏦 Banking &amp; Fees</string>
+    <string name="children_category">👶 Children</string>
+    <string name="pets_category">🐕 Pets</string>
+    <string name="family_category">👨‍👩‍👧‍👦 Family</string>
+    <string name="salary_category">💰 Salary</string>
+    <string name="investment_category">📈 Investment</string>
+    <string name="side_income_category">💵 Side Income</string>
+    <string name="savings_category">🏦 Savings</string>
+
 
     <!-- Greetings -->
     <string name="greeting_morning">Good morning</string>
@@ -120,6 +142,7 @@
     <string name="total_budget_label">Total budget</string>
     <string name="spending_by_category">Spending by category</string>
     <string name="other_category">📱 Other</string>
+    <string name="home_subtitle">Today is a good day to save</string>
     <string name="compare_with_last_month">Compare with last month</string>
     <string name="last_month_label">Last month</string>
     <string name="this_month_label">This month</string>
@@ -136,6 +159,9 @@
     <string name="transaction_details">Transaction details</string>
     <string name="edit_transaction">Edit transaction</string>
     <string name="delete_transaction">Delete transaction</string>
+    <string name="tab_all">All</string>
+    <string name="tab_budget">Budget</string>
+    <string name="tab_expenses">Expenses</string>
 
     <!-- Dialogs -->
     <string name="full_name_hint">Full Name</string>
@@ -237,4 +263,5 @@
     <string name="create_account_button">Create Account</string>
     <string name="or_text"> or </string>
     <string name="login_link_text">Already have an account? Sign In</string>
+    <string name="budget_category">💰 Budget</string>
 </resources>

@@ -17,6 +17,7 @@ import com.example.spending_management_app.data.local.dao.TransactionDao;
 import com.example.spending_management_app.data.local.entity.TransactionEntity;
 import com.example.spending_management_app.databinding.FragmentStatisticsBinding;
 import com.example.spending_management_app.presentation.viewmodel.statistics.StatisticsViewModel;
+import com.example.spending_management_app.utils.CategoryUtils;
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.components.YAxis;
@@ -530,8 +531,9 @@ public class StatisticsFragment extends Fragment {
                 1.0f
         );
         nameView.setLayoutParams(nameParams);
+        String localizedCategoryName = CategoryUtils.getLocalizedCategoryName(getContext(), category);
         String icon = getIconEmojiForCategory(category);
-        nameView.setText(icon + " " + category);
+        nameView.setText(icon + " " + localizedCategoryName);
         nameView.setTextColor(0xFF212121);
         nameView.setTextSize(14);
         nameView.setTypeface(null, android.graphics.Typeface.BOLD);
@@ -602,36 +604,9 @@ public class StatisticsFragment extends Fragment {
     }
     
     private String getIconEmojiForCategory(String category) {
-        switch (category) {
-            case "Ăn uống": return "🍽️";
-            case "Di chuyển": return "🚗";
-            case "Tiện ích": return "⚡";
-            case "Y tế": return "🏥";
-            case "Nhà ở": return "🏠";
-            case "Mua sắm": return "🛍️";
-            case "Giáo dục": return "📚";
-            case "Giải trí": return "🎮";
-            case "Quần áo": return "👕";
-            case "Sức khỏe & Làm đẹp": return "💄";
-            case "Gia đình": return "👨‍👩‍👧‍👦";
-            case "Bạn bè": return "👥";
-            case "Con cái": return "👶";
-            case "Phương tiện": return "🚙";
-            case "Điện thoại & Internet": return "📱";
-            case "Phần mềm & Apps": return "💻";
-            case "Đầu tư": return "📈";
-            case "Tiết kiệm": return "🏦";
-            case "Từ thiện": return "❤️";
-            case "Du lịch": return "✈️";
-            case "Thể thao": return "⚽";
-            case "Thú cưng": return "🐶";
-            case "Đăng ký & Dịch vụ": return "📝";
-            case "Hội họp & Tiệc tụng": return "🎉";
-            case "Ăn ngoài & Cafe": return "☕";
-            case "Lương": return "💰";
-            case "Khác": return "📦";
-            default: return "📦";
-        }
+        // Get the localized category name first, then get the icon
+        String localizedCategory = CategoryUtils.getLocalizedCategoryName(getContext(), category);
+        return CategoryUtils.getIconForCategory(localizedCategory);
     }
 
     private void loadMonthComparison() {

@@ -104,6 +104,30 @@
     <string name="food_category">🍽️ Ăn uống</string>
     <string name="transport_category">🚗 Di chuyển</string>
     <string name="shopping_category">🛍️ Mua sắm</string>
+    <string name="entertainment_category">🎬 Giải trí</string>
+    <string name="utilities_category">⚡ Tiện ích</string>
+    <string name="healthcare_category">🏥 Y tế</string>
+    <string name="housing_category">🏠 Nhà ở</string>
+    <string name="education_category">📚 Giáo dục</string>
+    <string name="books_category">📖 Sách &amp; Học tập</string>
+    <string name="sports_category">⚽ Thể thao</string>
+    <string name="beauty_category">💆 Sức khỏe &amp; Làm đẹp</string>
+    <string name="travel_category">✈️ Du lịch</string>
+    <string name="cafe_category">☕ Ăn ngoài &amp; Cafe</string>
+    <string name="gifts_category">🎁 Quà tặng &amp; Từ thiện</string>
+    <string name="events_category">🎉 Hội họp &amp; Tiệc tụng</string>
+    <string name="phone_category">📱 Điện thoại &amp; Internet</string>
+    <string name="services_category">💳 Đăng ký &amp; Dịch vụ</string>
+    <string name="software_category">💻 Phần mềm &amp; Apps</string>
+    <string name="banking_category">🏦 Ngân hàng &amp; Phí</string>
+    <string name="children_category">👶 Con cái</string>
+    <string name="pets_category">🐕 Thú cưng</string>
+    <string name="family_category">👨‍👩‍👧‍👦 Gia đình</string>
+    <string name="salary_category">💰 Lương</string>
+    <string name="investment_category">📈 Đầu tư</string>
+    <string name="side_income_category">💵 Thu nhập phụ</string>
+    <string name="savings_category">🏦 Tiết kiệm</string>
+    <string name="other_category">📱 Khác</string>
     <string name="home_subtitle">Hôm nay là ngày tốt để tiết kiệm</string>
 
     <!-- Greetings -->
@@ -119,7 +143,6 @@
     <string name="total_expense_label">Tổng chi tiêu</string>
     <string name="total_budget_label">Tổng ngân sách</string>
     <string name="spending_by_category">Chi tiêu theo danh mục</string>
-    <string name="other_category">📱 Khác</string>
     <string name="compare_with_last_month">So sánh với tháng trước</string>
     <string name="last_month_label">Tháng trước</string>
     <string name="this_month_label">Tháng này</string>
@@ -136,6 +159,9 @@
     <string name="transaction_details">Chi tiết giao dịch</string>
     <string name="edit_transaction">Sửa giao dịch</string>
     <string name="delete_transaction">Xóa giao dịch</string>
+    <string name="tab_all">Tất cả</string>
+    <string name="tab_budget">Ngân sách</string>
+    <string name="tab_expenses">Chi tiêu</string>
 
     <!-- Dialogs -->
     <string name="full_name_hint">Tên đầy đủ</string>
@@ -237,4 +263,5 @@
     <string name="create_account_button">Tạo tài khoản</string>
     <string name="or_text"> hoặc </string>
     <string name="login_link_text">Đã có tài khoản? Đăng nhập</string>
+    <string name="budget_category">💰 Ngân sách</string>
 </resources>
