@@ -6,6 +6,7 @@ import android.util.Log;
 
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.spending_management_app.BuildConfig;
 import com.example.spending_management_app.domain.repository.BudgetRepository;
 import com.example.spending_management_app.domain.repository.CategoryBudgetRepository;
 import com.example.spending_management_app.domain.repository.ExpenseRepository;
@@ -211,7 +212,7 @@ public class AiContextUseCase {
 
             RequestBody body = RequestBody.create(json.toString(), MediaType.parse("application/json"));
             Request request = new Request.Builder()
-                    .url("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyAsDEIa1N6Dn_rCXYiRCXuUAY-E1DQ0Yv8")
+                    .url("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=" + BuildConfig.GEMINI_API_KEY)
                     .post(body)
                     .build();
 

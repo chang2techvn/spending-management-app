@@ -16,6 +16,7 @@ import com.example.spending_management_app.data.local.entity.BudgetEntity;
 import com.example.spending_management_app.data.local.entity.CategoryBudgetEntity;
 import com.example.spending_management_app.presentation.dialog.AiChatBottomSheet;
 import com.example.spending_management_app.utils.CategoryUtils;
+import com.example.spending_management_app.utils.CategoryIconHelper;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -174,13 +175,14 @@ public class BudgetManagementDialog extends DialogFragment {
                 }
                 
                 for (CategoryBudgetInfo info : allCategoryInfo) {
+                    String icon = CategoryIconHelper.getIconEmoji(info.category);
                     String localizedCategory = getLocalizedCategoryName(info.category);
                     if (info.amount > 0) {
-                        message.append(String.format("%s: %,d VND\n", 
-                                localizedCategory, info.amount));
+                        message.append(String.format("%s %s: %,d VND\n", 
+                                icon, localizedCategory, info.amount));
                     } else {
-                        message.append(String.format("%s: %s\n", 
-                                localizedCategory, getString(R.string.not_set)));
+                        message.append(String.format("%s %s: %s\n", 
+                                icon, localizedCategory, getString(R.string.not_set)));
                     }
                 }
                 
