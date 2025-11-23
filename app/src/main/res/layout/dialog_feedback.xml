@@ -10,7 +10,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Gửi Feedback"
+        android:text="@string/feedback_title"
         android:textColor="#212121"
         android:textSize="20sp"
         android:textStyle="bold"
@@ -22,7 +22,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="24dp"
-        android:hint="Mô tả vấn đề của bạn"
+        android:hint="@string/feedback_hint"
         app:hintTextColor="#757575"
         app:boxBackgroundColor="@android:color/white">
 
@@ -49,7 +49,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Hủy"
+            android:text="@string/cancel_button"
             android:textColor="#757575"
             android:background="?android:attr/selectableItemBackground"
             style="?android:attr/buttonStyle" />
@@ -59,7 +59,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Gửi"
+            android:text="@string/send_button"
             android:textColor="#FFFFFF"
             android:backgroundTint="#4CAF50"
             style="?android:attr/buttonStyle" />

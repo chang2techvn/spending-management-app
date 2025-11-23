@@ -23,7 +23,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Lịch sử giao dịch"
+            android:text="@string/history_title"
             android:textColor="#212121"
             android:textSize="20sp"
             android:textStyle="bold" />
@@ -31,7 +31,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Tất cả giao dịch của bạn"
+            android:text="@string/history_subtitle"
             android:textColor="#757575"
             android:textSize="14sp"
             android:layout_marginTop="4dp" />
@@ -69,7 +69,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:hint="Tìm kiếm giao dịch..."
+                android:hint="@string/search_transactions_hint"
                 android:inputType="text"
                 android:background="@null"
                 android:textSize="14sp" />
@@ -81,7 +81,7 @@
                 android:layout_marginStart="8dp"
                 android:src="@drawable/ic_filter"
                 android:background="?android:attr/selectableItemBackgroundBorderless"
-                android:contentDescription="Lọc theo ngày"
+                android:contentDescription="@string/filter_by_date"
                 app:tint="#757575" />
 
         </LinearLayout>
@@ -142,7 +142,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Chưa có giao dịch nào"
+            android:text="@string/no_transactions"
             android:textColor="#BDBDBD"
             android:textSize="16sp"
             android:textStyle="bold"
@@ -151,7 +151,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Các giao dịch sẽ xuất hiện ở đây"
+            android:text="@string/no_transactions_desc"
             android:textColor="#BDBDBD"
             android:textSize="14sp"
             android:layout_marginTop="8dp" />

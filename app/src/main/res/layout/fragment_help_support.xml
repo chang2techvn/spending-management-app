@@ -31,7 +31,7 @@
                 android:layout_height="48dp"
                 android:src="@drawable/ic_arrow_back"
                 android:background="?android:attr/selectableItemBackgroundBorderless"
-                android:contentDescription="Quay lại" />
+                android:contentDescription="@string/back_button" />
 
             <LinearLayout
                 android:layout_width="0dp"
@@ -42,7 +42,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Trợ giúp &amp; Hỗ trợ"
+                    android:text="@string/help_title"
                     android:textColor="#212121"
                     android:textSize="20sp"
                     android:textStyle="bold" />
@@ -50,7 +50,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Câu hỏi thường gặp và hỗ trợ"
+                    android:text="@string/help_subtitle"
                     android:textColor="#757575"
                     android:textSize="14sp"
                     android:layout_marginTop="4dp" />
@@ -76,7 +76,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Câu hỏi thường gặp"
+                    android:text="@string/faq_title"
                     android:textColor="#212121"
                     android:textSize="18sp"
                     android:textStyle="bold"
@@ -100,7 +100,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Ứng dụng Quản lý Chi tiêu là gì?"
+                        android:text="@string/faq1_question"
                         android:textColor="#212121"
                         android:textSize="16sp"
                         android:textStyle="bold" />
@@ -109,7 +109,7 @@
                         android:id="@+id/answer1"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Đây là ứng dụng giúp bạn theo dõi và quản lý chi tiêu cá nhân, đặt ngân sách, xem thống kê và lịch sử giao dịch."
+                        android:text="@string/faq1_answer"
                         android:textColor="#757575"
                         android:textSize="14sp"
                         android:layout_marginTop="8dp"
@@ -135,7 +135,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Làm thế nào để thiết lập ngân sách?"
+                        android:text="@string/faq2_question"
                         android:textColor="#212121"
                         android:textSize="16sp"
                         android:textStyle="bold" />
@@ -144,7 +144,7 @@
                         android:id="@+id/answer2"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Bạn có thể vào trang Ngân sách và nhấn nút '+' để tạo ngân sách mới, hoặc trò chuyện với AI bằng ngôn ngữ tự nhiên để thiết lập ngân sách một cách dễ dàng."
+                        android:text="@string/faq2_answer"
                         android:textColor="#757575"
                         android:textSize="14sp"
                         android:layout_marginTop="8dp"
@@ -170,7 +170,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Làm thế nào để xem báo cáo chi tiêu?"
+                        android:text="@string/faq3_question"
                         android:textColor="#212121"
                         android:textSize="16sp"
                         android:textStyle="bold" />
@@ -179,7 +179,7 @@
                         android:id="@+id/answer3"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Vào trang Thống kê để xem các biểu đồ và báo cáo chi tiêu."
+                        android:text="@string/faq3_answer"
                         android:textColor="#757575"
                         android:textSize="14sp"
                         android:layout_marginTop="8dp"
@@ -205,7 +205,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Làm thế nào để đổi mật khẩu?"
+                        android:text="@string/faq4_question"
                         android:textColor="#212121"
                         android:textSize="16sp"
                         android:textStyle="bold" />
@@ -214,7 +214,7 @@
                         android:id="@+id/answer4"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Vào Tài khoản > Đổi mật khẩu để cập nhật mật khẩu mới."
+                        android:text="@string/faq4_answer"
                         android:textColor="#757575"
                         android:textSize="14sp"
                         android:layout_marginTop="8dp"
@@ -240,7 +240,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Làm thế nào để liên hệ hỗ trợ?"
+                        android:text="@string/faq5_question"
                         android:textColor="#212121"
                         android:textSize="16sp"
                         android:textStyle="bold" />
@@ -249,7 +249,7 @@
                         android:id="@+id/answer5"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Sử dụng nút Feedback hoặc Trò chuyện với AI để liên hệ."
+                        android:text="@string/faq5_answer"
                         android:textColor="#757575"
                         android:textSize="14sp"
                         android:layout_marginTop="8dp"
@@ -275,7 +275,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Làm thế nào để thêm chi tiêu?"
+                        android:text="@string/faq6_question"
                         android:textColor="#212121"
                         android:textSize="16sp"
                         android:textStyle="bold" />
@@ -284,7 +284,7 @@
                         android:id="@+id/answer6"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Trò chuyện với AI bằng ngôn ngữ tự nhiên để thêm chi tiêu một cách nhanh chóng."
+                        android:text="@string/faq6_answer"
                         android:textColor="#757575"
                         android:textSize="14sp"
                         android:layout_marginTop="8dp"
@@ -310,7 +310,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Làm thế nào để sửa hoặc xóa chi tiêu?"
+                        android:text="@string/faq7_question"
                         android:textColor="#212121"
                         android:textSize="16sp"
                         android:textStyle="bold" />
@@ -319,7 +319,7 @@
                         android:id="@+id/answer7"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Trò chuyện với AI để sửa hoặc xóa chi tiêu bằng ngôn ngữ tự nhiên."
+                        android:text="@string/faq7_answer"
                         android:textColor="#757575"
                         android:textSize="14sp"
                         android:layout_marginTop="8dp"
@@ -345,7 +345,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Làm thế nào để sửa ngân sách?"
+                        android:text="@string/faq8_question"
                         android:textColor="#212121"
                         android:textSize="16sp"
                         android:textStyle="bold" />
@@ -354,7 +354,7 @@
                         android:id="@+id/answer8"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Bạn có thể sử dụng chat AI để sửa hoặc xóa ngân sách một cách thuận tiện."
+                        android:text="@string/faq8_answer"
                         android:textColor="#757575"
                         android:textSize="14sp"
                         android:layout_marginTop="8dp"
@@ -380,7 +380,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Làm thế nào để sử dụng Trò chuyện với AI?"
+                        android:text="@string/faq9_question"
                         android:textColor="#212121"
                         android:textSize="16sp"
                         android:textStyle="bold" />
@@ -389,7 +389,7 @@
                         android:id="@+id/answer9"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Nhấn nút 'AI' trên menu để mở khung chat. Bạn có thể sử dụng ngôn ngữ tự nhiên để thiết lập, thêm, sửa, xóa chi tiêu và ngân sách. Ví dụ: 'Thêm chi tiêu 50k cho ăn uống hôm nay' hoặc 'Tạo ngân sách 2 triệu cho tháng này'. AI sẽ giúp bạn thực hiện các thao tác một cách dễ dàng và nhanh chóng."
+                        android:text="@string/faq9_answer"
                         android:textColor="#757575"
                         android:textSize="14sp"
                         android:layout_marginTop="8dp"
@@ -414,7 +414,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Trò chuyện với AI"
+                android:text="@string/chat_with_ai_button"
                 android:textColor="@android:color/white"
                 app:backgroundTint="#4CAF50"
                 app:cornerRadius="16dp"
@@ -425,7 +425,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Feedback"
+                android:text="@string/feedback_button"
                 android:textColor="@android:color/white"
                 app:backgroundTint="#2196F3"
                 app:cornerRadius="16dp"

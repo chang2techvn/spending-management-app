@@ -28,7 +28,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Thống kê"
+                android:text="@string/statistics_title"
                 android:textColor="#212121"
                 android:textSize="20sp"
                 android:textStyle="bold" />
@@ -36,7 +36,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Tổng quan tài chính của bạn"
+                android:text="@string/statistics_subtitle"
                 android:textColor="#757575"
                 android:textSize="14sp"
                 android:layout_marginTop="4dp" />
@@ -68,7 +68,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Chi tiêu theo tháng"
+                        android:text="@string/monthly_spending_chart"
                         android:textColor="#212121"
                         android:textSize="18sp"
                         android:textStyle="bold" />
@@ -145,7 +145,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Tổng chi tiêu"
+                        android:text="@string/total_expense_label"
                         android:textColor="#757575"
                         android:textSize="12sp" />
 
@@ -181,7 +181,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Tổng ngân sách"
+                        android:text="@string/total_budget_label"
                         android:textColor="#757575"
                         android:textSize="12sp" />
 
@@ -220,7 +220,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Chi tiêu theo danh mục"
+                    android:text="@string/spending_by_category"
                     android:textColor="#212121"
                     android:textSize="18sp"
                     android:textStyle="bold" />
@@ -242,7 +242,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="🍽️ Ăn uống"
+                            android:text="@string/food_category"
                             android:textColor="#212121"
                             android:textSize="14sp"
                             android:textStyle="bold" />
@@ -292,7 +292,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="🚗 Di chuyển"
+                            android:text="@string/transport_category"
                             android:textColor="#212121"
                             android:textSize="14sp"
                             android:textStyle="bold" />
@@ -342,7 +342,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="🛍️ Mua sắm"
+                            android:text="@string/shopping_category"
                             android:textColor="#212121"
                             android:textSize="14sp"
                             android:textStyle="bold" />
@@ -392,7 +392,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="📱 Khác"
+                            android:text="@string/other_category"
                             android:textColor="#212121"
                             android:textSize="14sp"
                             android:textStyle="bold" />
@@ -447,7 +447,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="So sánh với tháng trước"
+                    android:text="@string/compare_with_last_month"
                     android:textColor="#212121"
                     android:textSize="18sp"
                     android:textStyle="bold" />
@@ -468,7 +468,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Tháng trước"
+                            android:text="@string/last_month_label"
                             android:textColor="#757575"
                             android:textSize="12sp" />
 
@@ -494,7 +494,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Tháng này"
+                            android:text="@string/this_month_label"
                             android:textColor="#757575"
                             android:textSize="12sp" />
 
@@ -520,7 +520,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Chênh lệch"
+                            android:text="@string/difference_label"
                             android:textColor="#757575"
                             android:textSize="12sp" />
 

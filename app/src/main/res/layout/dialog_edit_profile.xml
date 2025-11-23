@@ -10,7 +10,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Chỉnh sửa hồ sơ"
+        android:text="@string/edit_profile_title"
         android:textColor="#212121"
         android:textSize="20sp"
         android:textStyle="bold"
@@ -52,7 +52,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"
-        android:hint="Tên đầy đủ"
+        android:hint="@string/full_name_hint"
         app:hintTextColor="#757575"
         app:boxBackgroundColor="@android:color/white">
 
@@ -71,7 +71,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="24dp"
-        android:hint="Email hoặc số điện thoại"
+        android:hint="@string/email_or_phone_hint"
         app:hintTextColor="#757575"
         app:boxBackgroundColor="@android:color/white">
 
@@ -97,7 +97,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Hủy"
+            android:text="@string/cancel_button"
             android:textColor="#757575"
             android:background="?android:attr/selectableItemBackground"
             style="?android:attr/buttonStyle" />
@@ -107,7 +107,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Lưu"
+            android:text="@string/save_button"
             android:textColor="#FFFFFF"
             android:backgroundTint="#4CAF50"
             style="?android:attr/buttonStyle" />

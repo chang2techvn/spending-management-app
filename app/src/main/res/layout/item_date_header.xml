@@ -12,7 +12,7 @@
         android:id="@+id/date_header_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Hôm nay"
+        android:text="@string/today_date_header"
         android:textColor="#424242"
         android:textSize="14sp"
         android:textStyle="bold"

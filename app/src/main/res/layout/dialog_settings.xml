@@ -8,7 +8,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Cài đặt"
+        android:text="@string/settings_title"
         android:textSize="20sp"
         android:textStyle="bold"
         android:textColor="#212121"
@@ -26,7 +26,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Thông báo"
+            android:text="@string/notifications_label"
             android:textSize="16sp"
             android:textColor="#212121" />
 
@@ -42,7 +42,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"
-        android:hint="Ngôn ngữ"
+        android:hint="@string/language_label"
         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu">
 
         <AutoCompleteTextView
@@ -58,7 +58,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="24dp"
-        android:hint="Đơn vị tiền tệ"
+        android:hint="@string/currency_label"
         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu">
 
         <AutoCompleteTextView
@@ -80,7 +80,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Hủy"
+            android:text="@string/cancel_button"
             android:textColor="#757575"
             android:background="?android:attr/selectableItemBackground"
             android:layout_marginEnd="8dp" />
@@ -90,7 +90,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Lưu"
+            android:text="@string/save_button"
             android:textColor="#FFFFFF"
             android:background="#2196F3"
             android:layout_marginStart="8dp" />

@@ -10,7 +10,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Quản lý ngân sách"
+        android:text="@string/budget_management_title"
         android:textColor="#212121"
         android:textSize="20sp"
         android:textStyle="bold"
@@ -19,7 +19,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Chọn hành động:"
+        android:text="@string/choose_action"
         android:textColor="#757575"
         android:textSize="16sp"
         android:layout_marginBottom="16dp" />
@@ -28,7 +28,7 @@
         android:id="@+id/btn_add_income"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Ngân sách tháng"
+        android:text="@string/monthly_budget_button"
         android:textColor="#FFFFFF"
         android:backgroundTint="#4CAF50"
         android:layout_marginBottom="8dp"
@@ -38,7 +38,7 @@
         android:id="@+id/btn_set_budget"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Ngân sách theo danh mục"
+        android:text="@string/category_budget_button"
         android:textColor="#FFFFFF"
         android:backgroundTint="#2196F3"
         android:layout_marginBottom="16dp"
@@ -48,7 +48,7 @@
         android:id="@+id/btn_cancel"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Hủy"
+        android:text="@string/cancel_button"
         android:textColor="#757575"
         android:background="?android:attr/selectableItemBackground"
         style="?android:attr/buttonStyle" />

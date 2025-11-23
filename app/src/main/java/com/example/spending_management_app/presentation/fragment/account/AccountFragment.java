@@ -10,6 +10,8 @@ import android.provider.MediaStore;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+
+import com.example.spending_management_app.presentation.activity.LoginActivity;
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.android.material.textfield.TextInputEditText;
 import android.text.TextWatcher;
@@ -38,7 +40,7 @@ import com.example.spending_management_app.data.local.entity.UserEntity;
 import com.example.spending_management_app.data.repository.UserRepositoryImpl;
 import com.example.spending_management_app.databinding.FragmentAccountBinding;
 import com.example.spending_management_app.domain.repository.UserRepository;
-import com.example.spending_management_app.presentation.activity.LoginActivity;
+import com.example.spending_management_app.utils.LocaleHelper;
 import com.example.spending_management_app.utils.PasswordUtils;
 import com.example.spending_management_app.utils.SessionManager;
 
@@ -92,8 +94,8 @@ public class AccountFragment extends Fragment {
             }
         } else {
             // Fallback if no user data
-            binding.userName.setText("Người dùng");
-            binding.userEmail.setText("Chưa đăng nhập");
+            binding.userName.setText(getString(R.string.user_placeholder));
+            binding.userEmail.setText(getString(R.string.not_logged_in));
         }
     }
 
@@ -152,7 +154,7 @@ public class AccountFragment extends Fragment {
             String newEmailPhone = emailPhoneInput.getText().toString().trim();
 
             if (newName.isEmpty() || newEmailPhone.isEmpty()) {
-                Toast.makeText(getContext(), "Vui lòng điền đầy đủ thông tin", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), getString(R.string.fill_all_fields), Toast.LENGTH_SHORT).show();
                 return;
             }
 
@@ -181,7 +183,7 @@ public class AccountFragment extends Fragment {
                                 .into(binding.userAvatar);
                         }
 
-                        Toast.makeText(getContext(), "Hồ sơ đã được cập nhật", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getContext(), getString(R.string.profile_updated), Toast.LENGTH_SHORT).show();
                         dialog.dismiss();
                     });
                 }).start();
@@ -235,17 +237,17 @@ public class AccountFragment extends Fragment {
             String confirmPassword = confirmPasswordInput.getText().toString().trim();
 
             if (currentPassword.isEmpty() || newPassword.isEmpty() || confirmPassword.isEmpty()) {
-                Toast.makeText(getContext(), "Vui lòng điền đầy đủ thông tin", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), getString(R.string.fill_all_fields), Toast.LENGTH_SHORT).show();
                 return;
             }
 
             if (!PasswordUtils.verifyPassword(currentPassword, currentUser.getPasswordHash())) {
-                Toast.makeText(getContext(), "Mật khẩu hiện tại không đúng", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), getString(R.string.current_password_incorrect), Toast.LENGTH_SHORT).show();
                 return;
             }
 
             if (!newPassword.equals(confirmPassword)) {
-                Toast.makeText(getContext(), "Mật khẩu xác nhận không khớp", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), getString(R.string.passwords_not_match), Toast.LENGTH_SHORT).show();
                 return;
             }
 
@@ -260,7 +262,7 @@ public class AccountFragment extends Fragment {
                     // Update session
                     sessionManager.updateUserData(currentUser);
 
-                    Toast.makeText(getContext(), "Mật khẩu đã được thay đổi", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), getString(R.string.password_changed), Toast.LENGTH_SHORT).show();
                     dialog.dismiss();
                 });
             }).start();
@@ -281,7 +283,7 @@ public class AccountFragment extends Fragment {
 
         // Setup language dropdown
         ArrayAdapter<String> languageAdapter = new ArrayAdapter<>(getContext(),
-            android.R.layout.simple_dropdown_item_1line, new String[]{"Việt", "Anh"});
+            android.R.layout.simple_dropdown_item_1line, new String[]{getString(R.string.vietnamese), getString(R.string.english)});
         languageDropdown.setAdapter(languageAdapter);
 
         // Setup currency dropdown
@@ -289,10 +291,12 @@ public class AccountFragment extends Fragment {
             android.R.layout.simple_dropdown_item_1line, new String[]{"VND", "USD"});
         currencyDropdown.setAdapter(currencyAdapter);
 
-        // Load current settings (for demo, set defaults)
-        // In real app, load from SharedPreferences
-        notificationSwitch.setChecked(true); // Default on
-        languageDropdown.setText("Việt", false); // Default Vietnamese
+        // Load current settings
+        String currentLanguage = LocaleHelper.getLanguage(getContext());
+        boolean notificationsEnabled = true; // Default, can be loaded from preferences
+
+        notificationSwitch.setChecked(notificationsEnabled);
+        languageDropdown.setText(currentLanguage.equals("vi") ? getString(R.string.vietnamese) : getString(R.string.english), false);
         currencyDropdown.setText("VND", false); // Default VND
 
         // Cancel button
@@ -300,16 +304,25 @@ public class AccountFragment extends Fragment {
 
         // Save button
         dialogView.findViewById(R.id.btn_save).setOnClickListener(v -> {
-            boolean notificationsEnabled = notificationSwitch.isChecked();
             String selectedLanguage = languageDropdown.getText().toString();
             String selectedCurrency = currencyDropdown.getText().toString();
 
-            // Save settings (for demo, just show toast)
-            // In real app, save to SharedPreferences or database
+            // Convert display text to language code
+            String languageCode = selectedLanguage.equals(getString(R.string.vietnamese)) ? "vi" : "en";
+
+            // Save settings
+            // For demo, just show toast
+            // In real app, save notifications and currency to SharedPreferences
+
+            // Apply language change
+            if (!languageCode.equals(LocaleHelper.getLanguage(getContext()))) {
+                LocaleHelper.setLocale(getContext(), languageCode);
+                // Recreate activity to apply language change
+                getActivity().recreate();
+            }
+
             Toast.makeText(getContext(),
-                "Thông báo: " + (notificationsEnabled ? "Bật" : "Tắt") +
-                ", Ngôn ngữ: " + selectedLanguage +
-                ", Tiền tệ: " + selectedCurrency, Toast.LENGTH_LONG).show();
+                getString(R.string.settings_saved), Toast.LENGTH_SHORT).show();
 
             dialog.dismiss();
         });
@@ -324,10 +337,10 @@ public class AccountFragment extends Fragment {
 
     private void showLogoutConfirmationDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext(), R.style.RoundedDialog4Corners);
-        builder.setTitle("Xác nhận đăng xuất");
-        builder.setMessage("Bạn có chắc chắn muốn đăng xuất?");
+        builder.setTitle(getString(R.string.logout_confirmation_title));
+        builder.setMessage(getString(R.string.logout_confirmation_message));
 
-        builder.setPositiveButton("Đăng xuất", (dialog, which) -> {
+        builder.setPositiveButton(getString(R.string.logout_button), (dialog, which) -> {
             // Perform actual logout
             sessionManager.logout();
 

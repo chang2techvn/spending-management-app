@@ -28,7 +28,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Tài khoản"
+                android:text="@string/account_header_title"
                 android:textColor="#212121"
                 android:textSize="20sp"
                 android:textStyle="bold" />
@@ -36,7 +36,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Thông tin cá nhân của bạn"
+                android:text="@string/account_header_subtitle"
                 android:textColor="#757575"
                 android:textSize="14sp"
                 android:layout_marginTop="4dp" />
@@ -139,7 +139,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Chỉnh sửa hồ sơ"
+                        android:text="@string/edit_profile"
                         android:textColor="#212121"
                         android:textSize="16sp"
                         android:layout_marginStart="16dp" />
@@ -177,7 +177,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Đổi mật khẩu"
+                        android:text="@string/change_password"
                         android:textColor="#212121"
                         android:textSize="16sp"
                         android:layout_marginStart="16dp" />
@@ -215,7 +215,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Cài đặt"
+                        android:text="@string/settings"
                         android:textColor="#212121"
                         android:textSize="16sp"
                         android:layout_marginStart="16dp" />
@@ -253,7 +253,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Trợ giúp &amp; Hỗ trợ"
+                        android:text="@string/help_support"
                         android:textColor="#212121"
                         android:textSize="16sp"
                         android:layout_marginStart="16dp" />
@@ -288,7 +288,7 @@
                     android:id="@+id/logout_button"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Đăng xuất"
+                    android:text="@string/logout"
                     android:textColor="@android:color/white"
                     android:textSize="16sp"
                     android:textStyle="bold"

@@ -41,4 +41,200 @@
     <string name="signupSuggest_text">Đã có tài khoản?</string>
     <string name="title_remember">Ghi nhớ đăng nhập</string>
     <string name="forgotPassword_text">Quên mật khẩu?</string>
+
+    <!-- Settings strings -->
+    <string name="settings_title">Cài đặt</string>
+    <string name="notifications_label">Thông báo</string>
+    <string name="language_label">Ngôn ngữ</string>
+    <string name="currency_label">Đơn vị tiền tệ</string>
+    <string name="cancel_button">Hủy</string>
+    <string name="save_button">Lưu</string>
+    <string name="vietnamese">Việt</string>
+    <string name="english">Anh</string>
+
+    <!-- Account strings -->
+    <string name="account_title">Tài khoản</string>
+    <string name="edit_profile">Chỉnh sửa hồ sơ</string>
+    <string name="change_password">Đổi mật khẩu</string>
+    <string name="settings">Cài đặt</string>
+    <string name="help_support">Trợ giúp &amp; Hỗ trợ</string>
+    <string name="logout">Đăng xuất</string>
+    <string name="user_placeholder">Người dùng</string>
+    <string name="not_logged_in">Chưa đăng nhập</string>
+
+    <!-- Dialog strings -->
+    <string name="edit_profile_title">Chỉnh sửa hồ sơ</string>
+    <string name="name_label">Tên</string>
+    <string name="email_phone_label">Email/Số điện thoại</string>
+    <string name="current_password">Mật khẩu hiện tại</string>
+    <string name="new_password">Mật khẩu mới</string>
+    <string name="confirm_password">Xác nhận mật khẩu</string>
+    <string name="change_password_title">Đổi mật khẩu</string>
+    <string name="logout_confirmation_title">Xác nhận đăng xuất</string>
+    <string name="logout_confirmation_message">Bạn có chắc chắn muốn đăng xuất?</string>
+    <string name="logout_button">Đăng xuất</string>
+
+    <!-- Validation messages -->
+    <string name="fill_all_fields">Vui lòng điền đầy đủ thông tin</string>
+    <string name="profile_updated">Hồ sơ đã được cập nhật</string>
+    <string name="password_changed">Mật khẩu đã được thay đổi</string>
+    <string name="current_password_incorrect">Mật khẩu hiện tại không đúng</string>
+    <string name="passwords_not_match">Mật khẩu xác nhận không khớp</string>
+    <string name="settings_saved">Cài đặt đã được lưu</string>
+
+    <!-- Navigation -->
+    <string name="navigation_home">Trang chủ</string>
+    <string name="navigation_statistics">Thống kê</string>
+    <string name="navigation_history">Lịch sử</string>
+    <string name="navigation_account">Tài khoản</string>
+
+    <!-- Account page -->
+    <string name="account_header_title">Tài khoản</string>
+    <string name="account_header_subtitle">Thông tin cá nhân của bạn</string>
+
+    <!-- Home page -->
+    <string name="current_balance_label">Số dư hiện tại</string>
+    <string name="monthly_budget_label">Ngân sách tháng này</string>
+    <string name="monthly_expense_label">Chi tiêu tháng này</string>
+    <string name="manage_budget">Quản lý ngân sách</string>
+    <string name="add_expense">Thêm chi tiêu</string>
+    <string name="recent_transactions">Giao dịch gần đây</string>
+    <string name="view_all">Xem tất cả</string>
+    <string name="monthly_overview">Tổng quan tháng này</string>
+    <string name="food_category">🍽️ Ăn uống</string>
+    <string name="transport_category">🚗 Di chuyển</string>
+    <string name="shopping_category">🛍️ Mua sắm</string>
+    <string name="home_subtitle">Hôm nay là ngày tốt để tiết kiệm</string>
+
+    <!-- Greetings -->
+    <string name="greeting_morning">Chào buổi sáng</string>
+    <string name="greeting_afternoon">Chào buổi chiều</string>
+    <string name="greeting_evening">Chào buổi tối</string>
+    <string name="greeting_night">Chào buổi đêm</string>
+
+    <!-- Statistics page -->
+    <string name="statistics_title">Thống kê</string>
+    <string name="statistics_subtitle">Tổng quan tài chính của bạn</string>
+    <string name="monthly_spending_chart">Chi tiêu theo tháng</string>
+    <string name="total_expense_label">Tổng chi tiêu</string>
+    <string name="total_budget_label">Tổng ngân sách</string>
+    <string name="spending_by_category">Chi tiêu theo danh mục</string>
+    <string name="other_category">📱 Khác</string>
+    <string name="compare_with_last_month">So sánh với tháng trước</string>
+    <string name="last_month_label">Tháng trước</string>
+    <string name="this_month_label">Tháng này</string>
+    <string name="difference_label">Chênh lệch</string>
+    <string name="no_statistics_data">Chưa có dữ liệu thống kê</string>
+
+    <!-- History page -->
+    <string name="history_title">Lịch sử giao dịch</string>
+    <string name="history_subtitle">Tất cả giao dịch của bạn</string>
+    <string name="search_transactions_hint">Tìm kiếm giao dịch...</string>
+    <string name="filter_by_date">Lọc theo ngày</string>
+    <string name="no_transactions">Chưa có giao dịch nào</string>
+    <string name="no_transactions_desc">Các giao dịch sẽ xuất hiện ở đây</string>
+    <string name="transaction_details">Chi tiết giao dịch</string>
+    <string name="edit_transaction">Sửa giao dịch</string>
+    <string name="delete_transaction">Xóa giao dịch</string>
+
+    <!-- Dialogs -->
+    <string name="full_name_hint">Tên đầy đủ</string>
+    <string name="email_or_phone_hint">Email hoặc số điện thoại</string>
+    <string name="confirm_new_password_hint">Xác nhận mật khẩu mới</string>
+    <string name="change_password_button">Đổi mật khẩu</string>
+    <string name="save_changes">Lưu thay đổi</string>
+    <string name="cancel">Hủy</string>
+    <string name="ok">OK</string>
+    <string name="yes">Có</string>
+    <string name="no">Không</string>
+
+    <!-- Feedback Dialog -->
+    <string name="feedback_title">Gửi Feedback</string>
+    <string name="feedback_hint">Mô tả vấn đề của bạn</string>
+    <string name="send_button">Gửi</string>
+
+    <!-- Budget Management Dialog -->
+    <string name="budget_management_title">Quản lý ngân sách</string>
+    <string name="choose_action">Chọn hành động:</string>
+    <string name="monthly_budget_button">Ngân sách tháng</string>
+    <string name="category_budget_button">Ngân sách theo danh mục</string>
+
+    <!-- Date Range Picker Dialog -->
+    <string name="date_range_picker_title">Chọn khoảng thời gian</string>
+    <string name="quick_select">Chọn nhanh</string>
+    <string name="today">Hôm nay</string>
+    <string name="this_week">Tuần này</string>
+    <string name="this_month">Tháng này</string>
+    <string name="custom_date_range">Chọn ngày cụ thể</string>
+    <string name="from_date">Từ:</string>
+    <string name="select_start_date">Chọn ngày bắt đầu</string>
+    <string name="to_date">Đến:</string>
+    <string name="select_end_date">Chọn ngày kết thúc</string>
+    <string name="apply_button">Áp dụng</string>
+
+    <!-- Date Header -->
+    <string name="today_date_header">Hôm nay</string>
+
+    <!-- Toast -->
+    <string name="toast_message">Thông báo</string>
+
+    <!-- Login -->
+    <string name="login_welcome_title">Chào mừng trở lại</string>
+    <string name="login_subtitle">Đăng nhập để tiếp tục quản lý chi tiêu</string>
+    <string name="login_button">Đăng nhập</string>
+    <string name="forgot_password_link">Quên mật khẩu?</string>
+    <string name="register_link_text">Chưa có tài khoản? Đăng ký ngay</string>
+
+    <!-- Forgot Password Dialog -->
+    <string name="forgot_password_title">Quên mật khẩu</string>
+    <string name="forgot_password_subtitle">Nhập email hoặc số điện thoại để nhận hướng dẫn đặt lại mật khẩu</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">Trang chủ</string>
+    <string name="nav_statistics">Thống kê</string>
+    <string name="nav_ai">AI</string>
+    <string name="nav_history">Lịch sử</string>
+    <string name="nav_account">Tài khoản</string>
+
+    <!-- Help & Support -->
+    <string name="help_title">Trợ giúp &amp; Hỗ trợ</string>
+    <string name="help_subtitle">Câu hỏi thường gặp và hỗ trợ</string>
+    <string name="faq_title">Câu hỏi thường gặp</string>
+    <string name="faq1_question">Ứng dụng Quản lý Chi tiêu là gì?</string>
+    <string name="faq1_answer">Đây là ứng dụng giúp bạn theo dõi và quản lý chi tiêu cá nhân, đặt ngân sách, xem thống kê và lịch sử giao dịch.</string>
+    <string name="faq2_question">Làm thế nào để thiết lập ngân sách?</string>
+    <string name="faq2_answer">Bạn có thể vào trang Ngân sách và nhấn nút \'+\' để tạo ngân sách mới, hoặc trò chuyện với AI bằng ngôn ngữ tự nhiên để thiết lập ngân sách một cách dễ dàng.</string>
+    <string name="faq3_question">Làm thế nào để xem báo cáo chi tiêu?</string>
+    <string name="faq3_answer">Vào trang Thống kê để xem các biểu đồ và báo cáo chi tiêu.</string>
+    <string name="faq4_question">Làm thế nào để đổi mật khẩu?</string>
+    <string name="faq4_answer">Vào Tài khoản > Đổi mật khẩu để cập nhật mật khẩu mới.</string>
+    <string name="faq5_question">Làm thế nào để liên hệ hỗ trợ?</string>
+    <string name="faq5_answer">Sử dụng nút Feedback hoặc Trò chuyện với AI để liên hệ.</string>
+    <string name="faq6_question">Làm thế nào để thêm chi tiêu?</string>
+    <string name="faq6_answer">Trò chuyện với AI bằng ngôn ngữ tự nhiên để thêm chi tiêu một cách nhanh chóng.</string>
+    <string name="faq7_question">Làm thế nào để sửa hoặc xóa chi tiêu?</string>
+    <string name="faq7_answer">Trò chuyện với AI để sửa hoặc xóa chi tiêu bằng ngôn ngữ tự nhiên.</string>
+    <string name="faq8_question">Làm thế nào để sửa ngân sách?</string>
+    <string name="faq8_answer">Bạn có thể sử dụng chat AI để sửa hoặc xóa ngân sách một cách thuận tiện.</string>
+    <string name="faq9_question">Làm thế nào để sử dụng Trò chuyện với AI?</string>
+    <string name="faq9_answer">Nhấn nút \'AI\' trên menu để mở khung chat. Bạn có thể sử dụng ngôn ngữ tự nhiên để thiết lập, thêm, sửa, xóa chi tiêu và ngân sách. Ví dụ: \'Thêm chi tiêu 50k cho ăn uống hôm nay\' hoặc \'Tạo ngân sách 2 triệu cho tháng này\'. AI sẽ giúp bạn thực hiện các thao tác một cách dễ dàng và nhanh chóng.</string>
+
+    <!-- Action buttons -->
+    <string name="chat_with_ai_button">Trò chuyện với AI</string>
+    <string name="feedback_button">Feedback</string>
+    <string name="back_button">Quay lại</string>
+
+    <!-- AI Chat -->
+    <string name="ai_assistant_title">Trợ lý AI</string>
+    <string name="ai_status_active">Đang hoạt động</string>
+    <string name="ai_input_hint">Nhập tin nhắn hoặc giữ nút AI để nói...</string>
+
+    <!-- Register -->
+    <string name="register_title">Tạo tài khoản mới</string>
+    <string name="register_subtitle">Bắt đầu quản lý chi tiêu thông minh</string>
+    <string name="register_button">Đăng ký tài khoản</string>
+    <string name="register_terms">Bằng việc đăng ký, bạn đồng ý với Điều khoản sử dụng và Chính sách bảo mật của chúng tôi.</string>
+    <string name="create_account_button">Tạo tài khoản</string>
+    <string name="or_text"> hoặc </string>
+    <string name="login_link_text">Đã có tài khoản? Đăng nhập</string>
 </resources>

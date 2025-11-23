@@ -1,0 +1,240 @@
+<resources>
+    <string name="app_name">spending-management-app</string>
+    <string name="title_home">Home</string>
+    <string name="title_dashboard">Dashboard</string>
+    <string name="title_notifications">Notifications</string>
+
+    <string-array name="transaction_types">
+        <item>Expense</item>
+        <item>Budget</item>
+    </string-array>
+
+    <string-array name="currencies">
+        <item>VND</item>
+        <item>USD</item>
+        <item>EUR</item>
+        <item>JPY</item>
+    </string-array>
+
+    <string-array name="categories">
+        <item>Food</item>
+        <item>Transportation</item>
+        <item>Shopping</item>
+        <item>Entertainment</item>
+        <item>Bills</item>
+        <item>Other</item>
+    </string-array>
+
+    <!-- Authentication strings -->
+    <string name="title_signin">Sign In</string>
+    <string name="title_signup">Sign Up</string>
+    <string name="title_firstname">First Name</string>
+    <string name="title_lastname">Last Name</string>
+    <string name="title_email">Email</string>
+    <string name="title_password">Password</string>
+    <string name="signin_hint">Email or phone number</string>
+    <string name="password_hint">Password</string>
+    <string name="firstname_hint">Enter your first name</string>
+    <string name="lastname_hint">Enter your last name</string>
+    <string name="email_hint">Enter email address or phone number</string>
+    <string name="confirmPassword_hint">Confirm password</string>
+    <string name="signupSuggest_text">Already have an account?</string>
+    <string name="title_remember">Remember login</string>
+    <string name="forgotPassword_text">Forgot password?</string>
+
+    <!-- Settings strings -->
+    <string name="settings_title">Settings</string>
+    <string name="notifications_label">Notifications</string>
+    <string name="language_label">Language</string>
+    <string name="currency_label">Currency</string>
+    <string name="cancel_button">Cancel</string>
+    <string name="save_button">Save</string>
+    <string name="vietnamese">Vietnamese</string>
+    <string name="english">English</string>
+
+    <!-- Account strings -->
+    <string name="account_title">Account</string>
+    <string name="edit_profile">Edit Profile</string>
+    <string name="change_password">Change Password</string>
+    <string name="settings">Settings</string>
+    <string name="help_support">Help &amp; Support</string>
+    <string name="logout">Logout</string>
+    <string name="user_placeholder">User</string>
+    <string name="not_logged_in">Not logged in</string>
+
+    <!-- Dialog strings -->
+    <string name="edit_profile_title">Edit Profile</string>
+    <string name="name_label">Name</string>
+    <string name="email_phone_label">Email/Phone</string>
+    <string name="current_password">Current Password</string>
+    <string name="new_password">New Password</string>
+    <string name="confirm_password">Confirm Password</string>
+    <string name="change_password_title">Change Password</string>
+    <string name="logout_confirmation_title">Confirm Logout</string>
+    <string name="logout_confirmation_message">Are you sure you want to logout?</string>
+    <string name="logout_button">Logout</string>
+
+    <!-- Validation messages -->
+    <string name="fill_all_fields">Please fill in all information</string>
+    <string name="profile_updated">Profile has been updated</string>
+    <string name="password_changed">Password has been changed</string>
+    <string name="current_password_incorrect">Current password is incorrect</string>
+    <string name="passwords_not_match">Confirm password does not match</string>
+    <string name="settings_saved">Settings have been saved</string>
+
+    <!-- Navigation -->
+    <string name="navigation_home">Home</string>
+    <string name="navigation_statistics">Statistics</string>
+    <string name="navigation_history">History</string>
+    <string name="navigation_account">Account</string>
+
+    <!-- Account page -->
+    <string name="account_header_title">Account</string>
+    <string name="account_header_subtitle">Your personal information</string>
+
+    <!-- Home page -->
+    <string name="current_balance_label">Current Balance</string>
+    <string name="monthly_budget_label">Monthly Budget</string>
+    <string name="monthly_expense_label">Monthly Expense</string>
+    <string name="manage_budget">Manage Budget</string>
+    <string name="add_expense">Add Expense</string>
+    <string name="recent_transactions">Recent Transactions</string>
+    <string name="view_all">View All</string>
+    <string name="monthly_overview">Monthly Overview</string>
+    <string name="food_category">🍽️ Food</string>
+    <string name="transport_category">🚗 Transport</string>
+    <string name="shopping_category">🛍️ Shopping</string>
+    <string name="home_subtitle">Today is a good day to save</string>
+
+    <!-- Greetings -->
+    <string name="greeting_morning">Good morning</string>
+    <string name="greeting_afternoon">Good afternoon</string>
+    <string name="greeting_evening">Good evening</string>
+    <string name="greeting_night">Good night</string>
+
+    <!-- Statistics page -->
+    <string name="statistics_title">Statistics</string>
+    <string name="statistics_subtitle">Your financial overview</string>
+    <string name="monthly_spending_chart">Monthly spending</string>
+    <string name="total_expense_label">Total expense</string>
+    <string name="total_budget_label">Total budget</string>
+    <string name="spending_by_category">Spending by category</string>
+    <string name="other_category">📱 Other</string>
+    <string name="compare_with_last_month">Compare with last month</string>
+    <string name="last_month_label">Last month</string>
+    <string name="this_month_label">This month</string>
+    <string name="difference_label">Difference</string>
+    <string name="no_statistics_data">No statistics data yet</string>
+
+    <!-- History page -->
+    <string name="history_title">Transaction History</string>
+    <string name="history_subtitle">All your transactions</string>
+    <string name="search_transactions_hint">Search transactions...</string>
+    <string name="filter_by_date">Filter by date</string>
+    <string name="no_transactions">No transactions yet</string>
+    <string name="no_transactions_desc">Transactions will appear here</string>
+    <string name="transaction_details">Transaction details</string>
+    <string name="edit_transaction">Edit transaction</string>
+    <string name="delete_transaction">Delete transaction</string>
+
+    <!-- Dialogs -->
+    <string name="full_name_hint">Full Name</string>
+    <string name="email_or_phone_hint">Email or Phone Number</string>
+    <string name="confirm_new_password_hint">Confirm New Password</string>
+    <string name="change_password_button">Change Password</string>
+    <string name="save_changes">Save Changes</string>
+    <string name="cancel">Cancel</string>
+    <string name="ok">OK</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+
+    <!-- Feedback Dialog -->
+    <string name="feedback_title">Send Feedback</string>
+    <string name="feedback_hint">Describe your problem</string>
+    <string name="send_button">Send</string>
+
+    <!-- Budget Management Dialog -->
+    <string name="budget_management_title">Budget Management</string>
+    <string name="choose_action">Choose action:</string>
+    <string name="monthly_budget_button">Monthly Budget</string>
+    <string name="category_budget_button">Category Budget</string>
+
+    <!-- Date Range Picker Dialog -->
+    <string name="date_range_picker_title">Select Date Range</string>
+    <string name="quick_select">Quick Select</string>
+    <string name="today">Today</string>
+    <string name="this_week">This Week</string>
+    <string name="this_month">This Month</string>
+    <string name="custom_date_range">Custom Date Range</string>
+    <string name="from_date">From:</string>
+    <string name="select_start_date">Select Start Date</string>
+    <string name="to_date">To:</string>
+    <string name="select_end_date">Select End Date</string>
+    <string name="apply_button">Apply</string>
+
+    <!-- Date Header -->
+    <string name="today_date_header">Today</string>
+
+    <!-- Toast -->
+    <string name="toast_message">Notification</string>
+
+    <!-- Login -->
+    <string name="login_welcome_title">Welcome back</string>
+    <string name="login_subtitle">Login to continue managing expenses</string>
+    <string name="login_button">Login</string>
+    <string name="forgot_password_link">Forgot password?</string>
+    <string name="register_link_text">Don\'t have an account? Sign up now</string>
+
+    <!-- Forgot Password Dialog -->
+    <string name="forgot_password_title">Forgot Password</string>
+    <string name="forgot_password_subtitle">Enter email or phone number to receive password reset instructions</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_statistics">Statistics</string>
+    <string name="nav_ai">AI</string>
+    <string name="nav_history">History</string>
+    <string name="nav_account">Account</string>
+
+    <!-- Help & Support -->
+    <string name="help_title">Help &amp; Support</string>
+    <string name="help_subtitle">Frequently asked questions and support</string>
+    <string name="faq_title">Frequently Asked Questions</string>
+    <string name="faq1_question">What is the Spending Management App?</string>
+    <string name="faq1_answer">This is an app that helps you track and manage personal expenses, set budgets, view statistics and transaction history.</string>
+    <string name="faq2_question">How to set up a budget?</string>
+    <string name="faq2_answer">You can go to the Budget page and tap the \'+\' button to create a new budget, or chat with AI in natural language to set up a budget easily.</string>
+    <string name="faq3_question">How to view expense reports?</string>
+    <string name="faq3_answer">Go to Statistics to view expense charts and reports.</string>
+    <string name="faq4_question">How to change password?</string>
+    <string name="faq4_answer">Go to Account &gt; Change Password to update your new password.</string>
+    <string name="faq5_question">How to contact support?</string>
+    <string name="faq5_answer">Use the Feedback button or Chat with AI to contact.</string>
+    <string name="faq6_question">How to add expenses?</string>
+    <string name="faq6_answer">Chat with AI in natural language to add expenses quickly.</string>
+    <string name="faq7_question">How to edit or delete expenses?</string>
+    <string name="faq7_answer">Chat with AI to edit or delete expenses in natural language.</string>
+    <string name="faq8_question">How to edit budget?</string>
+    <string name="faq8_answer">You can use AI chat to edit or delete budgets conveniently.</string>
+    <string name="faq9_question">How to use Chat with AI?</string>
+    <string name="faq9_answer">Tap the \'AI\' button on the menu to open the chat frame. You can use natural language to set up, add, edit, delete expenses and budgets. For example: \'Add 50k expense for food today\' or \'Create 2 million budget for this month\'. AI will help you perform operations easily and quickly.</string>
+
+    <!-- Action buttons -->
+    <string name="chat_with_ai_button">Chat with AI</string>
+    <string name="feedback_button">Feedback</string>
+    <string name="back_button">Back</string>
+
+    <!-- AI Chat -->
+    <string name="ai_assistant_title">AI Assistant</string>
+    <string name="ai_status_active">Active</string>
+    <string name="ai_input_hint">Type a message or hold AI button to speak...</string>
+
+    <!-- Register -->
+    <string name="register_title">Create New Account</string>
+    <string name="register_subtitle">Start smart expense management</string>
+    <string name="register_button">Register Account</string>
+    <string name="register_terms">By registering, you agree to our Terms of Use and Privacy Policy.</string>
+    <string name="create_account_button">Create Account</string>
+    <string name="or_text"> or </string>
+    <string name="login_link_text">Already have an account? Sign In</string>
+</resources>

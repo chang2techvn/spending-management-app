@@ -22,10 +22,12 @@ import androidx.navigation.Navigation;
 
 import com.example.spending_management_app.R;
 import com.example.spending_management_app.databinding.ActivityMainBinding;
-import com.example.spending_management_app.presentation.dialog.AiChatBottomSheet;
+import com.example.spending_management_app.utils.LocaleHelper;
+import android.content.Context;
 import com.example.spending_management_app.utils.SessionManager;
 import com.example.spending_management_app.data.local.entity.UserEntity;
 import com.bumptech.glide.Glide;
+import com.example.spending_management_app.presentation.dialog.AiChatBottomSheet;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -44,6 +46,9 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        // Set app language before setting content view
+        LocaleHelper.setLocale(this, LocaleHelper.getLanguage(this));
+
         super.onCreate(savedInstanceState);
 
         // Check authentication first
@@ -100,6 +105,13 @@ public class MainActivity extends AppCompatActivity {
         greetingUpdateHandler.post(greetingUpdateRunnable);
     }
 
+    @Override
+    protected void attachBaseContext(Context newBase) {
+        // Wrap base context with configured locale so inflation uses correct resources
+        Context context = LocaleHelper.updateContextLocale(newBase, LocaleHelper.getLanguage(newBase));
+        super.attachBaseContext(context);
+    }
+
     private void loadUserAvatar() {
         if (sessionManager == null) return;
         UserEntity currentUser = sessionManager.getUserData();
@@ -128,13 +140,13 @@ public class MainActivity extends AppCompatActivity {
         Calendar calendar = Calendar.getInstance();
         int hour = calendar.get(Calendar.HOUR_OF_DAY);
         if (hour >= 5 && hour < 12) {
-            return "Chào buổi sáng";
+            return getString(R.string.greeting_morning);
         } else if (hour >= 12 && hour < 18) {
-            return "Chào buổi chiều";
+            return getString(R.string.greeting_afternoon);
         } else if (hour >= 18 && hour < 22) {
-            return "Chào buổi tối";
+            return getString(R.string.greeting_evening);
         } else {
-            return "Chào buổi đêm";
+            return getString(R.string.greeting_night);
         }
     }
 

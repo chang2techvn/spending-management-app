@@ -26,7 +26,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Trang chủ"
+            android:text="@string/nav_home"
             android:textColor="@color/nav_item_color"
             android:textSize="10sp" />
     </LinearLayout>
@@ -50,7 +50,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Thống kê"
+            android:text="@string/nav_statistics"
             android:textColor="@color/nav_item_color"
             android:textSize="10sp" />
     </LinearLayout>
@@ -87,7 +87,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="AI"
+                    android:text="@string/nav_ai"
                     android:textColor="@android:color/white"
                     android:textSize="8sp" />
             </LinearLayout>
@@ -113,7 +113,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Lịch sử"
+            android:text="@string/nav_history"
             android:textColor="@color/nav_item_color"
             android:textSize="10sp" />
     </LinearLayout>
@@ -137,7 +137,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Tài khoản"
+            android:text="@string/nav_account"
             android:textColor="@color/nav_item_color"
             android:textSize="10sp" />
     </LinearLayout>
