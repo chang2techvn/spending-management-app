@@ -371,7 +371,7 @@ public class HistoryFragment extends Fragment implements DateRangePickerDialog.D
     // Helper method to get appropriate icon for category
     private String getIconForCategory(String category, String type) {
         if ("income".equals(type)) {
-            return "ic_home_black_24dp";
+            return "ic_home";
         }
         // For non-income types, use centralized CategoryUtils so localization updates reflect immediately
         String localized = CategoryUtils.getLocalizedCategoryName(getContext(), category);

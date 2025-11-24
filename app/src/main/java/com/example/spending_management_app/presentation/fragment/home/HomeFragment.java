@@ -606,7 +606,7 @@ public class HomeFragment extends Fragment {
     // Helper method to get appropriate icon for category
     private String getIconForCategory(String category, String type) {
         if ("income".equals(type)) {
-            return "ic_home_black_24dp";
+            return "ic_home";
         }
         String localized = CategoryUtils.getLocalizedCategoryName(getContext(), category);
         // Keep "income" behavior; for others return emoji/icon from CategoryUtils
