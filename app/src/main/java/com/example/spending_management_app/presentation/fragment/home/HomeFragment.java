@@ -278,6 +278,7 @@ public class HomeFragment extends Fragment {
     }
 
     private void loadCategorySpendingFromDatabase() {
+        android.util.Log.d("HomeFragment", "=== loadCategorySpendingFromDatabase START ===");
         Executors.newSingleThreadExecutor().execute(() -> {
             try {
                 // Calculate month range
@@ -296,10 +297,18 @@ public class HomeFragment extends Fragment {
                 cal.set(Calendar.MILLISECOND, 999);
                 Date endOfMonth = cal.getTime();
                 
+                android.util.Log.d("HomeFragment", "Loading category spending for month: " + startOfMonth + " to " + endOfMonth);
+                
                 // Get all transactions for this month by category
                 List<TransactionEntity> allTransactions = AppDatabase.getInstance(getContext())
                         .transactionDao()
                         .getTransactionsByDateRange(startOfMonth, endOfMonth);
+                
+                android.util.Log.d("HomeFragment", "Found " + allTransactions.size() + " transactions in current month");
+                for (TransactionEntity transaction : allTransactions) {
+                    android.util.Log.d("HomeFragment", "Transaction: " + transaction.description + 
+                            " - " + transaction.category + " - " + transaction.amount + " - " + transaction.date);
+                }
                 
                 // Get all category budgets for this month
                 List<CategoryBudgetEntity> categoryBudgets =
@@ -391,6 +400,7 @@ public class HomeFragment extends Fragment {
                 // Update UI on main thread
                 if (getActivity() != null) {
                     getActivity().runOnUiThread(() -> {
+                        android.util.Log.d("HomeFragment", "Updating UI with " + allCategoryData.size() + " categories");
                         updateCategoryUI(allCategoryData, finalTotalCategorySpending);
                     });
                 }
@@ -399,10 +409,12 @@ public class HomeFragment extends Fragment {
                 android.util.Log.e("HomeFragment", "Error loading category spending", e);
             }
         });
+        android.util.Log.d("HomeFragment", "=== loadCategorySpendingFromDatabase END ===");
     }
     
     private void updateCategoryUI(List<?> allCategories, long totalSpending) {
-        android.util.Log.d("HomeFragment", "updateCategoryUI called with " + allCategories.size() + " categories");
+        android.util.Log.d("HomeFragment", "=== updateCategoryUI START ===");
+        android.util.Log.d("HomeFragment", "updateCategoryUI called with " + allCategories.size() + " categories, totalSpending=" + totalSpending);
         
         // Clear existing category views (except the title)
         ViewGroup container = binding.categoriesContainer;
@@ -448,6 +460,7 @@ public class HomeFragment extends Fragment {
         }
         
         android.util.Log.d("HomeFragment", "Total views in container: " + container.getChildCount());
+        android.util.Log.d("HomeFragment", "=== updateCategoryUI END ===");
     }
     
     private View createCategoryView(String category, long spending, long budget, long totalSpending) {

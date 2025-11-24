@@ -13,5 +13,7 @@ public interface ExpenseRepository {
     void delete(TransactionEntity transaction);
     TransactionEntity getTransactionById(int id);
     List<TransactionEntity> getTransactionsByDateRange(Date startDate, Date endDate);
+    List<TransactionEntity> getTransactionsByDate(Date date);
     List<TransactionEntity> getRecentTransactions(int limit);
+    List<TransactionEntity> getAllTransactions();
 }

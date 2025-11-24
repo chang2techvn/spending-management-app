@@ -61,6 +61,25 @@ public class RequestRouterUseCase {
         boolean isCategoryBudgetMode = args != null && "category_budget_management".equals(args.getString("mode"));
         boolean isExpenseBulkMode = args != null && "expense_bulk_management".equals(args.getString("mode"));
 
+        // Also check if this is an expense bulk request based on text content
+        // Even if mode is not set, detect expense bulk operations from text
+        if (!isExpenseBulkMode) {
+            String lowerText = text.toLowerCase();
+            // Check for expense bulk keywords
+            if (lowerText.contains("xóa") || lowerText.contains("xoá") || lowerText.contains("xoa") ||
+                lowerText.contains("thêm chi tiêu") || lowerText.contains("them chi tieu") ||
+                lowerText.contains("chi tiêu") || lowerText.contains("chi tieu")) {
+                // Check if it looks like a bulk operation (contains amounts, dates, or multiple items)
+                if (lowerText.contains("ngày") || lowerText.contains("hôm") || lowerText.contains("tháng") ||
+                    lowerText.contains("tất cả") || lowerText.contains("tat ca") ||
+                    lowerText.matches(".*\\d+.*k.*") || lowerText.matches(".*\\d+.*000.*") ||
+                    lowerText.contains("và") || lowerText.contains("cả")) {
+                    isExpenseBulkMode = true;
+                    android.util.Log.d("RequestRouterUseCase", "Detected expense bulk request from text content: " + text);
+                }
+            }
+        }
+
         // If offline, try to handle with regex first
         if (!isOnline) {
             boolean handled = callback.handleOfflineRequest(text, isBudgetMode, isCategoryBudgetMode, isExpenseBulkMode);

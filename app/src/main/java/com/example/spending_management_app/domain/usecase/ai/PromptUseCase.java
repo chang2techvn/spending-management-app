@@ -7,6 +7,10 @@ import android.util.Log;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.spending_management_app.BuildConfig;
+import com.example.spending_management_app.domain.usecase.expense.ExpenseBulkUseCase;
+import com.example.spending_management_app.domain.repository.ExpenseRepository;
+import com.example.spending_management_app.data.local.database.AppDatabase;
+import com.example.spending_management_app.data.repository.ExpenseRepositoryImpl;
 import com.example.spending_management_app.domain.usecase.expense.ExpenseUseCase;
 import com.example.spending_management_app.presentation.dialog.AiChatBottomSheet;
 import com.example.spending_management_app.utils.ExtractorHelper;
@@ -44,6 +48,14 @@ public class PromptUseCase {
     public void sendPromptToAI(String text, Activity activity, List<AiChatBottomSheet.ChatMessage> messages,
                                AiChatBottomSheet.ChatAdapter chatAdapter, RecyclerView messagesRecycler,
                                TextToSpeech textToSpeech, Runnable updateNetworkStatusCallback) {
+
+        // Check if this is a delete request - handle locally instead of sending to AI
+        if (isDeleteRequest(text)) {
+            android.util.Log.d("PromptService", "Detected delete request, routing to ExpenseBulkUseCase");
+            handleDeleteRequestLocally(text, activity, messages, chatAdapter, messagesRecycler, updateNetworkStatusCallback);
+            return;
+        }
+
         // Add temporary "Đang phân tích..." message
         int analyzingIndex = messages.size();
         messages.add(new AiChatBottomSheet.ChatMessage("Đang phân tích...", false, "Bây giờ"));
@@ -218,5 +230,47 @@ public class PromptUseCase {
             messages.set(analyzingIndex, new AiChatBottomSheet.ChatMessage("Lỗi gửi tin nhắn.", false, "Bây giờ"));
             chatAdapter.notifyItemChanged(analyzingIndex);
         }
+    }
+
+    /**
+     * Check if the user input is a delete request
+     */
+    private boolean isDeleteRequest(String text) {
+        String lowerText = text.toLowerCase();
+        return lowerText.contains("xóa") || lowerText.contains("xoá") || lowerText.contains("xoa") ||
+               lowerText.contains("delete") || lowerText.contains("remove");
+    }
+
+    /**
+     * Handle delete requests locally using ExpenseBulkUseCase
+     */
+    private void handleDeleteRequestLocally(String text, Activity activity, List<AiChatBottomSheet.ChatMessage> messages,
+                                           AiChatBottomSheet.ChatAdapter chatAdapter, RecyclerView messagesRecycler,
+                                           Runnable updateNetworkStatusCallback) {
+
+        android.util.Log.d("PromptService", "Handling delete request locally: " + text);
+
+        // Initialize ExpenseBulkUseCase with proper context
+        AppDatabase appDatabase = AppDatabase.getInstance(activity.getApplicationContext());
+        ExpenseRepository expenseRepository = new ExpenseRepositoryImpl(appDatabase);
+        ExpenseBulkUseCase bulkUseCase = new ExpenseBulkUseCase(expenseRepository);
+
+        // Create refresh callbacks
+        Runnable refreshHomeFragment = () -> {
+            // This will be called by ExpenseBulkUseCase
+            android.util.Log.d("PromptService", "Refresh home fragment called");
+        };
+
+        Runnable refreshExpenseWelcomeMessage = () -> {
+            // This will be called by ExpenseBulkUseCase
+            android.util.Log.d("PromptService", "Refresh expense welcome message called");
+        };
+
+        // Call ExpenseBulkUseCase to handle the delete request
+        bulkUseCase.handleExpenseBulkRequest(text, activity.getApplicationContext(), activity, messages,
+                                           chatAdapter, messagesRecycler, refreshHomeFragment, refreshExpenseWelcomeMessage);
+
+        // Update network status
+        updateNetworkStatusCallback.run();
     }
 }
