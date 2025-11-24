@@ -182,7 +182,20 @@ public class HomeFragment extends Fragment {
     private void loadRecentTransactionsFromDatabase() {
         // Initialize empty list first
         transactions = new ArrayList<>();
-        
+
+        // Show skeleton loading
+        if (transactionAdapter == null) {
+            transactionAdapter = new TransactionAdapter(transactions);
+            binding.recentTransactionsRecycler.setLayoutManager(new LinearLayoutManager(getContext()));
+            binding.recentTransactionsRecycler.setAdapter(transactionAdapter);
+
+            // Setup view all transactions click
+            binding.viewAllTransactions.setOnClickListener(v -> {
+                Navigation.findNavController(v).navigate(R.id.navigation_history);
+            });
+        }
+        transactionAdapter.setLoading(true);
+
         // Load data from database in background thread
         Executors.newSingleThreadExecutor().execute(() -> {
             try {
@@ -215,26 +228,13 @@ public class HomeFragment extends Fragment {
                             android.util.Log.w("HomeFragment", "Fragment not added or context null, skipping UI update");
                             return;
                         }
-                        
+
                         transactions.clear();
                         transactions.addAll(recentTransactions);
-                        
-                        // Setup RecyclerView if not done yet
-                        if (transactionAdapter == null) {
-                            transactionAdapter = new TransactionAdapter(transactions);
-                            binding.recentTransactionsRecycler.setLayoutManager(new LinearLayoutManager(getContext()));
-                            binding.recentTransactionsRecycler.setAdapter(transactionAdapter);
-                            
-                            // Setup view all transactions click
-                            binding.viewAllTransactions.setOnClickListener(v -> {
-                                Navigation.findNavController(v).navigate(R.id.navigation_history);
-                            });
-                            android.util.Log.d("HomeFragment", "Created new adapter with " + recentTransactions.size() + " transactions");
-                        } else {
-                            // Update adapter data and notify
-                            transactionAdapter.updateTransactions(recentTransactions);
-                            android.util.Log.d("HomeFragment", "Updated adapter with " + recentTransactions.size() + " transactions");
-                        }
+
+                        // Update adapter data and notify
+                        transactionAdapter.updateTransactions(recentTransactions);
+                        android.util.Log.d("HomeFragment", "Created new adapter with " + recentTransactions.size() + " transactions");
                     });
                 }
                 
@@ -261,15 +261,19 @@ public class HomeFragment extends Fragment {
         transactions.add(new Transaction("Lương tháng 10", "Ngân sách", 8000000, "ic_home_black_24dp", new Date(), "income"));
 
         // Setup RecyclerView
-        transactionAdapter = new TransactionAdapter(transactions);
-        binding.recentTransactionsRecycler.setLayoutManager(new LinearLayoutManager(getContext()));
-        binding.recentTransactionsRecycler.setAdapter(transactionAdapter);
+        if (transactionAdapter == null) {
+            transactionAdapter = new TransactionAdapter(transactions);
+            binding.recentTransactionsRecycler.setLayoutManager(new LinearLayoutManager(getContext()));
+            binding.recentTransactionsRecycler.setAdapter(transactionAdapter);
 
-        // Setup view all transactions click
-        binding.viewAllTransactions.setOnClickListener(v -> {
-            Navigation.findNavController(v).navigate(R.id.navigation_history);
-        });
-        
+            // Setup view all transactions click
+            binding.viewAllTransactions.setOnClickListener(v -> {
+                Navigation.findNavController(v).navigate(R.id.navigation_history);
+            });
+        } else {
+            transactionAdapter.updateTransactions(transactions);
+        }
+
         android.util.Log.d("HomeFragment", "Sample recent transactions loaded with " + transactions.size() + " items");
     }
 

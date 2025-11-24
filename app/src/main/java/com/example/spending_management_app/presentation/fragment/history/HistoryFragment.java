@@ -68,7 +68,12 @@ public class HistoryFragment extends Fragment implements DateRangePickerDialog.D
         // Initialize empty lists first
         allTransactions = new ArrayList<>();
         filteredTransactions = new ArrayList<>();
-        
+
+        // Show skeleton loading
+        if (transactionAdapter != null) {
+            transactionAdapter.setLoading(true);
+        }
+
         // Load data from database in background thread
         Executors.newSingleThreadExecutor().execute(() -> {
             try {
@@ -142,7 +147,7 @@ public class HistoryFragment extends Fragment implements DateRangePickerDialog.D
                         filteredTransactions.clear();
                         filteredTransactions.addAll(allTransactions);
                         
-                        // Refresh adapter
+                        // Update adapter with loaded data (this will hide skeleton)
                         if (transactionAdapter != null) {
                             transactionAdapter.updateTransactions(filteredTransactions);
                         }
@@ -194,6 +199,12 @@ public class HistoryFragment extends Fragment implements DateRangePickerDialog.D
 
         filteredTransactions = new ArrayList<>(allTransactions);
         
+        // Update adapter with sample data
+        if (transactionAdapter != null) {
+            transactionAdapter.updateTransactions(filteredTransactions);
+        }
+        updateEmptyState();
+        
         android.util.Log.d("HistoryFragment", "Sample data loaded with " + allTransactions.size() + " transactions");
     }
 
@@ -218,7 +229,8 @@ public class HistoryFragment extends Fragment implements DateRangePickerDialog.D
     }
 
     private void setupRecyclerView() {
-        transactionAdapter = new SectionedTransactionAdapter(filteredTransactions);
+        transactionAdapter = new SectionedTransactionAdapter(new ArrayList<>()); // Start with empty list
+        // Don't set loading here - loadTransactionsFromDatabase() will handle it
         binding.transactionsRecycler.setLayoutManager(new LinearLayoutManager(getContext()));
         binding.transactionsRecycler.setAdapter(transactionAdapter);
 
