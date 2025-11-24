@@ -38,7 +38,7 @@
     <string name="lastname_hint">Nhập họ của bạn</string>
     <string name="email_hint">Nhập địa chỉ email hoặc số điện thoại</string>
     <string name="confirmPassword_hint">Xác nhận mật khẩu</string>
-    <string name="signupSuggest_text">Đã có tài khoản?</string>
+    <string name="signupSuggest_text">Chưa có tài khoản?</string>
     <string name="title_remember">Ghi nhớ đăng nhập</string>
     <string name="forgotPassword_text">Quên mật khẩu?</string>
 
@@ -263,7 +263,7 @@
     <string name="register_terms">Bằng việc đăng ký, bạn đồng ý với Điều khoản sử dụng và Chính sách bảo mật của chúng tôi.</string>
     <string name="create_account_button">Tạo tài khoản</string>
     <string name="or_text"> hoặc </string>
-    <string name="login_link_text">Đã có tài khoản? Đăng nhập</string>
+    <string name="login_link_text">Chưa có tài khoản? Đăng nhập</string>
     <string name="budget_category">💰 Ngân sách</string>
     <string name="loading">Đang tải...</string>
     <string name="loading_budget_info">Đang tải thông tin ngân sách...</string>

@@ -367,8 +367,14 @@ public class AccountFragment extends Fragment {
             getActivity().finish();
         });
 
-        builder.setNegativeButton("Hủy", null);
-        builder.show();
+        builder.setNegativeButton(getString(R.string.cancel), (dialog, which) -> dialog.dismiss());
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
+
+        // Ensure buttons are visible by setting explicit layout params if needed
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(ContextCompat.getColor(getContext(), R.color.expense_color));
+        dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(ContextCompat.getColor(getContext(), R.color.text_secondary));
     }
 
     @Override

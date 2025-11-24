@@ -38,7 +38,7 @@
     <string name="lastname_hint">Enter your last name</string>
     <string name="email_hint">Enter email address or phone number</string>
     <string name="confirmPassword_hint">Confirm password</string>
-    <string name="signupSuggest_text">Already have an account?</string>
+    <string name="signupSuggest_text">Don\'t have an account?</string>
     <string name="title_remember">Remember login</string>
     <string name="forgotPassword_text">Forgot password?</string>
 

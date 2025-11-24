@@ -141,7 +141,7 @@
                     <ImageView
                         android:layout_width="32dp"
                         android:layout_height="32dp"
-                        android:src="@drawable/ic_budget"
+                        android:src="@drawable/ic_add_budget"
                         app:tint="#4CAF50" />
 
                     <TextView
