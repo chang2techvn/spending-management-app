@@ -25,6 +25,11 @@ public class ExpenseRepositoryImpl implements ExpenseRepository {
     }
 
     @Override
+    public void update(TransactionEntity transaction) {
+        appDatabase.transactionDao().update(transaction);
+    }
+
+    @Override
     public void delete(TransactionEntity transaction) {
         appDatabase.transactionDao().delete(transaction);
     }

@@ -66,12 +66,13 @@ public class ExpenseBulkUseCase {
                         "💡 Hướng dẫn:\n" +
                         "• Thêm: 'Hôm qua ăn sáng 25k và cafe 30k'\n" +
                         "• Xóa theo tên: 'Xóa cafe' hoặc 'Xóa ăn sáng'\n" +
-                        "• Xóa theo ngày: 'Xóa hôm qua' hoặc 'Xóa ngày 15/11'\n" +
-                        "• Xóa theo tháng: 'Xóa tháng này' hoặc 'Xóa tháng 10/2024'\n" +
+                        "• Xóa theo ngày: 'Xóa hôm nay', 'Xóa hôm qua', 'Xóa hôm kia', 'Xóa ngày 15/11'\n" +
+                        "• Xóa theo tháng: 'Xóa tháng này', 'Xóa tháng trước', 'Xóa tháng sau', 'Xóa tháng 10/2024'\n" +
+                        "• Xóa theo năm: 'Xóa năm này', 'Xóa năm trước', 'Xóa năm sau', 'Xóa năm 2024'\n" +
+                        "• Sửa số tiền: 'Sửa cafe hôm nay thành 50k', 'Thay đổi ăn sáng ngày 11/2 thành 30k'\n" +
                         "• Xóa tất cả ngày: 'Xóa tất cả hôm qua'\n" +
-                        "• Xóa theo ID: 'Xóa chi tiêu #123'\n" +
-                        "• Sửa: 'Sửa chi tiêu #123' (đang phát triển)\n\n" +
-                        "📅 Có thể thêm/sửa/xóa chi tiêu ở quá khứ, hiện tại và tương lai!",
+                        "• Xóa theo ID: 'Xóa chi tiêu #123'\n\n" +
+                        "📅 Hỗ trợ đầy đủ ngày/tháng/năm ở quá khứ, hiện tại và tương lai!",
                         false, "Bây giờ"));
                 chatAdapter.notifyItemChanged(analyzingIndex);
             });
@@ -79,7 +80,7 @@ public class ExpenseBulkUseCase {
         }
 
         // Process all operations
-        processExpenseOperations(operations, analyzingIndex, context, activity, messages, chatAdapter, messagesRecycler, refreshHomeFragment, refreshExpenseWelcomeMessage);
+        processExpenseOperations(operations, analyzingIndex, context, activity, messages, chatAdapter, messagesRecycler, refreshHomeFragment, refreshExpenseWelcomeMessage, text);
 
         android.util.Log.d("ExpenseBulkService", "=== handleExpenseBulkRequest END ===");
     }
@@ -123,6 +124,17 @@ public class ExpenseBulkUseCase {
             this.amount = 0;
             this.date = new Date();
         }
+
+        // New constructor for edit operations with new amount
+        ExpenseOperation(String type, String identifier, long newAmount) {
+            this.type = type;
+            this.identifier = identifier;
+            this.transactionId = -1;
+            this.description = "";
+            this.category = "";
+            this.amount = newAmount; // New amount for edit
+            this.date = new Date();
+        }
     }
 
     private static List<ExpenseOperation> parseMultipleExpenseOperations(String text) {
@@ -159,28 +171,54 @@ public class ExpenseBulkUseCase {
                 android.util.Log.d("ExpenseBulkService", "Found ID pattern: " + transactionId);
             }
 
-            // If no ID found, try to extract date or month for bulk operations
+            // If no ID found, try to extract date, month, or year for bulk operations
             if (operations.isEmpty()) {
-                android.util.Log.d("ExpenseBulkService", "No ID found, trying to extract date/month");
+                android.util.Log.d("ExpenseBulkService", "No ID found, trying to extract date/month/year");
 
-                // First check if text contains month-related keywords
-                boolean hasMonthKeywords = lowerText.contains("tháng") || lowerText.contains("thang");
-                android.util.Log.d("ExpenseBulkService", "Has month keywords: " + hasMonthKeywords);
+                // Priority order: year -> month -> date (most specific to least specific)
+                // This prevents "tháng này" from being interpreted as "ngày này"
 
-                if (hasMonthKeywords) {
-                    // Try to extract month/year
-                    int[] monthYear = DateParser.extractMonthYear(lowerText);
-                    android.util.Log.d("ExpenseBulkService", "DateParser.extractMonthYear result: " + monthYear[0] + "/" + monthYear[1]);
+                // First check if text contains year-related keywords
+                boolean hasYearKeywords = lowerText.contains("năm") || lowerText.contains("nam");
+                android.util.Log.d("ExpenseBulkService", "Has year keywords: " + hasYearKeywords);
 
-                    if (monthYear != null && monthYear.length == 2) {
-                        android.util.Log.d("ExpenseBulkService", "Valid month/year extracted: " + monthYear[0] + "/" + monthYear[1]);
+                if (hasYearKeywords) {
+                    // Try to extract year
+                    int year = DateParser.extractYear(lowerText);
+                    android.util.Log.d("ExpenseBulkService", "DateParser.extractYear result: " + year);
 
-                        // Allow operations on any month (past, present, future)
-                        // Add operation with month-year
-                        operations.add(new ExpenseOperation(operationType, "month:" + monthYear[0] + "-" + monthYear[1]));
-                        android.util.Log.d("ExpenseBulkService", "Created month operation: month:" + monthYear[0] + "-" + monthYear[1]);
+                    if (year > 0) {
+                        android.util.Log.d("ExpenseBulkService", "Valid year extracted: " + year);
+
+                        // Allow operations on any year (past, present, future)
+                        // Add operation with year
+                        operations.add(new ExpenseOperation(operationType, "year:" + year));
+                        android.util.Log.d("ExpenseBulkService", "Created year operation: year:" + year);
                     } else {
-                        android.util.Log.d("ExpenseBulkService", "No valid month/year extracted");
+                        android.util.Log.d("ExpenseBulkService", "No valid year extracted");
+                    }
+                }
+
+                // If no year found or no year keywords, check for month keywords
+                if (operations.isEmpty()) {
+                    boolean hasMonthKeywords = lowerText.contains("tháng") || lowerText.contains("thang");
+                    android.util.Log.d("ExpenseBulkService", "Has month keywords: " + hasMonthKeywords);
+
+                    if (hasMonthKeywords) {
+                        // Try to extract month/year
+                        int[] monthYear = DateParser.extractMonthYear(lowerText);
+                        android.util.Log.d("ExpenseBulkService", "DateParser.extractMonthYear result: " + monthYear[0] + "/" + monthYear[1]);
+
+                        if (monthYear != null && monthYear.length == 2) {
+                            android.util.Log.d("ExpenseBulkService", "Valid month/year extracted: " + monthYear[0] + "/" + monthYear[1]);
+
+                            // Allow operations on any month (past, present, future)
+                            // Add operation with month-year
+                            operations.add(new ExpenseOperation(operationType, "month:" + monthYear[0] + "-" + monthYear[1]));
+                            android.util.Log.d("ExpenseBulkService", "Created month operation: month:" + monthYear[0] + "-" + monthYear[1]);
+                        } else {
+                            android.util.Log.d("ExpenseBulkService", "No valid month/year extracted");
+                        }
                     }
                 }
 
@@ -199,6 +237,22 @@ public class ExpenseBulkUseCase {
                     } else {
                         android.util.Log.d("ExpenseBulkService", "No valid date extracted");
                     }
+                }
+            }
+
+            // For edit operations, try to extract new amount
+            if (operationType.equals("edit") && !operations.isEmpty()) {
+                android.util.Log.d("ExpenseBulkService", "Processing edit operation - trying to extract new amount");
+
+                // Extract new amount from text (look for patterns like "thành 50k", "là 30k", etc.)
+                long newAmount = BudgetAmountParser.extractBudgetAmount(text);
+                android.util.Log.d("ExpenseBulkService", "Extracted new amount for edit: " + newAmount);
+
+                if (newAmount > 0) {
+                    // Update the last operation with new amount
+                    ExpenseOperation lastOp = operations.get(operations.size() - 1);
+                    operations.set(operations.size() - 1, new ExpenseOperation(lastOp.type, lastOp.identifier, newAmount));
+                    android.util.Log.d("ExpenseBulkService", "Updated edit operation with new amount: " + newAmount);
                 }
             }
 
@@ -392,7 +446,7 @@ public class ExpenseBulkUseCase {
     private void processExpenseOperations(List<ExpenseOperation> operations, int analyzingIndex,
             Context context, android.app.Activity activity, List<AiChatBottomSheet.ChatMessage> messages,
             AiChatBottomSheet.ChatAdapter chatAdapter, androidx.recyclerview.widget.RecyclerView messagesRecycler,
-            Runnable refreshHomeFragment, Runnable refreshExpenseWelcomeMessage) {
+            Runnable refreshHomeFragment, Runnable refreshExpenseWelcomeMessage, String text) {
 
         android.util.Log.d("ExpenseBulkService", "=== processExpenseOperations START ===");
         android.util.Log.d("ExpenseBulkService", "Operations to process: " + operations.size());
@@ -499,6 +553,44 @@ public class ExpenseBulkUseCase {
                                     counts[1]++;
                                     android.util.Log.d("ExpenseBulkService", "No transactions found in month");
                                 }
+                            } else if (op.identifier.startsWith("year:")) {
+                                // Delete all transactions in a specific year
+                                int year = Integer.parseInt(op.identifier.substring(5)); // Remove "year:"
+                                android.util.Log.d("ExpenseBulkService", "Deleting all transactions in year: " + year);
+
+                                // Calculate start and end dates of the year
+                                Calendar cal = Calendar.getInstance();
+                                cal.set(year, 0, 1, 0, 0, 0); // January 1st
+                                cal.set(Calendar.MILLISECOND, 0);
+                                Date startOfYear = cal.getTime();
+
+                                cal.set(year, 11, 31, 23, 59, 59); // December 31st
+                                cal.set(Calendar.MILLISECOND, 999);
+                                Date endOfYear = cal.getTime();
+
+                                android.util.Log.d("ExpenseBulkService", "Year range: " + startOfYear + " to " + endOfYear);
+
+                                List<TransactionEntity> transactionsInYear = expenseRepository.getTransactionsByDateRange(startOfYear, endOfYear);
+                                android.util.Log.d("ExpenseBulkService", "Found " + transactionsInYear.size() + " transactions in year");
+                                if (!transactionsInYear.isEmpty()) {
+                                    int deletedCount = 0;
+                                    for (TransactionEntity transaction : transactionsInYear) {
+                                        android.util.Log.d("ExpenseBulkService", "Deleting transaction: " + transaction.description);
+                                        expenseRepository.delete(transaction);
+                                        deletedCount++;
+                                    }
+                                    resultMessage.append("✅ Xóa ").append(deletedCount).append(" chi tiêu năm ")
+                                            .append(year)
+                                            .append("\n");
+                                    counts[0] += deletedCount;
+                                    android.util.Log.d("ExpenseBulkService", "Successfully deleted " + deletedCount + " transactions in year");
+                                } else {
+                                    resultMessage.append("⚠️ Không có chi tiêu nào năm ")
+                                            .append(year)
+                                            .append("\n");
+                                    counts[1]++;
+                                    android.util.Log.d("ExpenseBulkService", "No transactions found in year");
+                                }
                             } else if (op.identifier.startsWith("desc:")) {
                                 // Delete by description (find most recent matching transaction)
                                 String searchDesc = op.identifier.substring(5).toLowerCase();
@@ -536,7 +628,7 @@ public class ExpenseBulkUseCase {
 
                         } else if (op.type.equals("edit")) {
                             android.util.Log.d("ExpenseBulkService", "Processing edit operation");
-                            processEditOperation(op, resultMessage, counts, context);
+                            processEditOperation(op, resultMessage, counts, context, text);
                         } else if (op.type.equals("add")) {
                             android.util.Log.d("ExpenseBulkService", "Processing add operation: " + op.description);
                             // Add new transaction
@@ -626,7 +718,7 @@ public class ExpenseBulkUseCase {
         android.util.Log.d("ExpenseBulkService", "=== processExpenseOperations END ===");
     }
 
-    private void processEditOperation(ExpenseOperation op, StringBuilder resultMessage, int[] counts, Context context) {
+    private void processEditOperation(ExpenseOperation op, StringBuilder resultMessage, int[] counts, Context context, String text) {
         android.util.Log.d("ExpenseBulkService", "=== processEditOperation START ===");
         android.util.Log.d("ExpenseBulkService", "Edit operation identifier: " + op.identifier);
 
@@ -681,6 +773,31 @@ public class ExpenseBulkUseCase {
                         }
                     }
                 }
+            } else if (op.identifier.startsWith("year:")) {
+                // Edit most recent transaction in year
+                int year = Integer.parseInt(op.identifier.substring(5)); // Remove "year:"
+                android.util.Log.d("ExpenseBulkService", "Editing most recent transaction in year: " + year);
+
+                // Calculate start and end dates of the year
+                Calendar cal = Calendar.getInstance();
+                cal.set(year, 0, 1, 0, 0, 0); // January 1st
+                cal.set(Calendar.MILLISECOND, 0);
+                Date startOfYear = cal.getTime();
+
+                cal.set(year, 11, 31, 23, 59, 59); // December 31st
+                cal.set(Calendar.MILLISECOND, 999);
+                Date endOfYear = cal.getTime();
+
+                List<TransactionEntity> transactionsInYear = expenseRepository.getTransactionsByDateRange(startOfYear, endOfYear);
+                if (!transactionsInYear.isEmpty()) {
+                    // Get most recent transaction
+                    transactionToEdit = transactionsInYear.get(0);
+                    for (TransactionEntity t : transactionsInYear) {
+                        if (t.date.after(transactionToEdit.date)) {
+                            transactionToEdit = t;
+                        }
+                    }
+                }
             } else if (op.identifier.startsWith("desc:")) {
                 // Edit by description (find most recent matching transaction)
                 String searchDesc = op.identifier.substring(5).toLowerCase();
@@ -691,6 +808,36 @@ public class ExpenseBulkUseCase {
                         transactionToEdit = transaction;
                         android.util.Log.d("ExpenseBulkService", "Found matching transaction: " + transaction.description);
                         break; // Take the first (most recent) match
+                    }
+                }
+            } else {
+                // Try to find by description and date from the original text
+                // This handles cases like "sửa cafe hôm nay thành 50k"
+                android.util.Log.d("ExpenseBulkService", "Trying to find by description and date from original text");
+
+                String originalText = text.toLowerCase();
+                String description = "";
+                Date targetDate = null;
+
+                // Extract description (remove edit keywords and amounts)
+                description = originalText.replaceAll("(sửa|thay đổi|cập nhật|thành|là|được|đổi|chỉnh)", "").trim();
+
+                // Try to extract date from original text
+                targetDate = DateParser.extractDateFromText(text);
+
+                android.util.Log.d("ExpenseBulkService", "Extracted description: " + description + ", date: " + targetDate);
+
+                if (!description.isEmpty() && targetDate != null) {
+                    // Find transactions on the target date that match the description
+                    List<TransactionEntity> transactionsOnDate = expenseRepository.getTransactionsByDate(targetDate);
+                    android.util.Log.d("ExpenseBulkService", "Found " + transactionsOnDate.size() + " transactions on date");
+
+                    for (TransactionEntity transaction : transactionsOnDate) {
+                        if (transaction.description.toLowerCase().contains(description.toLowerCase())) {
+                            transactionToEdit = transaction;
+                            android.util.Log.d("ExpenseBulkService", "Found matching transaction by desc+date: " + transaction.description);
+                            break; // Take the first match
+                        }
                     }
                 }
             }
@@ -704,11 +851,34 @@ public class ExpenseBulkUseCase {
 
             android.util.Log.d("ExpenseBulkService", "Found transaction to edit: " + transactionToEdit.description);
 
-            // For now, edit operations are not fully parsed from text
-            // This is a placeholder - in future versions, we could parse new values from text
-            resultMessage.append("⚠️ Chức năng sửa chi tiết chưa được hỗ trợ. Vui lòng xóa và thêm lại với thông tin mới.\n");
-            counts[1]++;
-            android.util.Log.d("ExpenseBulkService", "Edit operation not fully implemented - placeholder response");
+            // Check if we have a new amount to update
+            if (op.amount > 0) {
+                android.util.Log.d("ExpenseBulkService", "Updating transaction amount from " + transactionToEdit.amount + " to " + (-Math.abs(op.amount)));
+
+                // Update the transaction with new amount (expense is negative)
+                TransactionEntity updatedTransaction = new TransactionEntity(
+                        transactionToEdit.description,
+                        transactionToEdit.category,
+                        -Math.abs(op.amount), // Ensure it's negative for expense
+                        transactionToEdit.date,
+                        transactionToEdit.type
+                );
+                updatedTransaction.id = transactionToEdit.id; // Preserve ID
+
+                expenseRepository.update(updatedTransaction);
+                android.util.Log.d("ExpenseBulkService", "Successfully updated transaction amount");
+
+                resultMessage.append("✅ Sửa: ").append(transactionToEdit.description)
+                        .append(" từ ").append(CurrencyFormatter.formatCurrency(context, Math.abs(transactionToEdit.amount)))
+                        .append(" thành ").append(CurrencyFormatter.formatCurrency(context, op.amount))
+                        .append("\n");
+                counts[0]++;
+            } else {
+                // No new amount provided - show placeholder message
+                resultMessage.append("⚠️ Chức năng sửa chi tiết chưa được hỗ trợ. Vui lòng xóa và thêm lại với thông tin mới.\n");
+                counts[1]++;
+                android.util.Log.d("ExpenseBulkService", "Edit operation not fully implemented - no amount provided");
+            }
 
         } catch (Exception e) {
             android.util.Log.e("ExpenseBulkService", "Error in processEditOperation", e);

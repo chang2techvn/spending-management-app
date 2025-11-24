@@ -10,6 +10,7 @@ import java.util.List;
  */
 public interface ExpenseRepository {
     void insert(TransactionEntity transaction);
+    void update(TransactionEntity transaction);
     void delete(TransactionEntity transaction);
     TransactionEntity getTransactionById(int id);
     List<TransactionEntity> getTransactionsByDateRange(Date startDate, Date endDate);
