@@ -163,7 +163,7 @@ public class RegisterActivity extends AppCompatActivity {
     private void showLoading() {
         progressBar.setVisibility(View.VISIBLE);
         signupButton.setEnabled(false);
-        signupButton.setText("Đang đăng ký...");
+        signupButton.setText(getString(R.string.registering));
     }
 
     private void hideLoading() {

@@ -287,7 +287,7 @@ public class AiChatBottomSheet extends DialogFragment {
         try {
             startActivityForResult(intent, VOICE_REQUEST_CODE);
         } catch (Exception e) {
-            ToastHelper.showTopToast(getActivity(), "Thiết bị không hỗ trợ nhận diện giọng nói", Toast.LENGTH_SHORT);
+            ToastHelper.showErrorToast(getActivity(), getString(R.string.voice_recognition_not_supported));
         }
     }
 

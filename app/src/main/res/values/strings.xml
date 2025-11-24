@@ -149,6 +149,10 @@
     <string name="difference_label">Chênh lệch</string>
     <string name="no_statistics_data">Chưa có dữ liệu thống kê</string>
 
+    <!-- Chart and data messages -->
+    <string name="no_expense_data">Chưa có dữ liệu chi tiêu</string>
+    <string name="no_expense_data_this_year">Chưa có dữ liệu chi tiêu trong năm này</string>
+
     <!-- History page -->
     <string name="history_title">Lịch sử giao dịch</string>
     <string name="history_subtitle">Tất cả giao dịch của bạn</string>
@@ -269,6 +273,16 @@
     <string name="loading_budget_info">Đang tải thông tin ngân sách...</string>
     <string name="welcome_greeting">Chào bạn! 👋</string>
     <string name="now_label">Bây giờ</string>
+    <string name="processing_request">Đang xử lý yêu cầu...</string>
+    <string name="processing_delete_request">Đang xử lý yêu cầu xóa...</string>
+    <string name="analyzing_financial_data">Đang phân tích dữ liệu tài chính...</string>
+    <string name="analyzing_budget">Đang phân tích ngân sách...</string>
+    <string name="analyzing">Đang phân tích...</string>
+    <string name="ai_connection_error">Lỗi kết nối AI.</string>
+    <string name="ai_processing_error">Lỗi xử lý phản hồi AI.</string>
+    <string name="ai_send_error">Lỗi gửi tin nhắn.</string>
+    <string name="voice_recognition_not_supported">Thiết bị không hỗ trợ nhận diện giọng nói</string>
+    <string name="internet_required">❌ Chức năng này cần kết nối internet. Vui lòng kiểm tra kết nối mạng của bạn.</string>
     <string name="offline_mode_header">⚠️ CHẾ ĐỘ OFFLINE</string>
     <string name="offline_mode_details">Bạn có thể:\n✅ Thêm, sửa, xóa chi tiêu\n✅ Quản lý ngân sách\n❌ Không thể phân tích và tư vấn với AI\n\n</string>
     <string name="budget_history_title">📊 Ngân sách 6 tháng gần đây:</string>
@@ -292,4 +306,24 @@
     <string name="category_budget_instructions_header">\n💡 Hướng dẫn:\n</string>
     <string name="category_budget_instructions">        • Thêm: \'Thêm 500 ngàn ăn uống và 300 ngàn di chuyển\'\n        • Sửa: \'Sửa ăn uống 700 ngàn, mua sắm 400 ngàn\'\n        • Xóa: \'Xóa ngân sách ăn uống và di chuyển\'\n\n⚠️ Lưu ý: Tổng ngân sách danh mục không vượt quá ngân sách tháng</string>
     <string name="default_category_budget_message">📊 Ngân sách theo danh mục\n\n💡 Hướng dẫn:\n• Đặt: \'Đặt ngân sách ăn uống 2 triệu\'\n• Sửa: \'Sửa ngân sách di chuyển 1 triệu\'\n• Xóa: \'Xóa ngân sách cafe\'\n• Nhiều: \'Thêm 500k ăn uống và 300k di chuyển\'\n\n📂 Danh mục: Ăn uống, Di chuyển, Tiện ích, Y tế, Nhà ở, Mua sắm, v.v.</string>
+    <string name="registering">Đang đăng ký...</string>
+    <string name="logging_in">Đang đăng nhập...</string>
+    <string name="expense_type">chi tiêu</string>
+    <string name="income_type">thu nhập</string>
+    <string name="expense_added_toast">✅ Đã thêm %s %,.0f %s - %s</string>
+    <string name="budget_save_error">Lỗi lưu ngân sách</string>
+    <string name="budget_deleted_toast">✅ Đã xóa ngân sách tháng %s</string>
+    <string name="budget_delete_error">Lỗi xóa ngân sách</string>
+    <string name="all_category_budgets_deleted">✅ Đã xóa tất cả ngân sách danh mục</string>
+    <string name="no_budgets_to_delete">⚠️ Không có ngân sách nào để xóa</string>
+    <string name="category_budget_delete_error">Lỗi xóa ngân sách</string>
+    <string name="partial_success_toast">⚠️ %d thành công, %d thất bại</string>
+    <string name="complete_failure_toast">❌ Thất bại: %d %s</string>
+    <string name="categories_updated_toast">✅ Cập nhật %d danh mục</string>
+    <string name="expenses_deleted_toast">✅ Xóa %d chi tiêu</string>
+    <string name="expenses_added_toast">✅ Thêm %d chi tiêu</string>
+    <string name="transactions_label">giao dịch</string>
+    <string name="categories_label">danh mục</string>
+    <string name="save_data_error">❌ Có lỗi xảy ra khi lưu dữ liệu: %s</string>
+    <string name="process_data_error">❌ Có lỗi xảy ra khi xử lý dữ liệu: %s</string>
 </resources>

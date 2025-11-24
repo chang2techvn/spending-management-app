@@ -156,7 +156,7 @@ public class LoginActivity extends AppCompatActivity {
     private void showLoading() {
         progressBar.setVisibility(View.VISIBLE);
         signinButton.setEnabled(false);
-        signinButton.setText("Đang đăng nhập...");
+        signinButton.setText(getString(R.string.logging_in));
     }
 
     private void hideLoading() {

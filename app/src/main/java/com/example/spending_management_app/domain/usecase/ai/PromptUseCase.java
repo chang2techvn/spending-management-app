@@ -7,6 +7,7 @@ import android.util.Log;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.spending_management_app.BuildConfig;
+import com.example.spending_management_app.R;
 import com.example.spending_management_app.domain.usecase.expense.ExpenseBulkUseCase;
 import com.example.spending_management_app.domain.repository.ExpenseRepository;
 import com.example.spending_management_app.data.local.database.AppDatabase;
@@ -58,7 +59,7 @@ public class PromptUseCase {
 
         // Add temporary "Đang phân tích..." message
         int analyzingIndex = messages.size();
-        messages.add(new AiChatBottomSheet.ChatMessage("Đang phân tích...", false, "Bây giờ"));
+        messages.add(new AiChatBottomSheet.ChatMessage(activity.getString(R.string.analyzing), false, activity.getString(R.string.now_label)));
         chatAdapter.notifyItemInserted(messages.size() - 1);
         messagesRecycler.smoothScrollToPosition(messages.size() - 1);
 

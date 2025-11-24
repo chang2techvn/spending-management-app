@@ -10,6 +10,7 @@ import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
+import com.example.spending_management_app.R;
 import com.example.spending_management_app.data.local.database.AppDatabase;
 import com.example.spending_management_app.data.local.dao.BudgetDao;
 import com.example.spending_management_app.data.local.entity.MonthlySpending;
@@ -213,7 +214,7 @@ public class StatisticsFragment extends Fragment {
             if (monthlyData == null || monthlyData.isEmpty()) {
                 // No data available
                 chart.clear();
-                chart.setNoDataText("Chưa có dữ liệu chi tiêu");
+                chart.setNoDataText(getString(R.string.no_expense_data));
                 chart.invalidate();
                 return;
             }
@@ -434,7 +435,7 @@ public class StatisticsFragment extends Fragment {
             );
             params.topMargin = (int) (16 * getResources().getDisplayMetrics().density);
             noDataText.setLayoutParams(params);
-            noDataText.setText("Chưa có dữ liệu chi tiêu trong năm này");
+            noDataText.setText(getString(R.string.no_expense_data_this_year));
             noDataText.setTextColor(0xFF757575);
             noDataText.setTextSize(14);
             container.addView(noDataText);

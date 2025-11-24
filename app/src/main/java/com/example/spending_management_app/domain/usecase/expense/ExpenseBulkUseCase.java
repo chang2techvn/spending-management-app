@@ -2,6 +2,7 @@ package com.example.spending_management_app.domain.usecase.expense;
 
 import android.content.Context;
 
+import com.example.spending_management_app.R;
 import com.example.spending_management_app.data.local.entity.TransactionEntity;
 import com.example.spending_management_app.domain.repository.ExpenseRepository;
 import com.example.spending_management_app.presentation.dialog.AiChatBottomSheet;
@@ -42,7 +43,7 @@ public class ExpenseBulkUseCase {
 
         // Add analyzing message
         int analyzingIndex = messages.size();
-        messages.add(new AiChatBottomSheet.ChatMessage("Đang xử lý yêu cầu...", false, "Bây giờ"));
+        messages.add(new AiChatBottomSheet.ChatMessage(context.getString(R.string.processing_request), false, context.getString(R.string.now_label)));
         chatAdapter.notifyItemInserted(messages.size() - 1);
         messagesRecycler.smoothScrollToPosition(messages.size() - 1);
 
@@ -676,18 +677,18 @@ public class ExpenseBulkUseCase {
                         // Show toast based on result
                         if (counts[1] > 0) {
                             if (counts[0] > 0) {
-                                ToastHelper.showErrorToast(activity, "⚠️ " + counts[0] + " thành công, " + counts[1] + " thất bại");
+                                ToastHelper.showErrorToast(activity, String.format(activity.getString(R.string.partial_success_toast), counts[0], counts[1]));
                             } else {
-                                ToastHelper.showErrorToast(activity, "❌ Thất bại: " + counts[1] + " giao dịch");
+                                ToastHelper.showErrorToast(activity, String.format(activity.getString(R.string.complete_failure_toast), counts[1], activity.getString(R.string.transactions_label)));
                             }
                         } else {
                             // Check if this was a delete operation
                             boolean hasDeleteOperations = operations.stream().anyMatch(op -> "delete".equals(op.type));
                             if (hasDeleteOperations) {
-                                ToastHelper.showToastOnTop(activity, "✅ Xóa " + counts[0] + " chi tiêu");
+                                ToastHelper.showToastOnTop(activity, String.format(activity.getString(R.string.expenses_deleted_toast), counts[0]));
                                 android.util.Log.d("ExpenseBulkService", "Showing delete success toast");
                             } else {
-                                ToastHelper.showToastOnTop(activity, "✅ Thêm " + counts[0] + " chi tiêu");
+                                ToastHelper.showToastOnTop(activity, String.format(activity.getString(R.string.expenses_added_toast), counts[0]));
                                 android.util.Log.d("ExpenseBulkService", "Showing add success toast");
                             }
                         }

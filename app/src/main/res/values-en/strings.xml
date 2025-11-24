@@ -148,6 +148,16 @@
     <string name="loading_budget_info">Loading budget information...</string>
     <string name="welcome_greeting">Hello! 👋</string>
     <string name="now_label">Now</string>
+    <string name="processing_request">Processing request...</string>
+    <string name="processing_delete_request">Processing delete request...</string>
+    <string name="analyzing_financial_data">Analyzing financial data...</string>
+    <string name="analyzing_budget">Analyzing budget...</string>
+    <string name="analyzing">Analyzing...</string>
+    <string name="ai_connection_error">AI connection error.</string>
+    <string name="ai_processing_error">AI response processing error.</string>
+    <string name="ai_send_error">Message sending error.</string>
+    <string name="voice_recognition_not_supported">Device does not support voice recognition</string>
+    <string name="internet_required">❌ This feature requires internet connection. Please check your network connection.</string>
     <string name="offline_mode_header">⚠️ OFFLINE MODE</string>
     <string name="offline_mode_details">You can:\n✅ Add, edit, delete expenses\n✅ Manage budgets\n❌ AI analysis and advice are unavailable\n\n</string>
     <string name="budget_history_title">📊 Budget history (last 6 months):</string>
@@ -293,4 +303,28 @@
     <string name="category_budget_instructions_header">\n💡 Instructions:\n</string>
     <string name="category_budget_instructions">        • Add: \'Add 500k food and 300k transportation\'\n        • Edit: \'Update food 700k, shopping 400k\'\n        • Delete: \'Delete food and transportation budgets\'\n\n⚠️ Note: Total category budget should not exceed monthly budget</string>
     <string name="default_category_budget_message">📊 Category Budget\n\n💡 Instructions:\n• Set: \'Set food budget 2 million\'\n• Edit: \'Edit transportation budget 1 million\'\n• Delete: \'Delete cafe budget\'\n• Multiple: \'Add 500k food and 300k transportation\'\n\n📂 Categories: Food, Transportation, Utilities, Healthcare, Housing, Shopping, etc.</string>
+    <string name="registering">Registering...</string>
+    <string name="logging_in">Logging in...</string>
+    <string name="expense_type">expense</string>
+    <string name="income_type">income</string>
+    <string name="expense_added_toast">✅ Added %s %,.0f %s - %s</string>
+    <string name="budget_save_error">Budget save error</string>
+    <string name="budget_deleted_toast">✅ Deleted budget for month %s</string>
+    <string name="budget_delete_error">Budget delete error</string>
+    <string name="all_category_budgets_deleted">✅ Deleted all category budgets</string>
+    <string name="no_budgets_to_delete">⚠️ No budgets to delete</string>
+    <string name="category_budget_delete_error">Budget delete error</string>
+    <string name="partial_success_toast">⚠️ %d successful, %d failed</string>
+    <string name="complete_failure_toast">❌ Failed: %d %s</string>
+    <string name="categories_updated_toast">✅ Updated %d categories</string>
+    <string name="expenses_deleted_toast">✅ Deleted %d expenses</string>
+    <string name="expenses_added_toast">✅ Added %d expenses</string>
+    <string name="transactions_label">transactions</string>
+    <string name="categories_label">categories</string>
+    <string name="save_data_error">❌ Error occurred while saving data: %s</string>
+    <string name="process_data_error">❌ Error occurred while processing data: %s</string>
+
+    <!-- Chart and data messages -->
+    <string name="no_expense_data">No expense data yet</string>
+    <string name="no_expense_data_this_year">No expense data for this year</string>
 </resources>

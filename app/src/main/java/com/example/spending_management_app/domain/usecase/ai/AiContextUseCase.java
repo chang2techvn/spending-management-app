@@ -7,6 +7,7 @@ import android.util.Log;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.spending_management_app.BuildConfig;
+import com.example.spending_management_app.R;
 import com.example.spending_management_app.data.remote.api.GeminiApiService;
 import com.example.spending_management_app.domain.repository.BudgetRepository;
 import com.example.spending_management_app.domain.repository.CategoryBudgetRepository;
@@ -146,7 +147,7 @@ public class AiContextUseCase {
                                                  TextToSpeech textToSpeech, Runnable updateNetworkStatus) {
         // Add temporary "Đang phân tích..." message
         int analyzingIndex = messages.size();
-        messages.add(new AiChatBottomSheet.ChatMessage("Đang phân tích dữ liệu tài chính...", false, "Bây giờ"));
+        messages.add(new AiChatBottomSheet.ChatMessage(activity.getString(R.string.analyzing_financial_data), false, activity.getString(R.string.now_label)));
         chatAdapter.notifyItemInserted(messages.size() - 1);
         messagesRecycler.smoothScrollToPosition(messages.size() - 1);
 
@@ -466,7 +467,7 @@ public class AiContextUseCase {
             RecyclerView messagesRecycler, TextToSpeech textToSpeech, Runnable updateNetworkStatus) {
         // Add temporary "Đang phân tích..." message
         int analyzingIndex = messages.size();
-        messages.add(new AiChatBottomSheet.ChatMessage("Đang phân tích ngân sách...", false, "Bây giờ"));
+        messages.add(new AiChatBottomSheet.ChatMessage(context.getString(R.string.analyzing_budget), false, context.getString(R.string.now_label)));
         chatAdapter.notifyItemInserted(messages.size() - 1);
         messagesRecycler.smoothScrollToPosition(messages.size() - 1);
 
