@@ -13,6 +13,11 @@
     <!-- Text colors -->
     <color name="text_primary">#FF212121</color>
     <color name="text_secondary">#FF757575</color>
+    <color name="textPrimary">#FF212121</color>
+    <color name="textSecondary">#FF757575</color>
+
+    <!-- Primary colors -->
+    <color name="primaryBlue">#FF1976D2</color>
 
     <!-- Transaction colors -->
     <color name="income_color">#FF4CAF50</color>

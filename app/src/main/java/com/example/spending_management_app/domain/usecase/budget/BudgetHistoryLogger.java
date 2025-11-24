@@ -4,6 +4,7 @@ import android.content.Context;
 
 import com.example.spending_management_app.data.local.database.AppDatabase;
 import com.example.spending_management_app.data.local.entity.BudgetHistoryEntity;
+import com.example.spending_management_app.utils.CurrencyFormatter;
 
 import java.util.Date;
 import java.util.Locale;
@@ -15,9 +16,7 @@ public class BudgetHistoryLogger {
      * Log when monthly budget is created
      */
     public static void logMonthlyBudgetCreated(Context context, long amount, Date budgetDate) {
-        String description = String.format(Locale.getDefault(),
-                "Đặt ngân sách tháng: %,d VND",
-                amount);
+        String description = "Đặt ngân sách tháng: " + CurrencyFormatter.formatCurrency(context, amount);
         
         logBudgetHistory(context, "create", "monthly", null, amount, new Date(), description);
     }
@@ -32,19 +31,17 @@ public class BudgetHistoryLogger {
         String description;
         if (delta > 0) {
             // Increased
-            description = String.format(Locale.getDefault(),
-                    "Tăng ngân sách tháng: %,d VND → %,d VND (+%,d VND)",
-                    oldAmount, newAmount, delta);
+            description = "Tăng ngân sách tháng: " + CurrencyFormatter.formatCurrency(context, oldAmount) + 
+                         " → " + CurrencyFormatter.formatCurrency(context, newAmount) + 
+                         " (+" + CurrencyFormatter.formatCurrency(context, delta) + ")";
         } else if (delta < 0) {
             // Decreased
-            description = String.format(Locale.getDefault(),
-                    "Giảm ngân sách tháng: %,d VND → %,d VND (%,d VND)",
-                    oldAmount, newAmount, delta);
+            description = "Giảm ngân sách tháng: " + CurrencyFormatter.formatCurrency(context, oldAmount) + 
+                         " → " + CurrencyFormatter.formatCurrency(context, newAmount) + 
+                         " (" + CurrencyFormatter.formatCurrency(context, delta) + ")";
         } else {
             // No change
-            description = String.format(Locale.getDefault(),
-                    "Cập nhật ngân sách tháng: %,d VND",
-                    newAmount);
+            description = "Cập nhật ngân sách tháng: " + CurrencyFormatter.formatCurrency(context, newAmount);
         }
         
         // Store delta instead of newAmount
@@ -56,9 +53,7 @@ public class BudgetHistoryLogger {
      * Log when monthly budget is deleted
      */
     public static void logMonthlyBudgetDeleted(Context context, long amount, Date budgetDate) {
-        String description = String.format(Locale.getDefault(),
-                "Xóa ngân sách tháng: %,d VND",
-                amount);
+        String description = "Xóa ngân sách tháng: " + CurrencyFormatter.formatCurrency(context, amount);
         
         logBudgetHistory(context, "delete", "monthly", null, amount, new Date(), description);
     }
@@ -67,9 +62,7 @@ public class BudgetHistoryLogger {
      * Log when category budget is created
      */
     public static void logCategoryBudgetCreated(Context context, String category, long amount) {
-        String description = String.format(Locale.getDefault(),
-                "Đặt ngân sách danh mục '%s': %,d VND",
-                category, amount);
+        String description = "Đặt ngân sách danh mục '" + category + "': " + CurrencyFormatter.formatCurrency(context, amount);
         
         logBudgetHistory(context, "create", "category", category, amount, new Date(), description);
     }
@@ -84,19 +77,17 @@ public class BudgetHistoryLogger {
         String description;
         if (delta > 0) {
             // Increased
-            description = String.format(Locale.getDefault(),
-                    "Tăng ngân sách '%s': %,d VND → %,d VND (+%,d VND)",
-                    category, oldAmount, newAmount, delta);
+            description = "Tăng ngân sách '" + category + "': " + CurrencyFormatter.formatCurrency(context, oldAmount) + 
+                         " → " + CurrencyFormatter.formatCurrency(context, newAmount) + 
+                         " (+" + CurrencyFormatter.formatCurrency(context, delta) + ")";
         } else if (delta < 0) {
             // Decreased
-            description = String.format(Locale.getDefault(),
-                    "Giảm ngân sách '%s': %,d VND → %,d VND (%,d VND)",
-                    category, oldAmount, newAmount, delta);
+            description = "Giảm ngân sách '" + category + "': " + CurrencyFormatter.formatCurrency(context, oldAmount) + 
+                         " → " + CurrencyFormatter.formatCurrency(context, newAmount) + 
+                         " (" + CurrencyFormatter.formatCurrency(context, delta) + ")";
         } else {
             // No change
-            description = String.format(Locale.getDefault(),
-                    "Cập nhật ngân sách '%s': %,d VND",
-                    category, newAmount);
+            description = "Cập nhật ngân sách '" + category + "': " + CurrencyFormatter.formatCurrency(context, newAmount);
         }
         
         // Store delta instead of newAmount
@@ -108,9 +99,7 @@ public class BudgetHistoryLogger {
      * Log when category budget is deleted
      */
     public static void logCategoryBudgetDeleted(Context context, String category, long amount) {
-        String description = String.format(Locale.getDefault(),
-                "Xóa ngân sách danh mục '%s': %,d VND",
-                category, amount);
+        String description = "Xóa ngân sách danh mục '" + category + "': " + CurrencyFormatter.formatCurrency(context, amount);
         
         logBudgetHistory(context, "delete", "category", category, amount, new Date(), description);
     }

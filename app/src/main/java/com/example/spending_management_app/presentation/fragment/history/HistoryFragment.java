@@ -12,6 +12,7 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
+import com.example.spending_management_app.R;
 import com.example.spending_management_app.data.local.entity.BudgetHistoryEntity;
 import com.example.spending_management_app.databinding.FragmentHistoryBinding;
 import com.example.spending_management_app.domain.model.Transaction;
@@ -19,6 +20,7 @@ import com.example.spending_management_app.data.local.database.AppDatabase;
 import com.example.spending_management_app.data.local.entity.TransactionEntity;
 import com.example.spending_management_app.presentation.viewmodel.history.HistoryViewModel;
 import com.google.android.material.tabs.TabLayout;
+import com.example.spending_management_app.utils.CategoryUtils;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -170,25 +172,25 @@ public class HistoryFragment extends Fragment implements DateRangePickerDialog.D
 
         // Today's transactions
         Date today = new Date();
-        allTransactions.add(new Transaction("Lương tháng 10", "Ngân sách", 8000000, "ic_home_black_24dp", today, "income"));
-        allTransactions.add(new Transaction("Ăn trưa tại quán cơm", "Ăn uống", -45000, "ic_bar_chart", today, "expense"));
-        allTransactions.add(new Transaction("Tiền xăng đi làm", "Di chuyển", -120000, "ic_bar_chart", today, "expense"));
+        allTransactions.add(new Transaction("Lương tháng 10", getString(R.string.budget_category), 8000000, "ic_home_black_24dp", today, "income"));
+        allTransactions.add(new Transaction("Ăn trưa tại quán cơm", getString(R.string.food_category), -45000, "ic_bar_chart", today, "expense"));
+        allTransactions.add(new Transaction("Tiền xăng đi làm", getString(R.string.transport_category), -120000, "ic_bar_chart", today, "expense"));
 
         // Yesterday's transactions
         Date yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
-        allTransactions.add(new Transaction("Mua áo mới", "Mua sắm", -350000, "ic_bar_chart", yesterday, "expense"));
-        allTransactions.add(new Transaction("Cà phê sáng", "Ăn uống", -25000, "ic_bar_chart", yesterday, "expense"));
+        allTransactions.add(new Transaction("Mua áo mới", getString(R.string.shopping_category), -350000, "ic_bar_chart", yesterday, "expense"));
+        allTransactions.add(new Transaction("Cà phê sáng", getString(R.string.food_category), -25000, "ic_bar_chart", yesterday, "expense"));
 
         // 2 days ago
         Date twoDaysAgo = new Date(today.getTime() - 2 * 24 * 60 * 60 * 1000);
-        allTransactions.add(new Transaction("Tiền điện tháng 10", "Tiện ích", -850000, "ic_bar_chart", twoDaysAgo, "expense"));
-        allTransactions.add(new Transaction("Bán đồ cũ", "Ngân sách", 500000, "ic_home_black_24dp", twoDaysAgo, "income"));
+        allTransactions.add(new Transaction("Tiền điện tháng 10", getString(R.string.utilities_category), -850000, "ic_bar_chart", twoDaysAgo, "expense"));
+        allTransactions.add(new Transaction("Bán đồ cũ", getString(R.string.budget_category), 500000, "ic_home_black_24dp", twoDaysAgo, "income"));
 
         // 3 days ago
         Date threeDaysAgo = new Date(today.getTime() - 3 * 24 * 60 * 60 * 1000);
-        allTransactions.add(new Transaction("Taxi về quê", "Di chuyển", -200000, "ic_bar_chart", threeDaysAgo, "expense"));
-        allTransactions.add(new Transaction("Mua sách", "Giáo dục", -150000, "ic_bar_chart", threeDaysAgo, "expense"));
-        allTransactions.add(new Transaction("Ăn tối gia đình", "Ăn uống", -180000, "ic_bar_chart", threeDaysAgo, "expense"));
+        allTransactions.add(new Transaction("Taxi về quê", getString(R.string.transport_category), -200000, "ic_bar_chart", threeDaysAgo, "expense"));
+        allTransactions.add(new Transaction("Mua sách", getString(R.string.education_category), -150000, "ic_bar_chart", threeDaysAgo, "expense"));
+        allTransactions.add(new Transaction("Ăn tối gia đình", getString(R.string.food_category), -180000, "ic_bar_chart", threeDaysAgo, "expense"));
 
         filteredTransactions = new ArrayList<>(allTransactions);
         
@@ -197,9 +199,9 @@ public class HistoryFragment extends Fragment implements DateRangePickerDialog.D
 
     private void setupFilterTabs() {
         // Add tabs for filtering
-        binding.transactionFilterTabs.addTab(binding.transactionFilterTabs.newTab().setText("Tất cả"));
-        binding.transactionFilterTabs.addTab(binding.transactionFilterTabs.newTab().setText("Ngân sách"));
-        binding.transactionFilterTabs.addTab(binding.transactionFilterTabs.newTab().setText("Chi tiêu"));
+        binding.transactionFilterTabs.addTab(binding.transactionFilterTabs.newTab().setText(getString(R.string.tab_all)));
+        binding.transactionFilterTabs.addTab(binding.transactionFilterTabs.newTab().setText(getString(R.string.tab_budget)));
+        binding.transactionFilterTabs.addTab(binding.transactionFilterTabs.newTab().setText(getString(R.string.tab_expenses)));
 
         binding.transactionFilterTabs.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
@@ -306,15 +308,15 @@ public class HistoryFragment extends Fragment implements DateRangePickerDialog.D
         filteredTransactions.clear();
 
         switch (currentTab) {
-            case 0: // Tất cả
+            case 0: // All
                 filteredTransactions.addAll(searchResults);
                 break;
-            case 1: // Ngân sách
+            case 1: // Budget
                 filteredTransactions.addAll(searchResults.stream()
                     .filter(t -> "budget".equals(t.getType()))
                     .collect(Collectors.toList()));
                 break;
-            case 2: // Chi tiêu
+            case 2: // Expenses
                 filteredTransactions.addAll(searchResults.stream()
                     .filter(t -> "expense".equals(t.getType()))
                     .collect(Collectors.toList()));
@@ -371,77 +373,13 @@ public class HistoryFragment extends Fragment implements DateRangePickerDialog.D
         if ("income".equals(type)) {
             return "ic_home_black_24dp";
         }
-        
-        switch (category) {
-            // Nhu cầu thiết yếu
-            case "Ăn uống":
-                return "🍽️";
-            case "Di chuyển":
-                return "🚗";
-            case "Tiện ích":
-                return "⚡";
-            case "Y tế":
-                return "🏥";
-            case "Nhà ở":
-                return "🏠";
-            
-            // Mua sắm & Phát triển bản thân
-            case "Mua sắm":
-                return "🛍️";
-            case "Giáo dục":
-                return "📚";
-            case "Sách & Học tập":
-                return "📖";
-            case "Thể thao":
-                return "⚽";
-            case "Sức khỏe & Làm đẹp":
-                return "💆";
-            
-            // Giải trí & Xã hội
-            case "Giải trí":
-                return "🎬";
-            case "Du lịch":
-                return "✈️";
-            case "Ăn ngoài & Cafe":
-                return "☕";
-            case "Quà tặng & Từ thiện":
-                return "🎁";
-            case "Hội họp & Tiệc tụng":
-                return "🎉";
-            
-            // Công nghệ & Dịch vụ
-            case "Điện thoại & Internet":
-                return "📱";
-            case "Đăng ký & Dịch vụ":
-                return "💳";
-            case "Phần mềm & Apps":
-                return "💻";
-            case "Ngân hàng & Phí":
-                return "🏦";
-            
-            // Gia đình & Con cái
-            case "Con cái":
-                return "👶";
-            case "Thú cưng":
-                return "🐕";
-            case "Gia đình":
-                return "👨‍👩‍👧‍👦";
-            
-            // Thu nhập & Tài chính
-            case "Lương":
-                return "💰";
-            case "Đầu tư":
-                return "📈";
-            case "Thu nhập phụ":
-                return "💵";
-            case "Tiết kiệm":
-                return "🏦";
-            
-            // Khác
-            case "Khác":
-                return "�";
-            default:
-                return "💳";
-        }
+        // For non-income types, use centralized CategoryUtils so localization updates reflect immediately
+        String localized = CategoryUtils.getLocalizedCategoryName(getContext(), category);
+        return CategoryUtils.getIconForCategory(localized);
+    }
+
+    private String getLocalizedCategoryName(String category) {
+        // Delegate to CategoryUtils so localization follows app-wide logic
+        return CategoryUtils.getLocalizedCategoryName(getContext(), category);
     }
 }

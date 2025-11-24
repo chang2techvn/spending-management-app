@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.spending_management_app.R;
 import com.example.spending_management_app.domain.model.Transaction;
+import com.example.spending_management_app.utils.CategoryUtils;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -158,9 +159,10 @@ public class SectionedTransactionAdapter extends RecyclerView.Adapter<RecyclerVi
 
         public void bind(Transaction transaction) {
             titleTextView.setText(transaction.getDescription());
-            categoryTextView.setText(transaction.getCategory());
+            // Display localized category name
+            categoryTextView.setText(CategoryUtils.getLocalizedCategoryName(itemView.getContext(), transaction.getCategory()));
             dateTextView.setText(transaction.getFormattedDate());
-            amountTextView.setText(transaction.getFormattedAmount());
+            amountTextView.setText(transaction.getFormattedAmount(itemView.getContext()));
 
             // Set amount color based on type
             if (transaction.getAmount() >= 0) {
@@ -179,140 +181,19 @@ public class SectionedTransactionAdapter extends RecyclerView.Adapter<RecyclerVi
         }
 
         private String getIconEmoji(String category) {
-            switch (category) {
-                // Nhu cầu thiết yếu
-                case "Ăn uống":
-                    return "🍽️";
-                case "Di chuyển":
-                    return "🚗";
-                case "Tiện ích":
-                    return "⚡";
-                case "Y tế":
-                    return "🏥";
-                case "Nhà ở":
-                    return "🏠";
-                
-                // Mua sắm & Phát triển bản thân
-                case "Mua sắm":
-                    return "🛍️";
-                case "Giáo dục":
-                    return "📚";
-                case "Sách & Học tập":
-                    return "📖";
-                case "Thể thao":
-                    return "⚽";
-                case "Sức khỏe & Làm đẹp":
-                    return "💆";
-                
-                // Giải trí & Xã hội
-                case "Giải trí":
-                    return "🎬";
-                case "Du lịch":
-                    return "✈️";
-                case "Ăn ngoài & Cafe":
-                    return "☕";
-                case "Quà tặng & Từ thiện":
-                    return "🎁";
-                case "Hội họp & Tiệc tụng":
-                    return "🎉";
-                
-                // Công nghệ & Dịch vụ
-                case "Điện thoại & Internet":
-                    return "📱";
-                case "Đăng ký & Dịch vụ":
-                    return "💳";
-                case "Phần mềm & Apps":
-                    return "💻";
-                case "Ngân hàng & Phí":
-                    return "🏦";
-                
-                // Gia đình & Con cái
-                case "Con cái":
-                    return "👶";
-                case "Thú cưng":
-                    return "🐕";
-                case "Gia đình":
-                    return "👨‍👩‍👧‍👦";
-                
-                // Thu nhập & Tài chính
-                case "Lương":
-                    return "💰";
-                case "Đầu tư":
-                    return "📈";
-                case "Thu nhập phụ":
-                    return "💵";
-                case "Tiết kiệm":
-                    return "🏦";
-                
-                // Khác
-                case "Khác":
-                    return "�";
-                default:
-                    return "💳";
-            }
+            String localized = CategoryUtils.getLocalizedCategoryName(itemView.getContext(), category);
+            return CategoryUtils.getIconForCategory(localized);
         }
 
         private int getCategoryColor(String category) {
-            Context context = itemView.getContext();
-            switch (category) {
-                // Nhu cầu thiết yếu
-                case "Ăn uống":
-                    return context.getColor(R.color.category_food);
-                case "Di chuyển":
-                    return context.getColor(R.color.category_transport);
-                case "Tiện ích":
-                    return context.getColor(R.color.category_utility);
-                case "Y tế":
-                    return context.getColor(R.color.category_health);
-                case "Nhà ở":
-                    return context.getColor(R.color.category_housing);
-                
-                // Mua sắm & Phát triển bản thân
-                case "Mua sắm":
-                    return context.getColor(R.color.category_shopping);
-                case "Giáo dục":
-                case "Sách & Học tập":
-                    return context.getColor(R.color.category_education);
-                case "Thể thao":
-                case "Sức khỏe & Làm đẹp":
-                    return context.getColor(R.color.category_fitness);
-                
-                // Giải trí & Xã hội
-                case "Giải trí":
-                case "Du lịch":
-                    return context.getColor(R.color.category_entertainment);
-                case "Ăn ngoài & Cafe":
-                    return context.getColor(R.color.category_cafe);
-                case "Quà tặng & Từ thiện":
-                case "Hội họp & Tiệc tụng":
-                    return context.getColor(R.color.category_gift);
-                
-                // Công nghệ & Dịch vụ
-                case "Điện thoại & Internet":
-                case "Phần mềm & Apps":
-                    return context.getColor(R.color.category_tech);
-                case "Đăng ký & Dịch vụ":
-                case "Ngân hàng & Phí":
-                    return context.getColor(R.color.category_service);
-                
-                // Gia đình & Con cái
-                case "Con cái":
-                case "Thú cưng":
-                case "Gia đình":
-                    return context.getColor(R.color.category_family);
-                
-                // Thu nhập & Tài chính
-                case "Lương":
-                case "Đầu tư":
-                case "Thu nhập phụ":
-                case "Tiết kiệm":
-                    return context.getColor(R.color.category_income);
-                
-                // Khác
-                case "Khác":
-                default:
-                    return context.getColor(R.color.category_default);
-            }
+            Context ctx = itemView.getContext();
+            String localized = CategoryUtils.getLocalizedCategoryName(ctx, category);
+            int colorRes = CategoryUtils.getColorForCategory(localized);
+            return ctx.getColor(colorRes);
+        }
+
+        private String getLocalizedCategoryName(String category) {
+            return CategoryUtils.getLocalizedCategoryName(itemView.getContext(), category);
         }
     }
 }

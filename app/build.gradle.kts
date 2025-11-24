@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
 }
@@ -5,6 +7,13 @@ plugins {
 android {
     namespace = "com.example.spending_management_app"
     compileSdk = 36
+
+    val localProperties = Properties().apply {
+        val localPropertiesFile = rootProject.file("local.properties")
+        if (localPropertiesFile.exists()) {
+            load(localPropertiesFile.inputStream())
+        }
+    }
 
     defaultConfig {
         applicationId = "com.example.spending_management_app"
@@ -14,6 +23,8 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField("String", "GEMINI_API_KEY", "\"${System.getenv("GEMINI_API_KEY") ?: localProperties.getProperty("gemini.api.key", "")}\"")
     }
 
     buildTypes {
@@ -31,6 +42,7 @@ android {
     }
     buildFeatures {
         viewBinding = true
+        buildConfig = true
     }
 }
 

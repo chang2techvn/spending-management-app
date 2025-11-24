@@ -1,9 +1,19 @@
 package com.example.spending_management_app.presentation.activity;
 
+import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.Intent;
+import android.text.InputType;
+import android.text.method.PasswordTransformationMethod;
 import android.os.Bundle;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -12,7 +22,7 @@ import androidx.lifecycle.ViewModelProvider;
 import com.example.spending_management_app.R;
 import com.example.spending_management_app.data.local.database.AppDatabase;
 import com.example.spending_management_app.data.repository.UserRepositoryImpl;
-import com.example.spending_management_app.databinding.ActivityLoginBinding;
+import com.example.spending_management_app.databinding.ActivitySigninBinding;
 import com.example.spending_management_app.domain.repository.UserRepository;
 import com.example.spending_management_app.domain.usecase.user.UserUseCase;
 import com.example.spending_management_app.presentation.viewmodel.auth.AuthViewModel;
@@ -26,16 +36,17 @@ import com.google.android.material.textfield.TextInputLayout;
  */
 public class LoginActivity extends AppCompatActivity {
 
-    private ActivityLoginBinding binding;
+    private ActivitySigninBinding binding;
     private AuthViewModel authViewModel;
     private SessionManager sessionManager;
 
-    private TextInputLayout emailLayout;
-    private TextInputLayout passwordLayout;
-    private TextInputEditText emailInput;
-    private TextInputEditText passwordInput;
-    private MaterialButton loginButton;
+    private EditText emailInput;
+    private EditText passwordInput;
+    private Button signinButton;
     private ProgressBar progressBar;
+    private ImageView passwordVisibilityToggle;
+    private CheckBox rememberButton;
+    private TextView forgotText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,7 +59,7 @@ public class LoginActivity extends AppCompatActivity {
             return;
         }
 
-        binding = ActivityLoginBinding.inflate(getLayoutInflater());
+        binding = ActivitySigninBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
         initializeDependencies();
@@ -73,21 +84,25 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void initializeViews() {
-        emailLayout = binding.emailLayout;
-        passwordLayout = binding.passwordLayout;
-        emailInput = binding.emailInput;
-        passwordInput = binding.passwordInput;
-        loginButton = binding.loginButton;
+        emailInput = binding.editTextEmail;
+        passwordInput = binding.editTextPassword;
+        signinButton = binding.signinButton;
         progressBar = binding.progressBar;
+        passwordVisibilityToggle = binding.passwordVisibilityToggle;
+        rememberButton = binding.rememberButton;
+        forgotText = binding.forgotText;
     }
 
     private void setupListeners() {
-        loginButton.setOnClickListener(v -> performLogin());
+        signinButton.setOnClickListener(v -> performLogin());
 
-        binding.registerLink.setOnClickListener(v -> {
+        binding.signupText.setOnClickListener(v -> {
             Intent intent = new Intent(this, RegisterActivity.class);
             startActivity(intent);
         });
+
+        passwordVisibilityToggle.setOnClickListener(v -> togglePasswordVisibility());
+        forgotText.setOnClickListener(v -> showForgotPasswordDialog());
     }
 
     private void observeViewModel() {
@@ -109,20 +124,16 @@ public class LoginActivity extends AppCompatActivity {
         String emailOrPhone = emailInput.getText().toString().trim();
         String password = passwordInput.getText().toString().trim();
 
-        // Clear previous errors
-        emailLayout.setError(null);
-        passwordLayout.setError(null);
-
         // Basic validation
         boolean isValid = true;
 
         if (emailOrPhone.isEmpty()) {
-            emailLayout.setError("Vui lòng nhập email hoặc số điện thoại");
+            emailInput.setError("Vui lòng nhập email hoặc số điện thoại");
             isValid = false;
         }
 
         if (password.isEmpty()) {
-            passwordLayout.setError("Vui lòng nhập mật khẩu");
+            passwordInput.setError("Vui lòng nhập mật khẩu");
             isValid = false;
         }
 
@@ -135,7 +146,8 @@ public class LoginActivity extends AppCompatActivity {
         // Get user data and save to session
         authViewModel.getCurrentUser().observe(this, user -> {
             if (user != null) {
-                sessionManager.createLoginSession(user);
+                boolean rememberMe = rememberButton.isChecked();
+                sessionManager.createLoginSession(user, rememberMe);
                 navigateToMain();
             }
         });
@@ -143,14 +155,14 @@ public class LoginActivity extends AppCompatActivity {
 
     private void showLoading() {
         progressBar.setVisibility(View.VISIBLE);
-        loginButton.setEnabled(false);
-        loginButton.setText("Đang đăng nhập...");
+        signinButton.setEnabled(false);
+        signinButton.setText("Đang đăng nhập...");
     }
 
     private void hideLoading() {
         progressBar.setVisibility(View.GONE);
-        loginButton.setEnabled(true);
-        loginButton.setText("Đăng nhập");
+        signinButton.setEnabled(true);
+        signinButton.setText("Đăng nhập");
     }
 
     private void showError(String message) {
@@ -162,5 +174,62 @@ public class LoginActivity extends AppCompatActivity {
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
         finish();
+    }
+
+    private void togglePasswordVisibility() {
+        if (passwordInput.getTransformationMethod() instanceof PasswordTransformationMethod) {
+            // Show password
+            passwordInput.setTransformationMethod(null);
+            passwordVisibilityToggle.setImageResource(R.drawable.ic_view_off);
+        } else {
+            // Hide password
+            passwordInput.setTransformationMethod(new PasswordTransformationMethod());
+            passwordVisibilityToggle.setImageResource(R.drawable.ic_view);
+        }
+        passwordInput.setSelection(passwordInput.getText().length());
+    }
+
+    private void showForgotPasswordDialog() {
+        Dialog dialog = new Dialog(this);
+        dialog.setContentView(R.layout.dialog_forgot_password);
+        dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        dialog.setCancelable(true);
+
+        // Set dialog size
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setLayout(
+                (int) (getResources().getDisplayMetrics().widthPixels * 0.9),
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            );
+        }
+
+        // Initialize dialog views
+        EditText emailInput = dialog.findViewById(R.id.emailInput);
+        TextView errorText = dialog.findViewById(R.id.errorText);
+        Button sendButton = dialog.findViewById(R.id.sendButton);
+        Button cancelButton = dialog.findViewById(R.id.cancelButton);
+
+        // Set click listeners
+        sendButton.setOnClickListener(v -> {
+            String emailOrPhone = emailInput.getText().toString().trim();
+            if (emailOrPhone.isEmpty()) {
+                errorText.setText("Vui lòng nhập email hoặc số điện thoại");
+                errorText.setVisibility(View.VISIBLE);
+            } else {
+                errorText.setVisibility(View.GONE);
+                sendPasswordReset(emailOrPhone);
+                dialog.dismiss();
+            }
+        });
+
+        cancelButton.setOnClickListener(v -> dialog.dismiss());
+
+        dialog.show();
+    }
+
+    private void sendPasswordReset(String emailOrPhone) {
+        // TODO: Implement actual password reset logic
+        // For now, just show a success message
+        Toast.makeText(this, "Đã gửi hướng dẫn đặt lại mật khẩu đến " + emailOrPhone, Toast.LENGTH_LONG).show();
     }
 }

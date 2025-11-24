@@ -246,7 +246,7 @@ public class AiChatBottomSheet extends DialogFragment {
                         "• Sửa: 'Sửa ngân sách di chuyển 1 triệu'\n" +
                         "• Xóa: 'Xóa ngân sách cafe'\n\n" +
                         "📂 Danh mục: Ăn uống, Di chuyển, Tiện ích, Y tế, Nhà ở, Mua sắm, v.v.";
-                messages.add(new ChatMessage(fallbackMessage, false, "Bây giờ"));
+                messages.add(new ChatMessage(fallbackMessage, false, getString(R.string.now_label)));
             } else if ("expense_bulk_management".equals(mode)) {
                 // Load expense bulk management welcome message
                 welcomeMessageUseCase.loadExpenseBulkWelcomeMessage(getContext(), getActivity(), messages, chatAdapter, messagesRecycler, this::refreshHomeFragment, this::refreshExpenseWelcomeMessage);
@@ -265,7 +265,7 @@ public class AiChatBottomSheet extends DialogFragment {
             String message = messageInput.getText().toString().trim();
             if (!message.isEmpty()) {
                 
-                messages.add(new ChatMessage(message, true, "Bây giờ"));
+                messages.add(new ChatMessage(message, true, getString(R.string.now_label)));
                 chatAdapter.notifyItemInserted(messages.size() - 1);
                 messagesRecycler.smoothScrollToPosition(messages.size() - 1);
                 sendToAI(message);
@@ -305,10 +305,10 @@ public class AiChatBottomSheet extends DialogFragment {
         }
         
         if (isNetworkAvailable()) {
-            statusText.setText("Đang hoạt động");
+            statusText.setText(getString(R.string.ai_status_active));
             statusText.setTextColor(0xFF4CAF50); // Green color
         } else {
-            statusText.setText("Offline");
+            statusText.setText(getString(R.string.ai_status_offline));
             statusText.setTextColor(0xFFFF5252); // Red color
         }
     }
@@ -396,7 +396,7 @@ public class AiChatBottomSheet extends DialogFragment {
             public void onSuccess(String message) {
                 if (getActivity() != null) {
                     getActivity().runOnUiThread(() -> {
-                        messages.add(new ChatMessage(message, false, "Bây giờ"));
+                        messages.add(new ChatMessage(message, false, getString(R.string.now_label)));
                         chatAdapter.notifyItemInserted(messages.size() - 1);
                         messagesRecycler.smoothScrollToPosition(messages.size() - 1);
                     });
@@ -407,7 +407,7 @@ public class AiChatBottomSheet extends DialogFragment {
             public void onError(String errorMessage) {
                 if (getActivity() != null) {
                     getActivity().runOnUiThread(() -> {
-                        messages.add(new ChatMessage(errorMessage, false, "Bây giờ"));
+                        messages.add(new ChatMessage(errorMessage, false, getString(R.string.now_label)));
                         chatAdapter.notifyItemInserted(messages.size() - 1);
                         messagesRecycler.smoothScrollToPosition(messages.size() - 1);
                     });
@@ -551,13 +551,13 @@ public class AiChatBottomSheet extends DialogFragment {
 
     // Method to refresh category budget welcome message - delegates to FragmentRefreshHelper
     private void refreshCategoryBudgetWelcomeMessage() {
-        FragmentRefreshHelper.refreshCategoryBudgetWelcomeMessage(getActivity(),
+        FragmentRefreshHelper.refreshCategoryBudgetWelcomeMessage(getActivity(), getActivity(),
             new FragmentRefreshHelper.FragmentRefreshCallback() {
                 @Override
                 public void onWelcomeMessageUpdated(String message) {
                     // Update first message (welcome message)
-                    if (!messages.isEmpty() && messages.get(0).message.contains("📊 Ngân sách theo danh mục")) {
-                        messages.set(0, new ChatMessage(message, false, "Bây giờ"));
+                    if (!messages.isEmpty() && messages.get(0).message.contains("📊")) {
+                        messages.set(0, new ChatMessage(message, false, getString(R.string.now_label)));
                         chatAdapter.notifyItemChanged(0);
                     }
                 }

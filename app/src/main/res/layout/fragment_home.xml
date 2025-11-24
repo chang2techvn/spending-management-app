@@ -34,7 +34,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:alpha="0.8"
-                    android:text="Số dư hiện tại"
+                    android:text="@string/current_balance_label"
                     android:textColor="#FFFFFF"
                     android:textSize="14sp" />
 
@@ -64,7 +64,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:alpha="0.8"
-                            android:text="Ngân sách tháng này"
+                            android:text="@string/monthly_budget_label"
                             android:textColor="#FFFFFF"
                             android:textSize="12sp" />
 
@@ -89,7 +89,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:alpha="0.8"
-                            android:text="Chi tiêu tháng này"
+                            android:text="@string/monthly_expense_label"
                             android:textColor="#FFFFFF"
                             android:textSize="12sp" />
 
@@ -148,7 +148,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
-                        android:text="Quản lý ngân sách"
+                        android:text="@string/manage_budget"
                         android:textColor="#212121"
                         android:textSize="14sp"
                         android:textStyle="bold" />
@@ -186,7 +186,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
-                        android:text="Thêm chi tiêu"
+                        android:text="@string/add_expense"
                         android:textColor="#212121"
                         android:textSize="14sp"
                         android:textStyle="bold" />
@@ -215,7 +215,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Giao dịch gần đây"
+                    android:text="@string/recent_transactions"
                     android:textColor="#212121"
                     android:textSize="18sp"
                     android:textStyle="bold" />
@@ -237,7 +237,7 @@
                     android:clickable="true"
                     android:focusable="true"
                     android:foreground="?android:attr/selectableItemBackground"
-                    android:text="Xem tất cả"
+                    android:text="@string/view_all"
                     android:textColor="#2196F3"
                     android:textSize="14sp" />
 
@@ -264,7 +264,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Tổng quan tháng này"
+                    android:text="@string/monthly_overview"
                     android:textColor="#212121"
                     android:textSize="18sp"
                     android:textStyle="bold" />
@@ -290,7 +290,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="🍽️ Ăn uống"
+                            android:text="@string/food_category"
                             android:textColor="#212121"
                             android:textSize="14sp"
                             android:textStyle="bold" />
@@ -346,7 +346,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="🚗 Di chuyển"
+                            android:text="@string/transport_category"
                             android:textColor="#212121"
                             android:textSize="14sp"
                             android:textStyle="bold" />
@@ -402,7 +402,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="🛍️ Mua sắm"
+                            android:text="@string/shopping_category"
                             android:textColor="#212121"
                             android:textSize="14sp"
                             android:textStyle="bold" />

@@ -4,6 +4,7 @@ import android.content.Context;
 import android.widget.TextView;
 
 import com.example.spending_management_app.R;
+import com.example.spending_management_app.utils.CurrencyFormatter;
 import com.github.mikephil.charting.components.MarkerView;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.highlight.Highlight;
@@ -32,7 +33,7 @@ public class MonthMarkerView extends MarkerView {
             month = monthLabels.get(index) + ": ";
         }
         
-        String amount = formatCurrency((long) e.getY());
+        String amount = CurrencyFormatter.formatCurrency(getContext(), (long) e.getY());
         tvContent.setText(month + amount);
         
         super.refreshContent(e, highlight);
@@ -41,19 +42,5 @@ public class MonthMarkerView extends MarkerView {
     @Override
     public MPPointF getOffset() {
         return new MPPointF(-(getWidth() / 2f), -getHeight());
-    }
-
-    private String formatCurrency(long amount) {
-        String amountStr = String.valueOf(Math.abs(amount));
-        StringBuilder formatted = new StringBuilder();
-        int count = 0;
-        for (int i = amountStr.length() - 1; i >= 0; i--) {
-            formatted.insert(0, amountStr.charAt(i));
-            count++;
-            if (count % 3 == 0 && i > 0) {
-                formatted.insert(0, ",");
-            }
-        }
-        return formatted.toString() + " VND";
     }
 }

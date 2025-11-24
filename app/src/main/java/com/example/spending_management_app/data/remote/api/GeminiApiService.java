@@ -1,9 +1,12 @@
 package com.example.spending_management_app.data.remote.api;
 
+import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
 
+import com.example.spending_management_app.BuildConfig;
 import com.example.spending_management_app.domain.usecase.ai.AiSystemInstructions;
+import com.example.spending_management_app.utils.LocaleHelper;
 import com.example.spending_management_app.utils.TextFormatHelper;
 
 import org.json.JSONArray;
@@ -37,10 +40,73 @@ public final class GeminiApiService {
         void onSuccess(String formattedResponse);
         void onFailure(String errorMessage);
     }
+
+    /**
+     * Send a simple one-shot prompt to Gemini and get textual response.
+     */
+    public static void sendSimplePrompt(Context context, String prompt, AIResponseCallback callback) {
+        OkHttpClient client = new OkHttpClient();
+        Handler mainHandler = new Handler(Looper.getMainLooper());
+
+        try {
+            JSONObject json = new JSONObject();
+
+            // Put prompt as user content
+            JSONArray contents = new JSONArray();
+            JSONObject userContent = new JSONObject();
+            JSONArray userParts = new JSONArray();
+            JSONObject userPart = new JSONObject();
+            userPart.put("text", prompt);
+            userParts.put(userPart);
+            userContent.put("parts", userParts);
+            userContent.put("role", "user");
+            contents.put(userContent);
+            json.put("contents", contents);
+
+            RequestBody body = RequestBody.create(json.toString(), MediaType.parse("application/json"));
+            Request request = new Request.Builder()
+                    .url("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=" + BuildConfig.GEMINI_API_KEY)
+                    .post(body)
+                    .build();
+
+            client.newCall(request).enqueue(new Callback() {
+                @Override
+                public void onFailure(Call call, IOException e) {
+                    mainHandler.post(() -> callback.onFailure("Lỗi kết nối AI."));
+                }
+
+                @Override
+                public void onResponse(Call call, Response response) throws IOException {
+                    if (response.isSuccessful()) {
+                        try {
+                            String responseBody = response.body().string();
+                            JSONObject jsonResponse = new JSONObject(responseBody);
+                            JSONArray candidates = jsonResponse.getJSONArray("candidates");
+                            JSONObject candidate = candidates.getJSONObject(0);
+                            JSONObject content = candidate.getJSONObject("content");
+                            JSONArray parts = content.getJSONArray("parts");
+                            String aiText = parts.getJSONObject(0).getString("text").trim();
+
+                            String formattedText = TextFormatHelper.formatMarkdownText(aiText);
+
+                            mainHandler.post(() -> callback.onSuccess(formattedText));
+                        } catch (Exception e) {
+                            mainHandler.post(() -> callback.onFailure("Lỗi xử lý phản hồi AI."));
+                        }
+                    } else {
+                        mainHandler.post(() -> callback.onFailure("Lỗi từ AI: " + response.code()));
+                    }
+                }
+            });
+        } catch (Exception e) {
+            mainHandler.post(() -> callback.onFailure("Lỗi gửi tin nhắn."));
+        }
+    }
     
     /**
      * Send prompt to AI with budget context
      * 
+     * @param context Application context for getting app language
      * @param userQuery The user's query
      * @param budgetContext The budget context data
      * @param messages The list of chat messages for conversation history
@@ -48,6 +114,7 @@ public final class GeminiApiService {
      * @param callback Callback for handling response
      */
     public static void sendPromptWithBudgetContext(
+            Context context,
             String userQuery, 
             String budgetContext,
             java.util.List<com.example.spending_management_app.presentation.dialog.AiChatBottomSheet.ChatMessage> messages,
@@ -72,7 +139,11 @@ public final class GeminiApiService {
             JSONArray systemParts = new JSONArray();
             JSONObject systemPart = new JSONObject();
 
-            String instruction = AiSystemInstructions.getBudgetAnalysisInstruction(currentDateInfo, budgetContext);
+            // Get app language and currency
+            String appLanguage = LocaleHelper.getLanguage(context);
+            String appCurrency = "VND"; // Currently hardcoded, can be made configurable later
+
+            String instruction = AiSystemInstructions.getBudgetAnalysisInstruction(currentDateInfo, budgetContext, appLanguage, appCurrency);
 
             systemPart.put("text", instruction);
             systemParts.put(systemPart);
@@ -116,7 +187,7 @@ public final class GeminiApiService {
 
             RequestBody body = RequestBody.create(json.toString(), MediaType.parse("application/json"));
             Request request = new Request.Builder()
-                    .url("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyAsDEIa1N6Dn_rCXYiRCXuUAY-E1DQ0Yv8")
+                    .url("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=" + BuildConfig.GEMINI_API_KEY)
                     .post(body)
                     .build();
 

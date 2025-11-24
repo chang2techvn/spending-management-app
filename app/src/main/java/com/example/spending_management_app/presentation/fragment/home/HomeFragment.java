@@ -17,11 +17,13 @@ import com.example.spending_management_app.presentation.activity.MainActivity;
 import com.example.spending_management_app.R;
 import com.example.spending_management_app.data.local.entity.CategoryBudgetEntity;
 import com.example.spending_management_app.databinding.FragmentHomeBinding;
+import com.example.spending_management_app.utils.CategoryUtils;
 
 import com.example.spending_management_app.data.local.database.AppDatabase;
 import com.example.spending_management_app.data.local.entity.BudgetEntity;
 import com.example.spending_management_app.data.local.entity.TransactionEntity;
 import com.example.spending_management_app.presentation.viewmodel.home.HomeViewModel;
+import com.example.spending_management_app.utils.CurrencyFormatter;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -112,7 +114,7 @@ public class HomeFragment extends Fragment {
                         if (monthlyBudgets != null && !monthlyBudgets.isEmpty()) {
                             BudgetEntity budget = monthlyBudgets.get(0);
                             budgetValue = budget.getMonthlyLimit();
-                            binding.monthlyIncome.setText(String.format(Locale.getDefault(), "%,d", budgetValue) + " VND");
+                            binding.monthlyIncome.setText(CurrencyFormatter.formatCurrency(getContext(), budgetValue));
                             android.util.Log.d("HomeFragment", "Budget displayed: " + budgetValue);
                         } else {
                             binding.monthlyIncome.setText("Chưa thiết lập");
@@ -121,11 +123,11 @@ public class HomeFragment extends Fragment {
                         
                         // Set monthly expense (absolute value, should be negative)
                         long expenseValue = totalExpense != null ? Math.abs(totalExpense) : 0;
-                        binding.monthlyExpense.setText(String.format(Locale.getDefault(), "-%,d", expenseValue) + " VND");
+                        binding.monthlyExpense.setText("-" + CurrencyFormatter.formatCurrency(getContext(), expenseValue));
                         
                         // Calculate and set remaining balance (budget - expense)
                         long remainingBalance = budgetValue - expenseValue;
-                        binding.currentBalance.setText(String.format(Locale.getDefault(), "%,d", remainingBalance) + " VND");
+                        binding.currentBalance.setText(CurrencyFormatter.formatCurrency(getContext(), remainingBalance));
                         
                         android.util.Log.d("HomeFragment", "Balance updated - Budget: " + budgetValue + 
                                 ", Expense: " + expenseValue + ", Remaining: " + remainingBalance);
@@ -137,9 +139,9 @@ public class HomeFragment extends Fragment {
                 // Fallback to sample data
                 if (getActivity() != null) {
                     getActivity().runOnUiThread(() -> {
-                        binding.monthlyIncome.setText("12,500,000 VND");
-                        binding.monthlyExpense.setText("-5,500,000 VND");
-                        binding.currentBalance.setText("7,000,000 VND");
+                        binding.monthlyIncome.setText(CurrencyFormatter.formatCurrency(getContext(), 12500000));
+                        binding.monthlyExpense.setText("-" + CurrencyFormatter.formatCurrency(getContext(), 5500000));
+                        binding.currentBalance.setText(CurrencyFormatter.formatCurrency(getContext(), 7000000));
                     });
                 }
             }
@@ -473,8 +475,9 @@ public class HomeFragment extends Fragment {
                 1.0f
         );
         nameView.setLayoutParams(nameParams);
-        String icon = getIconEmojiForCategory(category);
-        nameView.setText(icon + " " + category);
+    String localizedName = CategoryUtils.getLocalizedCategoryName(getContext(), category);
+    String icon = CategoryUtils.getIconForCategory(localizedName);
+    nameView.setText(icon + " " + localizedName);
         nameView.setTextColor(0xFF212121);
         nameView.setTextSize(14);
         nameView.setTypeface(null, android.graphics.Typeface.BOLD);
@@ -550,11 +553,9 @@ public class HomeFragment extends Fragment {
         amountView.setLayoutParams(amountParams);
         
         if (budget > 0) {
-            amountView.setText(String.format(Locale.getDefault(), 
-                    "%,d/%,d VND", spending, budget));
+            amountView.setText(CurrencyFormatter.formatCurrency(getContext(), spending) + "/" + CurrencyFormatter.formatCurrency(getContext(), budget));
         } else {
-            amountView.setText(String.format(Locale.getDefault(), 
-                    "%,d VND (Chưa đặt ngân sách)", spending));
+            amountView.setText(CurrencyFormatter.formatCurrency(getContext(), spending) + " (Chưa đặt ngân sách)");
         }
         amountView.setTextColor(0xFF757575);
         amountView.setTextSize(12);
@@ -568,36 +569,8 @@ public class HomeFragment extends Fragment {
     }
     
     private String getIconEmojiForCategory(String category) {
-        switch (category) {
-            case "Ăn uống": return "🍽️";
-            case "Di chuyển": return "🚗";
-            case "Tiện ích": return "⚡";
-            case "Y tế": return "🏥";
-            case "Nhà ở": return "🏠";
-            case "Mua sắm": return "🛍️";
-            case "Giáo dục": return "📚";
-            case "Sách & Học tập": return "📖";
-            case "Thể thao": return "⚽";
-            case "Sức khỏe & Làm đẹp": return "💆";
-            case "Giải trí": return "🎬";
-            case "Du lịch": return "✈️";
-            case "Ăn ngoài & Cafe": return "☕";
-            case "Quà tặng & Từ thiện": return "🎁";
-            case "Hội họp & Tiệc tụng": return "🎉";
-            case "Điện thoại & Internet": return "📱";
-            case "Đăng ký & Dịch vụ": return "💳";
-            case "Phần mềm & Apps": return "💻";
-            case "Ngân hàng & Phí": return "🏦";
-            case "Con cái": return "👶";
-            case "Thú cưng": return "🐕";
-            case "Gia đình": return "👨‍👩‍👧‍👦";
-            case "Lương": return "💰";
-            case "Đầu tư": return "📈";
-            case "Thu nhập phụ": return "💵";
-            case "Tiết kiệm": return "🏦";
-            case "Khác": return "📌";
-            default: return "💳";
-        }
+        String localized = CategoryUtils.getLocalizedCategoryName(getContext(), category);
+        return CategoryUtils.getIconForCategory(localized);
     }
 
     @Override
@@ -635,26 +608,12 @@ public class HomeFragment extends Fragment {
         if ("income".equals(type)) {
             return "ic_home_black_24dp";
         }
-        
-        switch (category) {
-            case "Ăn uống":
-                return "ic_restaurant";
-            case "Di chuyển":
-                return "ic_directions_car";
-            case "Mua sắm":
-                return "ic_shopping_cart";
-            case "Ngân sách":
-                return "ic_account_balance_wallet";
-            case "Tiện ích":
-                return "ic_electrical_services";
-            case "Giáo dục":
-                return "ic_school";
-            case "Giải trí":
-                return "ic_local_movies";
-            case "Y tế":
-                return "ic_local_hospital";
-            default:
-                return "ic_bar_chart";
-        }
+        String localized = CategoryUtils.getLocalizedCategoryName(getContext(), category);
+        // Keep "income" behavior; for others return emoji/icon from CategoryUtils
+        return CategoryUtils.getIconForCategory(localized);
+    }
+
+    private String getLocalizedCategoryName(String category) {
+        return CategoryUtils.getLocalizedCategoryName(getContext(), category);
     }
 }

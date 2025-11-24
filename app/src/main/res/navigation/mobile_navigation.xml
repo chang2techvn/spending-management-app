@@ -13,19 +13,29 @@
     <fragment
         android:id="@+id/navigation_statistics"
         android:name="com.example.spending_management_app.presentation.fragment.statistics.StatisticsFragment"
-        android:label="Thống kê"
+        android:label="@string/navigation_statistics"
         tools:layout="@layout/fragment_statistics" />
 
     <fragment
         android:id="@+id/navigation_history"
         android:name="com.example.spending_management_app.presentation.fragment.history.HistoryFragment"
-        android:label="Lịch sử"
+        android:label="@string/navigation_history"
         tools:layout="@layout/fragment_history" />
 
     <fragment
         android:id="@+id/navigation_account"
         android:name="com.example.spending_management_app.presentation.fragment.account.AccountFragment"
-        android:label="Tài khoản"
-        tools:layout="@layout/fragment_account" />
+        android:label="@string/navigation_account"
+        tools:layout="@layout/fragment_account" >
+        <action
+            android:id="@+id/action_navigation_account_to_navigation_help_support"
+            app:destination="@id/navigation_help_support" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/navigation_help_support"
+        android:name="com.example.spending_management_app.presentation.fragment.account.HelpSupportFragment"
+        android:label="Trợ giúp &amp; Hỗ trợ"
+        tools:layout="@layout/fragment_help_support" />
 
 </navigation>

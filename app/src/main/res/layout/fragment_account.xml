@@ -28,7 +28,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Tài khoản"
+                android:text="@string/account_header_title"
                 android:textColor="#212121"
                 android:textSize="20sp"
                 android:textStyle="bold" />
@@ -36,7 +36,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Thông tin cá nhân của bạn"
+                android:text="@string/account_header_subtitle"
                 android:textColor="#757575"
                 android:textSize="14sp"
                 android:layout_marginTop="4dp" />
@@ -45,6 +45,9 @@
 
         <!-- Profile Section -->
         <androidx.cardview.widget.CardView
+            android:id="@+id/profile_card"
+            android:clickable="true"
+            android:foreground="?android:attr/selectableItemBackground"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_margin="16dp"
@@ -65,10 +68,9 @@
 
                     <ImageView
                         android:id="@+id/user_avatar"
-                        android:layout_width="60dp"
-                        android:layout_height="60dp"
+                        android:layout_width="70dp"
+                        android:layout_height="70dp"
                         android:src="@drawable/ic_launcher_foreground"
-                        android:background="@drawable/circle_background"
                         android:padding="8dp" />
 
                     <LinearLayout
@@ -130,14 +132,14 @@
                     <ImageView
                         android:layout_width="24dp"
                         android:layout_height="24dp"
-                        android:src="@drawable/ic_launcher_foreground"
+                        android:src="@drawable/ic_edit_profile"
                         android:tint="#757575" />
 
                     <TextView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Chỉnh sửa hồ sơ"
+                        android:text="@string/edit_profile"
                         android:textColor="#212121"
                         android:textSize="16sp"
                         android:layout_marginStart="16dp" />
@@ -145,9 +147,7 @@
                     <ImageView
                         android:layout_width="16dp"
                         android:layout_height="16dp"
-                        android:src="@drawable/ic_launcher_foreground"
-                        android:tint="#BDBDBD"
-                        android:rotation="180" />
+                        android:src="@drawable/ic_arrow_right" />
 
                 </LinearLayout>
 
@@ -170,14 +170,14 @@
                     <ImageView
                         android:layout_width="24dp"
                         android:layout_height="24dp"
-                        android:src="@drawable/ic_launcher_foreground"
+                        android:src="@drawable/ic_change_password"
                         android:tint="#757575" />
 
                     <TextView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Đổi mật khẩu"
+                        android:text="@string/change_password"
                         android:textColor="#212121"
                         android:textSize="16sp"
                         android:layout_marginStart="16dp" />
@@ -185,9 +185,7 @@
                     <ImageView
                         android:layout_width="16dp"
                         android:layout_height="16dp"
-                        android:src="@drawable/ic_launcher_foreground"
-                        android:tint="#BDBDBD"
-                        android:rotation="180" />
+                        android:src="@drawable/ic_arrow_right" />
 
                 </LinearLayout>
 
@@ -210,14 +208,14 @@
                     <ImageView
                         android:layout_width="24dp"
                         android:layout_height="24dp"
-                        android:src="@drawable/ic_launcher_foreground"
+                        android:src="@drawable/ic_settings"
                         android:tint="#757575" />
 
                     <TextView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Cài đặt"
+                        android:text="@string/settings"
                         android:textColor="#212121"
                         android:textSize="16sp"
                         android:layout_marginStart="16dp" />
@@ -225,9 +223,7 @@
                     <ImageView
                         android:layout_width="16dp"
                         android:layout_height="16dp"
-                        android:src="@drawable/ic_launcher_foreground"
-                        android:tint="#BDBDBD"
-                        android:rotation="180" />
+                        android:src="@drawable/ic_arrow_right" />
 
                 </LinearLayout>
 
@@ -250,14 +246,14 @@
                     <ImageView
                         android:layout_width="24dp"
                         android:layout_height="24dp"
-                        android:src="@drawable/ic_launcher_foreground"
+                        android:src="@drawable/ic_help"
                         android:tint="#757575" />
 
                     <TextView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Trợ giúp &amp; Hỗ trợ"
+                        android:text="@string/help_support"
                         android:textColor="#212121"
                         android:textSize="16sp"
                         android:layout_marginStart="16dp" />
@@ -265,9 +261,7 @@
                     <ImageView
                         android:layout_width="16dp"
                         android:layout_height="16dp"
-                        android:src="@drawable/ic_launcher_foreground"
-                        android:tint="#BDBDBD"
-                        android:rotation="180" />
+                        android:src="@drawable/ic_arrow_right" />
 
                 </LinearLayout>
 
@@ -294,7 +288,7 @@
                     android:id="@+id/logout_button"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Đăng xuất"
+                    android:text="@string/logout"
                     android:textColor="@android:color/white"
                     android:textSize="16sp"
                     android:textStyle="bold"

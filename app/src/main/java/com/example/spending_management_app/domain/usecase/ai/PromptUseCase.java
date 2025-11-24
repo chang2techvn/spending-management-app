@@ -6,10 +6,12 @@ import android.util.Log;
 
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.spending_management_app.BuildConfig;
+import com.example.spending_management_app.domain.usecase.expense.ExpenseUseCase;
 import com.example.spending_management_app.presentation.dialog.AiChatBottomSheet;
 import com.example.spending_management_app.utils.ExtractorHelper;
+import com.example.spending_management_app.utils.LocaleHelper;
 import com.example.spending_management_app.utils.TextFormatHelper;
-import com.example.spending_management_app.domain.usecase.expense.ExpenseUseCase;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -40,8 +42,8 @@ public class PromptUseCase {
      * Send a prompt to AI for expense tracking
      */
     public void sendPromptToAI(String text, Activity activity, List<AiChatBottomSheet.ChatMessage> messages,
-                                     AiChatBottomSheet.ChatAdapter chatAdapter, RecyclerView messagesRecycler,
-                                     TextToSpeech textToSpeech, Runnable updateNetworkStatusCallback) {
+                               AiChatBottomSheet.ChatAdapter chatAdapter, RecyclerView messagesRecycler,
+                               TextToSpeech textToSpeech, Runnable updateNetworkStatusCallback) {
         // Add temporary "Đang phân tích..." message
         int analyzingIndex = messages.size();
         messages.add(new AiChatBottomSheet.ChatMessage("Đang phân tích...", false, "Bây giờ"));
@@ -72,10 +74,14 @@ public class PromptUseCase {
             JSONArray systemParts = new JSONArray();
             JSONObject systemPart = new JSONObject();
 
+            // Get app language and currency
+            String appLanguage = LocaleHelper.getLanguage(activity.getApplicationContext());
+            String appCurrency = "VND"; // Currently hardcoded, can be made configurable later
+
             // Use helper class for system instruction
             String instruction = AiSystemInstructions.getExpenseTrackingInstruction(
                 currentDateInfo, currentDay, currentMonth, currentYear,
-                yesterdayDay, yesterdayMonth, yesterdayYear
+                yesterdayDay, yesterdayMonth, yesterdayYear, appLanguage, appCurrency
             );
             systemPart.put("text", instruction);
             systemParts.put(systemPart);
@@ -119,7 +125,7 @@ public class PromptUseCase {
 
             RequestBody body = RequestBody.create(json.toString(), MediaType.parse("application/json"));
             Request request = new Request.Builder()
-                    .url("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyAsDEIa1N6Dn_rCXYiRCXuUAY-E1DQ0Yv8")
+                    .url("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=" + BuildConfig.GEMINI_API_KEY)
                     .post(body)
                     .build();
 

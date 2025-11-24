@@ -3,6 +3,8 @@ package com.example.spending_management_app.domain.model;
 import java.util.Date;
 import java.text.SimpleDateFormat;
 import java.util.Locale;
+import android.content.Context;
+import com.example.spending_management_app.utils.CurrencyFormatter;
 
 public class Transaction {
     private String description;
@@ -50,26 +52,13 @@ public class Transaction {
         return sdf.format(date);
     }
 
-    public String getFormattedAmount() {
+    public String getFormattedAmount(Context context) {
         if (amount >= 0) {
-            return "+" + formatCurrency(amount);
+            return "+" + CurrencyFormatter.formatCurrency(context, Math.abs(amount));
         } else {
-            return "-" + formatCurrency(amount);
+            return "-" + CurrencyFormatter.formatCurrency(context, Math.abs(amount));
         }
     }
 
-    private String formatCurrency(long amount) {
-        // Simple currency formatting - you can enhance this
-        String amountStr = String.valueOf(Math.abs(amount));
-        StringBuilder formatted = new StringBuilder();
-        int count = 0;
-        for (int i = amountStr.length() - 1; i >= 0; i--) {
-            formatted.insert(0, amountStr.charAt(i));
-            count++;
-            if (count % 3 == 0 && i > 0) {
-                formatted.insert(0, ",");
-            }
-        }
-        return formatted.toString() + " VND";
-    }
+
 }

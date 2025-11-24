@@ -12,6 +12,8 @@ import com.example.spending_management_app.presentation.dialog.AiChatBottomSheet
 import com.example.spending_management_app.presentation.dialog.AiChatBottomSheet.ChatMessage;
 import com.example.spending_management_app.utils.CategoryHelper;
 import com.example.spending_management_app.utils.CategoryIconHelper;
+import com.example.spending_management_app.utils.CategoryUtils;
+import com.example.spending_management_app.utils.CurrencyFormatter;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -40,8 +42,8 @@ public class WelcomeMessageUseCase {
     public void loadBudgetWelcomeMessage(Context context, Activity activity,
             List<ChatMessage> messages, ChatAdapter chatAdapter, RecyclerView messagesRecycler,
             Runnable refreshHomeFragment) {
-        // Add a temporary loading message
-        messages.add(new ChatMessage("Đang tải thông tin ngân sách...", false, "Bây giờ"));
+    // Add a temporary loading message (localized)
+    messages.add(new ChatMessage(context.getString(com.example.spending_management_app.R.string.loading_budget_info), false, context.getString(com.example.spending_management_app.R.string.now_label)));
 
         // Load budget data from database in background
         Executors.newSingleThreadExecutor().execute(() -> {
@@ -78,24 +80,22 @@ public class WelcomeMessageUseCase {
                 List<BudgetEntity> pastBudgets = budgetRepository
                         .getBudgetsByDateRangeOrdered(sixMonthsAgoStart, currentMonthEnd);
 
-                SimpleDateFormat monthFormat = new SimpleDateFormat("MM/yyyy", new Locale("vi", "VN"));
+                // Use device/default locale for month formatting so message localizes properly
+                SimpleDateFormat monthFormat = new SimpleDateFormat("MM/yyyy", Locale.getDefault());
 
                 // Build welcome message with budget information
                 StringBuilder welcomeMessage = new StringBuilder();
-                welcomeMessage.append("Chào bạn! 👋\n\n");
+                welcomeMessage.append(context.getString(com.example.spending_management_app.R.string.welcome_greeting)).append("\n\n");
 
                 // Check network status and add warning if offline
                 if (!isNetworkAvailable(context)) {
-                    welcomeMessage.append("⚠️ CHẾ ĐỘ OFFLINE\n");
-                    welcomeMessage.append("Bạn có thể:\n");
-                    welcomeMessage.append("✅ Thêm, sửa, xóa chi tiêu\n");
-                    welcomeMessage.append("✅ Quản lý ngân sách\n");
-                    welcomeMessage.append("❌ Không thể phân tích và tư vấn với AI\n\n");
+                    welcomeMessage.append(context.getString(com.example.spending_management_app.R.string.offline_mode_header)).append("\n");
+                    welcomeMessage.append(context.getString(com.example.spending_management_app.R.string.offline_mode_details));
                 }
 
                 // Part 1: Budget history from 6 months ago
                 if (!pastBudgets.isEmpty()) {
-                    welcomeMessage.append("📊 Ngân sách 6 tháng gần đây:\n\n");
+                    welcomeMessage.append(context.getString(com.example.spending_management_app.R.string.budget_history_title)).append("\n\n");
 
                     // Group budgets by month and show the most recent one for each month
                     java.util.Map<String, BudgetEntity> budgetsByMonth = new java.util.HashMap<>();
@@ -116,9 +116,9 @@ public class WelcomeMessageUseCase {
                     for (int i = startIndex; i < sortedMonths.size(); i++) {
                         String month = sortedMonths.get(i);
                         BudgetEntity budget = budgetsByMonth.get(month);
-                        String formattedAmount = String.format("%,d", budget.monthlyLimit);
+                        String formattedAmount = CurrencyFormatter.formatCurrency(context, budget.monthlyLimit);
                         welcomeMessage.append("💰 Tháng ").append(month).append(": ")
-                                .append(formattedAmount).append(" VND\n");
+                                .append(formattedAmount).append("\n");
                     }
                     welcomeMessage.append("\n");
                 }
@@ -134,17 +134,19 @@ public class WelcomeMessageUseCase {
 
                 if (!currentMonthBudgets.isEmpty()) {
                     BudgetEntity currentBudget = currentMonthBudgets.get(0);
-                    String formattedAmount = String.format("%,d", currentBudget.monthlyLimit);
+                    String formattedAmount = CurrencyFormatter.formatCurrency(context, currentBudget.monthlyLimit);
                     String currentMonth = monthFormat.format(currentBudget.date);
-                    welcomeMessage.append("📅 Ngân sách tháng này (").append(currentMonth).append("): ")
-                            .append(formattedAmount).append(" VND\n\n");
+                    welcomeMessage.append(context.getString(com.example.spending_management_app.R.string.current_month_budget_label))
+                            .append(" (").append(currentMonth).append("): ")
+                            .append(formattedAmount).append("\n\n");
                 } else {
-                    welcomeMessage.append("📅 Ngân sách tháng này: Chưa thiết lập\n\n");
+                    welcomeMessage.append(context.getString(com.example.spending_management_app.R.string.current_month_budget_label))
+                            .append(": ").append(context.getString(com.example.spending_management_app.R.string.budget_not_set)).append("\n\n");
                 }
 
                 // Part 2: Instructions for managing budget
-                welcomeMessage.append("💡 Để quản lý ngân sách, hãy cho tôi biết:\n");
-                welcomeMessage.append("Ví dụ: \"Thêm ngân sách 15 triệu\" hoặc \"Sửa ngân sách lên 20 triệu\"");
+                welcomeMessage.append(context.getString(com.example.spending_management_app.R.string.budget_instructions)).append("\n");
+                welcomeMessage.append(context.getString(com.example.spending_management_app.R.string.example_budget_command));
 
                 String finalMessage = welcomeMessage.toString();
 
@@ -153,7 +155,7 @@ public class WelcomeMessageUseCase {
                     activity.runOnUiThread(() -> {
                         // Replace loading message with actual welcome message
                         if (!messages.isEmpty()) {
-                            messages.set(0, new ChatMessage(finalMessage, false, "Bây giờ"));
+                            messages.set(0, new ChatMessage(finalMessage, false, context.getString(com.example.spending_management_app.R.string.now_label)));
                             chatAdapter.notifyItemChanged(0);
                         }
                     });
@@ -166,22 +168,19 @@ public class WelcomeMessageUseCase {
                 if (activity != null) {
                     activity.runOnUiThread(() -> {
                         StringBuilder fallbackMessage = new StringBuilder();
-                        fallbackMessage.append("Chào bạn! 👋\n\n");
+                        fallbackMessage.append(context.getString(com.example.spending_management_app.R.string.welcome_greeting)).append("\n\n");
 
                         // Check network status and add warning if offline
                         if (!isNetworkAvailable(context)) {
-                            fallbackMessage.append("⚠️ CHẾ ĐỘ OFFLINE\n");
-                            fallbackMessage.append("Bạn có thể:\n");
-                            fallbackMessage.append("✅ Thêm, sửa, xóa chi tiêu\n");
-                            fallbackMessage.append("✅ Quản lý ngân sách\n");
-                            fallbackMessage.append("❌ Không thể phân tích và tư vấn với AI\n\n");
+                            fallbackMessage.append(context.getString(com.example.spending_management_app.R.string.offline_mode_header)).append("\n");
+                            fallbackMessage.append(context.getString(com.example.spending_management_app.R.string.offline_mode_details));
                         }
 
-                        fallbackMessage.append("💡 Để quản lý ngân sách tháng, hãy cho tôi biết:\n");
-                        fallbackMessage.append("Ví dụ: \"Đặt ngân sách 15 triệu\" hoặc \"Sửa ngân sách lên 20 triệu\"");
+                        fallbackMessage.append(context.getString(com.example.spending_management_app.R.string.budget_instructions)).append("\n");
+                        fallbackMessage.append(context.getString(com.example.spending_management_app.R.string.example_budget_command));
 
                         if (!messages.isEmpty()) {
-                            messages.set(0, new ChatMessage(fallbackMessage.toString(), false, "Bây giờ"));
+                            messages.set(0, new ChatMessage(fallbackMessage.toString(), false, context.getString(com.example.spending_management_app.R.string.now_label)));
                             chatAdapter.notifyItemChanged(0);
                         }
                     });
@@ -195,8 +194,8 @@ public class WelcomeMessageUseCase {
      */
     public void loadRecentTransactionsForWelcome(Context context, Activity activity,
             List<ChatMessage> messages, ChatAdapter chatAdapter, RecyclerView messagesRecycler) {
-        // Add a temporary loading message
-        messages.add(new ChatMessage("Đang tải...", false, "Bây giờ"));
+    // Add a temporary loading message (localized)
+    messages.add(new ChatMessage(context.getString(com.example.spending_management_app.R.string.loading), false, context.getString(com.example.spending_management_app.R.string.now_label)));
 
         // Load recent transactions from database in background
         Executors.newSingleThreadExecutor().execute(() -> {
@@ -206,34 +205,32 @@ public class WelcomeMessageUseCase {
 
                 // Build welcome message with recent transactions
                 StringBuilder welcomeMessage = new StringBuilder();
-                welcomeMessage.append("Chào bạn! 👋\n\n");
+                welcomeMessage.append(context.getString(com.example.spending_management_app.R.string.welcome_greeting)).append("\n\n");
 
                 // Check network status and add warning if offline
                 if (!isNetworkAvailable(context)) {
-                    welcomeMessage.append("⚠️ CHẾ ĐỘ OFFLINE\n");
-                    welcomeMessage.append("Bạn có thể:\n");
-                    welcomeMessage.append("✅ Thêm, sửa, xóa chi tiêu\n");
-                    welcomeMessage.append("✅ Quản lý ngân sách\n");
-                    welcomeMessage.append("❌ Không thể phân tích và tư vấn với AI\n\n");
+                    welcomeMessage.append(context.getString(com.example.spending_management_app.R.string.offline_mode_header)).append("\n");
+                    welcomeMessage.append(context.getString(com.example.spending_management_app.R.string.offline_mode_details));
                 }
 
                 if (!recentTransactions.isEmpty()) {
-                    welcomeMessage.append("📋 Chi tiêu gần đây:\n\n");
+                    welcomeMessage.append(context.getString(com.example.spending_management_app.R.string.recent_transactions_title)).append("\n\n");
 
                     for (TransactionEntity transaction : recentTransactions) {
                         String emoji = CategoryHelper.getEmojiForCategory(transaction.category);
-                        String formattedAmount = String.format("%,d", Math.abs(transaction.amount));
+                        String formattedAmount = CurrencyFormatter.formatCurrency(context, Math.abs(transaction.amount));
+                        String localizedCategory = CategoryUtils.getLocalizedCategoryName(context, transaction.category);
                         welcomeMessage.append(emoji).append(" ")
                                 .append(transaction.description).append(": ")
-                                .append(formattedAmount).append(" VND")
-                                .append(" (").append(transaction.category).append(")")
+                                .append(formattedAmount)
+                                .append(" (").append(localizedCategory).append(")")
                                 .append("\n");
                     }
                     welcomeMessage.append("\n");
                 }
 
-                welcomeMessage.append("💡 Để thêm chi tiêu mới, hãy cho tôi biết:\n");
-                welcomeMessage.append("Ví dụ: \"Hôm qua tôi đổ xăng 50k\" hoặc \"Ngày 10/11 mua cafe 25k\"");
+                welcomeMessage.append(context.getString(com.example.spending_management_app.R.string.add_transaction_instructions)).append("\n");
+                welcomeMessage.append(context.getString(com.example.spending_management_app.R.string.example_add_transaction));
 
                 String finalMessage = welcomeMessage.toString();
 
@@ -242,7 +239,7 @@ public class WelcomeMessageUseCase {
                     activity.runOnUiThread(() -> {
                         // Replace loading message with actual welcome message
                         if (!messages.isEmpty()) {
-                            messages.set(0, new ChatMessage(finalMessage, false, "Bây giờ"));
+                            messages.set(0, new ChatMessage(finalMessage, false, context.getString(com.example.spending_management_app.R.string.now_label)));
                             chatAdapter.notifyItemChanged(0);
                         }
                     });
@@ -255,22 +252,19 @@ public class WelcomeMessageUseCase {
                 if (activity != null) {
                     activity.runOnUiThread(() -> {
                         StringBuilder fallbackMessage = new StringBuilder();
-                        fallbackMessage.append("Chào bạn! 👋\n\n");
+                        fallbackMessage.append(context.getString(com.example.spending_management_app.R.string.welcome_greeting)).append("\n\n");
 
                         // Check network status and add warning if offline
                         if (!isNetworkAvailable(context)) {
-                            fallbackMessage.append("⚠️ CHẾ ĐỘ OFFLINE\n");
-                            fallbackMessage.append("Bạn có thể:\n");
-                            fallbackMessage.append("✅ Thêm, sửa, xóa chi tiêu\n");
-                            fallbackMessage.append("✅ Quản lý ngân sách\n");
-                            fallbackMessage.append("❌ Không thể phân tích và tư vấn với AI\n\n");
+                            fallbackMessage.append(context.getString(com.example.spending_management_app.R.string.offline_mode_header)).append("\n");
+                            fallbackMessage.append(context.getString(com.example.spending_management_app.R.string.offline_mode_details));
                         }
 
-                        fallbackMessage.append("💡 Để thêm chi tiêu mới, hãy cho tôi biết:\n");
-                        fallbackMessage.append("Ví dụ: \"Hôm qua tôi đổ xăng 50k\" hoặc \"Ngày 10/11 mua cafe 25k\"");
+                        fallbackMessage.append(context.getString(com.example.spending_management_app.R.string.add_transaction_instructions)).append("\n");
+                        fallbackMessage.append(context.getString(com.example.spending_management_app.R.string.example_add_transaction));
 
                         if (!messages.isEmpty()) {
-                            messages.set(0, new ChatMessage(fallbackMessage.toString(), false, "Bây giờ"));
+                            messages.set(0, new ChatMessage(fallbackMessage.toString(), false, context.getString(com.example.spending_management_app.R.string.now_label)));
                             chatAdapter.notifyItemChanged(0);
                         }
                     });
@@ -285,8 +279,8 @@ public class WelcomeMessageUseCase {
     public void loadExpenseBulkWelcomeMessage(Context context, Activity activity,
             List<ChatMessage> messages, ChatAdapter chatAdapter, RecyclerView messagesRecycler,
             Runnable refreshHomeFragment, Runnable refreshExpenseWelcomeMessage) {
-        // Add a temporary loading message
-        messages.add(new ChatMessage("Đang tải...", false, "Bây giờ"));
+    // Add a temporary loading message (localized)
+    messages.add(new ChatMessage(context.getString(com.example.spending_management_app.R.string.loading), false, context.getString(com.example.spending_management_app.R.string.now_label)));
 
         // Load recent transactions from database in background
         Executors.newSingleThreadExecutor().execute(() -> {
@@ -296,39 +290,34 @@ public class WelcomeMessageUseCase {
 
                 // Build welcome message with recent transactions
                 StringBuilder welcomeMessage = new StringBuilder();
-                welcomeMessage.append("📋 Quản lý chi tiêu hàng loạt\n\n");
+                welcomeMessage.append(context.getString(com.example.spending_management_app.R.string.expense_bulk_title)).append("\n\n");
 
                 // Check network status and add warning if offline
                 if (!isNetworkAvailable(context)) {
-                    welcomeMessage.append("⚠️ CHẾ ĐỘ OFFLINE\n");
-                    welcomeMessage.append("Bạn có thể:\n");
-                    welcomeMessage.append("✅ Thêm, sửa, xóa chi tiêu\n");
-                    welcomeMessage.append("✅ Quản lý ngân sách\n");
-                    welcomeMessage.append("❌ Không thể phân tích và tư vấn với AI\n\n");
+                    welcomeMessage.append(context.getString(com.example.spending_management_app.R.string.offline_mode_header)).append("\n");
+                    welcomeMessage.append(context.getString(com.example.spending_management_app.R.string.offline_mode_details));
                 }
 
                 if (!recentTransactions.isEmpty()) {
-                    welcomeMessage.append("💳 Chi tiêu gần đây:\n\n");
+                    welcomeMessage.append(context.getString(com.example.spending_management_app.R.string.expense_bulk_details)).append("\n\n");
 
-                    SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM", new Locale("vi", "VN"));
+                    SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM", Locale.getDefault());
 
                     for (TransactionEntity transaction : recentTransactions) {
                         String emoji = CategoryIconHelper.getIconEmoji(transaction.category);
-                        String formattedAmount = String.format("%,d", Math.abs(transaction.amount));
+                        String formattedAmount = CurrencyFormatter.formatCurrency(context, Math.abs(transaction.amount));
                         String dateStr = dateFormat.format(transaction.date);
 
                         welcomeMessage.append(emoji).append(" ")
                                 .append(transaction.description)
-                                .append(": ").append(formattedAmount).append(" VND")
+                                .append(": ").append(formattedAmount)
                                 .append(" - ").append(dateStr)
                                 .append("\n");
                     }
                     welcomeMessage.append("\n");
                 }
 
-                welcomeMessage.append("💡 Hướng dẫn:\n");
-                welcomeMessage.append("• Thêm: 'Hôm qua ăn sáng 25k và cafe 30k'\n");
-                welcomeMessage.append("• Xóa: 'Xóa chi tiêu #123' (tìm ID ở trang Lịch sử)");
+                welcomeMessage.append(context.getString(com.example.spending_management_app.R.string.expense_bulk_guidance));
 
                 String finalMessage = welcomeMessage.toString();
 
@@ -337,7 +326,7 @@ public class WelcomeMessageUseCase {
                     activity.runOnUiThread(() -> {
                         // Replace loading message with actual welcome message
                         if (!messages.isEmpty()) {
-                            messages.set(0, new ChatMessage(finalMessage, false, "Bây giờ"));
+                            messages.set(0, new ChatMessage(finalMessage, false, context.getString(com.example.spending_management_app.R.string.now_label)));
                             chatAdapter.notifyItemChanged(0);
                         }
                     });
@@ -350,23 +339,18 @@ public class WelcomeMessageUseCase {
                 if (activity != null) {
                     activity.runOnUiThread(() -> {
                         StringBuilder fallbackMessage = new StringBuilder();
-                        fallbackMessage.append("📋 Quản lý chi tiêu hàng loạt\n\n");
+                        fallbackMessage.append(context.getString(com.example.spending_management_app.R.string.expense_bulk_title)).append("\n\n");
 
                         // Check network status and add warning if offline
                         if (!isNetworkAvailable(context)) {
-                            fallbackMessage.append("⚠️ CHẾ ĐỘ OFFLINE\n");
-                            fallbackMessage.append("Bạn có thể:\n");
-                            fallbackMessage.append("✅ Thêm, sửa, xóa chi tiêu\n");
-                            fallbackMessage.append("✅ Quản lý ngân sách\n");
-                            fallbackMessage.append("❌ Không thể phân tích và tư vấn với AI\n\n");
+                            fallbackMessage.append(context.getString(com.example.spending_management_app.R.string.offline_mode_header)).append("\n");
+                            fallbackMessage.append(context.getString(com.example.spending_management_app.R.string.offline_mode_details));
                         }
 
-                        fallbackMessage.append("💡 Hướng dẫn:\n");
-                        fallbackMessage.append("• Thêm: 'Hôm qua ăn sáng 25k và cafe 30k'\n");
-                        fallbackMessage.append("• Xóa: 'Xóa chi tiêu #123' (tìm ID ở trang Lịch sử)");
+                        fallbackMessage.append(context.getString(com.example.spending_management_app.R.string.expense_bulk_guidance));
 
                         if (!messages.isEmpty()) {
-                            messages.set(0, new ChatMessage(fallbackMessage.toString(), false, "Bây giờ"));
+                            messages.set(0, new ChatMessage(fallbackMessage.toString(), false, context.getString(com.example.spending_management_app.R.string.now_label)));
                             chatAdapter.notifyItemChanged(0);
                         }
                     });
