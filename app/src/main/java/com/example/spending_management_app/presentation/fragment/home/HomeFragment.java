@@ -117,8 +117,8 @@ public class HomeFragment extends Fragment {
                             binding.monthlyIncome.setText(CurrencyFormatter.formatCurrency(getContext(), budgetValue));
                             android.util.Log.d("HomeFragment", "Budget displayed: " + budgetValue);
                         } else {
-                            binding.monthlyIncome.setText("Chưa thiết lập");
-                            android.util.Log.d("HomeFragment", "No budget found - displaying 'Chưa thiết lập'");
+                            binding.monthlyIncome.setText(getString(R.string.not_set));
+                            android.util.Log.d("HomeFragment", "No budget found - displaying '" + getString(R.string.not_set) + "'");
                         }
                         
                         // Set monthly expense (absolute value, should be negative)
@@ -158,19 +158,19 @@ public class HomeFragment extends Fragment {
         dialog.setOnActionSelectedListener(new BudgetManagementDialog.OnActionSelectedListener() {
             @Override
             public void onAddIncomeSelected() {
-                ((MainActivity) getActivity()).openAiChat("Tôi muốn thêm thu nhập");
+                ((MainActivity) getActivity()).openAiChat(getString(R.string.add_income_chat_message));
             }
 
             @Override
             public void onSetBudgetSelected() {
-                ((MainActivity) getActivity()).openAiChat("Tôi muốn thiết lập ngân sách");
+                ((MainActivity) getActivity()).openAiChat(getString(R.string.set_budget_chat_message));
             }
         });
         dialog.show(getParentFragmentManager(), "BudgetManagementDialog");
     }
 
     private void showAddTransactionDialog() {
-        ((MainActivity) getActivity()).openAiChat("Tôi muốn thêm chi tiêu");
+        ((MainActivity) getActivity()).openAiChat(getString(R.string.add_expense_chat_message));
     }
 
     private void openAiChat(String prompt) {
@@ -572,7 +572,7 @@ public class HomeFragment extends Fragment {
         if (budget > 0) {
             amountView.setText(CurrencyFormatter.formatCurrency(getContext(), spending) + "/" + CurrencyFormatter.formatCurrency(getContext(), budget));
         } else {
-            amountView.setText(CurrencyFormatter.formatCurrency(getContext(), spending) + " (Chưa đặt ngân sách)");
+            amountView.setText(CurrencyFormatter.formatCurrency(getContext(), spending) + " (" + getString(R.string.budget_not_set_context) + ")");
         }
         amountView.setTextColor(0xFF757575);
         amountView.setTextSize(12);

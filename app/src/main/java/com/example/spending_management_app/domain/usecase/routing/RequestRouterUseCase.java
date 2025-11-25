@@ -65,15 +65,27 @@ public class RequestRouterUseCase {
         // Even if mode is not set, detect expense bulk operations from text
         if (!isExpenseBulkMode) {
             String lowerText = text.toLowerCase();
-            // Check for expense bulk keywords
-            if (lowerText.contains("xóa") || lowerText.contains("xoá") || lowerText.contains("xoa") ||
+            // Check for expense bulk keywords in Vietnamese
+            boolean hasVietnameseKeywords = lowerText.contains("xóa") || lowerText.contains("xoá") || lowerText.contains("xoa") ||
                 lowerText.contains("thêm chi tiêu") || lowerText.contains("them chi tieu") ||
-                lowerText.contains("chi tiêu") || lowerText.contains("chi tieu")) {
+                lowerText.contains("chi tiêu") || lowerText.contains("chi tieu");
+
+            // Check for expense bulk keywords in English
+            boolean hasEnglishKeywords = lowerText.contains("add expense") || lowerText.contains("delete expense") ||
+                lowerText.contains("remove expense") || lowerText.contains("spend") || lowerText.contains("expense") ||
+                lowerText.contains("spending") || lowerText.contains("cost");
+
+            if (hasVietnameseKeywords || hasEnglishKeywords) {
                 // Check if it looks like a bulk operation (contains amounts, dates, or multiple items)
-                if (lowerText.contains("ngày") || lowerText.contains("hôm") || lowerText.contains("tháng") ||
+                boolean hasBulkIndicators = lowerText.contains("ngày") || lowerText.contains("hôm") || lowerText.contains("tháng") ||
                     lowerText.contains("tất cả") || lowerText.contains("tat ca") ||
                     lowerText.matches(".*\\d+.*k.*") || lowerText.matches(".*\\d+.*000.*") ||
-                    lowerText.contains("và") || lowerText.contains("cả")) {
+                    lowerText.contains("và") || lowerText.contains("cả") ||
+                    lowerText.contains("day") || lowerText.contains("today") || lowerText.contains("yesterday") ||
+                    lowerText.contains("month") || lowerText.contains("year") || lowerText.contains("all") || lowerText.contains("and") ||
+                    lowerText.contains("with") || lowerText.contains("for");
+
+                if (hasBulkIndicators) {
                     isExpenseBulkMode = true;
                     android.util.Log.d("RequestRouterUseCase", "Detected expense bulk request from text content: " + text);
                 }

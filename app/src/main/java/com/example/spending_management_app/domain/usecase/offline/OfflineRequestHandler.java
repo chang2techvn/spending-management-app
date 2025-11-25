@@ -72,31 +72,35 @@ public class OfflineRequestHandler {
         }
         
         // 3. Handle category budget operations (check first if category name is present)
-        if (isCategoryBudgetMode || hasCategoryName || lowerText.contains("ngân sách danh mục")) {
-            boolean isBudgetOperation = lowerText.contains("ngân sách") || 
-                                       lowerText.contains("đặt") || 
-                                       lowerText.contains("thêm") ||
-                                       lowerText.contains("sửa") ||
-                                       lowerText.contains("xóa") || 
-                                       lowerText.contains("xoá");
+        if (isCategoryBudgetMode || hasCategoryName || lowerText.contains("ngân sách danh mục") || lowerText.contains("category budget")) {
+            boolean isBudgetOperation = lowerText.contains("ngân sách") || lowerText.contains("category budget") ||
+                                       lowerText.contains("đặt") || lowerText.contains("set") ||
+                                       lowerText.contains("thêm") || lowerText.contains("add") ||
+                                       lowerText.contains("sửa") || lowerText.contains("edit") ||
+                                       lowerText.contains("xóa") || lowerText.contains("xoá") ||
+                                       lowerText.contains("delete") || lowerText.contains("remove");
             
             if (isBudgetOperation && hasCategoryName) {
                 // Delete category budget
-                if (lowerText.contains("xóa") || lowerText.contains("xoá")) {
+                if (lowerText.contains("xóa") || lowerText.contains("xoá") ||
+                    lowerText.contains("delete") || lowerText.contains("remove")) {
                     return handleOfflineDeleteCategoryBudget(text);
                 }
                 // Add/Update category budget
                 if (lowerText.contains("thêm") || lowerText.contains("đặt") || 
-                    lowerText.contains("sửa") || lowerText.contains("ngân sách")) {
+                    lowerText.contains("sửa") || lowerText.contains("ngân sách") ||
+                    lowerText.contains("add") || lowerText.contains("set") ||
+                    lowerText.contains("edit") || lowerText.contains("category budget")) {
                     return handleOfflineUpdateCategoryBudget(text);
                 }
             }
         }
         
         // 2. Handle monthly budget operations
-        if (isBudgetMode || lowerText.contains("ngân sách tháng")) {
+        if (isBudgetMode || lowerText.contains("ngân sách tháng") || lowerText.contains("monthly budget")) {
             // Delete budget
-            if (lowerText.contains("xóa") || lowerText.contains("xoá")) {
+            if (lowerText.contains("xóa") || lowerText.contains("xoá") ||
+                lowerText.contains("delete") || lowerText.contains("remove")) {
                 return handleOfflineDeleteBudget(text);
             }
             // Add/Update budget
@@ -104,7 +108,10 @@ public class OfflineRequestHandler {
                 lowerText.contains("sửa") || lowerText.contains("nâng") || 
                 lowerText.contains("tăng") || lowerText.contains("giảm") ||
                 lowerText.contains("hạ") || lowerText.contains("cắt") ||
-                lowerText.contains("trừ") || lowerText.contains("bớt")) {
+                lowerText.contains("trừ") || lowerText.contains("bớt") ||
+                lowerText.contains("add") || lowerText.contains("set") ||
+                lowerText.contains("edit") || lowerText.contains("increase") ||
+                lowerText.contains("decrease") || lowerText.contains("monthly budget")) {
                 return handleOfflineUpdateBudget(text);
             }
         }
@@ -112,7 +119,8 @@ public class OfflineRequestHandler {
         // 1. Handle expense operations
         if (isExpenseBulkMode || (!isBudgetMode && !isCategoryBudgetMode)) {
             // Delete expense
-            if (lowerText.contains("xóa") || lowerText.contains("xoá")) {
+            if (lowerText.contains("xóa") || lowerText.contains("xoá") ||
+                lowerText.contains("delete") || lowerText.contains("remove")) {
                 return handleOfflineDeleteExpense(text);
             }
             // Add expense
@@ -127,7 +135,10 @@ public class OfflineRequestHandler {
     private boolean containsExpenseKeywords(String lowerText) {
         String[] keywords = {"chi tiêu", "mua", "đổ xăng", "ăn", "uống", "cafe", "cà phê", 
                             "nhà hàng", "siêu thị", "shopping", "mỹ phẩm", "quần áo",
-                            "điện", "nước", "internet", "điện thoại", "taxi", "grab"};
+                            "điện", "nước", "internet", "điện thoại", "taxi", "grab",
+                            "expense", "buy", "gas", "eat", "drink", "coffee",
+                            "restaurant", "supermarket", "clothes", "electricity",
+                            "water", "phone", "taxi", "grab"};
         for (String keyword : keywords) {
             if (lowerText.contains(keyword)) {
                 return true;

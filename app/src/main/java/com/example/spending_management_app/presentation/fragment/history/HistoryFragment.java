@@ -107,7 +107,9 @@ public class HistoryFragment extends Fragment implements DateRangePickerDialog.D
                 
                 // Convert BudgetHistoryEntity to Transaction objects
                 for (BudgetHistoryEntity entity : budgetHistoryEntities) {
-                    String category = entity.getBudgetType().equals("monthly") ? "Ngân sách tháng" : entity.getCategory();
+                    // Use localized string for monthly budget label so it follows app language
+                    String monthlyBudgetLabel = getString(R.string.monthly_budget_button);
+                    String category = entity.getBudgetType().equals("monthly") ? monthlyBudgetLabel : entity.getCategory();
                     String iconName = "ic_account_balance_wallet";
                     
                     // Determine amount sign based on action

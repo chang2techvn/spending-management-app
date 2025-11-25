@@ -325,7 +325,7 @@ public class AccountFragment extends Fragment {
                     }
                 } else {
                     if (getActivity() != null) {
-                        getActivity().runOnUiThread(() -> Toast.makeText(getContext(), "Lấy tỷ giá thất bại: " + msg, Toast.LENGTH_SHORT).show());
+                        getActivity().runOnUiThread(() -> Toast.makeText(getContext(), getString(R.string.exchange_rate_fetch_failed, msg), Toast.LENGTH_SHORT).show());
                     }
                 }
             });

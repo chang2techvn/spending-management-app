@@ -99,20 +99,20 @@ public class AiContextUseCase {
             List<BudgetEntity> monthlyBudgets = budgetRepository.getBudgetsByDateRange(startOfMonth, endOfMonth);
 
             // Build context string
-            contextBuilder.append("THÔNG TIN TÀI CHÍNH THÁNG NÀY:\n");
-            contextBuilder.append("- Tổng thu nhập: ").append(CurrencyFormatter.formatCurrency(context, totalIncome)).append("\n");
-            contextBuilder.append("- Tổng chi tiêu: ").append(CurrencyFormatter.formatCurrency(context, totalExpense)).append("\n");
-            contextBuilder.append("- Số dư ước tính: ").append(CurrencyFormatter.formatCurrency(context, (totalIncome - totalExpense))).append("\n");
+            contextBuilder.append(context.getString(R.string.financial_info_this_month)).append("\n");
+            contextBuilder.append("- ").append(context.getString(R.string.total_income_label)).append(" ").append(CurrencyFormatter.formatCurrency(context, totalIncome)).append("\n");
+            contextBuilder.append("- ").append(context.getString(R.string.total_expense_label)).append(": ").append(CurrencyFormatter.formatCurrency(context, totalExpense)).append("\n");
+            contextBuilder.append("- ").append(context.getString(R.string.estimated_balance_label)).append(" ").append(CurrencyFormatter.formatCurrency(context, (totalIncome - totalExpense))).append("\n");
             
             if (!monthlyBudgets.isEmpty()) {
                 BudgetEntity budget = monthlyBudgets.get(0);
                 long remaining = budget.getMonthlyLimit() - totalExpense;
-                contextBuilder.append("- Ngân sách tháng: ").append(CurrencyFormatter.formatCurrency(context, budget.getMonthlyLimit())).append("\n");
-                contextBuilder.append("- Còn lại: ").append(CurrencyFormatter.formatCurrency(context, remaining)).append("\n");
-                contextBuilder.append("- Tỷ lệ sử dụng: ").append(String.format("%.1f", (double)totalExpense/budget.getMonthlyLimit()*100)).append("%\n");
+                contextBuilder.append("- ").append(context.getString(R.string.monthly_budget_label_context)).append(" ").append(CurrencyFormatter.formatCurrency(context, budget.getMonthlyLimit())).append("\n");
+                contextBuilder.append("- ").append(context.getString(R.string.remaining_label)).append(" ").append(CurrencyFormatter.formatCurrency(context, remaining)).append("\n");
+                contextBuilder.append("- ").append(context.getString(R.string.usage_rate_label)).append(" ").append(String.format("%.1f", (double)totalExpense/budget.getMonthlyLimit()*100)).append("%\n");
             }
             
-            contextBuilder.append("\nCHI TIÊU THEO DANH MỤC:\n");
+            contextBuilder.append("\n").append(context.getString(R.string.spending_by_category_label)).append("\n");
             for (java.util.Map.Entry<String, Long> entry : expensesByCategory.entrySet()) {
                 double percentage = totalExpense > 0 ? (double)entry.getValue()/totalExpense*100 : 0;
                 contextBuilder.append("- ").append(entry.getKey()).append(": ")
@@ -120,7 +120,7 @@ public class AiContextUseCase {
                        .append(" (").append(String.format("%.1f", percentage)).append("%)\n");
             }
             
-            contextBuilder.append("\nGAO DỊCH GẦN ĐÂY:\n");
+            contextBuilder.append("\n").append(context.getString(R.string.recent_transactions_label)).append("\n");
             SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM", Locale.getDefault());
             List<TransactionEntity> recentTransactions = monthlyTransactions.stream()
                     .sorted((t1, t2) -> t2.date.compareTo(t1.date))
@@ -134,7 +134,7 @@ public class AiContextUseCase {
             }
 
         } catch (Exception e) {
-            contextBuilder.append("Lỗi khi truy xuất dữ liệu tài chính: ").append(e.getMessage());
+            contextBuilder.append(context.getString(R.string.error_getting_financial_data)).append(" ").append(e.getMessage());
         }
         
         return contextBuilder.toString();
@@ -227,7 +227,7 @@ public class AiContextUseCase {
                 @Override
                 public void onFailure(Call call, IOException e) {
                     activity.runOnUiThread(() -> {
-                        messages.set(analyzingIndex, new AiChatBottomSheet.ChatMessage("Lỗi kết nối AI.", false, "Bây giờ"));
+                        messages.set(analyzingIndex, new AiChatBottomSheet.ChatMessage(activity.getString(R.string.ai_connection_error), false, activity.getString(R.string.now_label)));
                         chatAdapter.notifyItemChanged(analyzingIndex);
                         updateNetworkStatus.run();
                     });
@@ -257,14 +257,14 @@ public class AiContextUseCase {
                             });
                         } catch (Exception e) {
                             activity.runOnUiThread(() -> {
-                                messages.set(analyzingIndex, new AiChatBottomSheet.ChatMessage("Lỗi xử lý phản hồi AI.", false, "Bây giờ"));
+                                messages.set(analyzingIndex, new AiChatBottomSheet.ChatMessage(activity.getString(R.string.ai_processing_error), false, activity.getString(R.string.now_label)));
                                 chatAdapter.notifyItemChanged(analyzingIndex);
                                 updateNetworkStatus.run();
                             });
                         }
                     } else {
                         activity.runOnUiThread(() -> {
-                            messages.set(analyzingIndex, new AiChatBottomSheet.ChatMessage("Lỗi từ AI: " + response.code(), false, "Bây giờ"));
+                            messages.set(analyzingIndex, new AiChatBottomSheet.ChatMessage(activity.getString(R.string.ai_send_error) + " " + response.code(), false, activity.getString(R.string.now_label)));
                             chatAdapter.notifyItemChanged(analyzingIndex);
                             updateNetworkStatus.run();
                         });
@@ -272,7 +272,7 @@ public class AiContextUseCase {
                 }
             });
         } catch (Exception e) {
-            messages.set(analyzingIndex, new AiChatBottomSheet.ChatMessage("Lỗi gửi tin nhắn.", false, "Bây giờ"));
+            messages.set(analyzingIndex, new AiChatBottomSheet.ChatMessage(activity.getString(R.string.ai_send_error), false, activity.getString(R.string.now_label)));
             chatAdapter.notifyItemChanged(analyzingIndex);
         }
     }
@@ -306,7 +306,7 @@ public class AiContextUseCase {
             
             SimpleDateFormat monthYearFormat = new SimpleDateFormat("MM/yyyy", new Locale("vi", "VN"));
             
-            contextBuilder.append("THÔNG TIN NGÂN SÁCH:\n");
+            contextBuilder.append(context.getString(R.string.budget_info_label)).append("\n");
             
             if (allBudgets != null && !allBudgets.isEmpty()) {
                 // Group by month
@@ -328,12 +328,12 @@ public class AiContextUseCase {
                 String currentMonth = monthYearFormat.format(currentCal.getTime());
                 
                 // List all budgets
-                contextBuilder.append("\nDanh sách ngân sách theo tháng:\n");
+                contextBuilder.append("\n").append(context.getString(R.string.budget_list_by_month)).append("\n");
                 for (String month : sortedMonths) {
                     BudgetEntity budget = budgetsByMonth.get(month);
                     String formattedAmount = CurrencyFormatter.formatCurrency(context, budget.monthlyLimit);
                     
-                    String marker = month.equals(currentMonth) ? " (Tháng hiện tại)" : "";
+                    String marker = month.equals(currentMonth) ? " " + context.getString(R.string.current_month_marker) : "";
                     contextBuilder.append("- Tháng ").append(month).append(marker).append(": ")
                            .append(formattedAmount).append("\n");
                 }
@@ -363,30 +363,29 @@ public class AiContextUseCase {
                 long avgBudget = totalBudget / sortedMonths.size();
                 
                 contextBuilder.append("\nThống kê ngân sách:\n");
-                contextBuilder.append("- Tổng số tháng đã thiết lập: ").append(sortedMonths.size()).append("\n");
-                contextBuilder.append("- Ngân sách trung bình: ").append(CurrencyFormatter.formatCurrency(context, avgBudget)).append("\n");
-                contextBuilder.append("- Ngân sách cao nhất: ").append(CurrencyFormatter.formatCurrency(context, maxBudget))
-                       .append(" (Tháng ").append(maxMonth).append(")\n");
-                contextBuilder.append("- Ngân sách thấp nhất: ").append(CurrencyFormatter.formatCurrency(context, minBudget))
-                       .append(" (Tháng ").append(minMonth).append(")\n");
+                contextBuilder.append("- ").append(context.getString(R.string.total_months_set)).append(" ").append(sortedMonths.size()).append("\n");
+                contextBuilder.append("- ").append(context.getString(R.string.average_budget_label)).append(" ").append(CurrencyFormatter.formatCurrency(context, avgBudget)).append("\n");
+                contextBuilder.append("- ").append(String.format(context.getString(R.string.highest_budget_month), CurrencyFormatter.formatCurrency(context, maxBudget), maxMonth)).append("\n");
+                contextBuilder.append("- ").append(String.format(context.getString(R.string.lowest_budget_month), CurrencyFormatter.formatCurrency(context, minBudget), minMonth)).append("\n");
                 
                 // Current month budget status
                 if (budgetsByMonth.containsKey(currentMonth)) {
                     BudgetEntity currentBudget = budgetsByMonth.get(currentMonth);
-                    contextBuilder.append("\nNgân sách tháng hiện tại: ")
+                    contextBuilder.append("\n").append(context.getString(R.string.current_month_budget_context))
+                           .append(" ")
                            .append(CurrencyFormatter.formatCurrency(context, currentBudget.monthlyLimit))
                            .append("\n");
                 } else {
-                    contextBuilder.append("\nNgân sách tháng hiện tại: Chưa thiết lập\n");
+                    contextBuilder.append("\n").append(context.getString(R.string.current_month_budget_context)).append(" ").append(context.getString(R.string.budget_not_set_context)).append("\n");
                 }
                 
             } else {
-                contextBuilder.append("Chưa có ngân sách nào được thiết lập.\n");
+                contextBuilder.append(context.getString(R.string.no_budget_set_message)).append("\n");
             }
             
             // ========== THÊM THÔNG TIN NGÂN SÁCH DANH MỤC ==========
             contextBuilder.append("\n");
-            contextBuilder.append("NGÂN SÁCH THEO DANH MỤC (THÁNG HIỆN TẠI):\n");
+            contextBuilder.append(context.getString(R.string.category_budget_section)).append("\n");
             
             try {
                 // Get current month range
@@ -417,7 +416,8 @@ public class AiContextUseCase {
                         totalCategoryBudget += budget.getBudgetAmount();
                     }
                     
-                    contextBuilder.append("Tổng ngân sách đã phân bổ: ")
+                    contextBuilder.append(context.getString(R.string.total_allocated_budget))
+                           .append(" ")
                            .append(CurrencyFormatter.formatCurrency(context, totalCategoryBudget))
                            .append("\n\n");
                     
@@ -425,7 +425,7 @@ public class AiContextUseCase {
                     categoryBudgets.sort((a, b) -> Long.compare(b.getBudgetAmount(), a.getBudgetAmount()));
                     
                     // List all category budgets
-                    contextBuilder.append("Chi tiết ngân sách từng danh mục:\n");
+                    contextBuilder.append(context.getString(R.string.category_budget_details)).append("\n");
                     for (CategoryBudgetEntity budget : categoryBudgets) {
                         contextBuilder.append("- ").append(budget.getCategory()).append(": ")
                                .append(CurrencyFormatter.formatCurrency(context, budget.getBudgetAmount())).append("\n");
@@ -433,7 +433,7 @@ public class AiContextUseCase {
                     
                     // Calculate percentage for top categories
                     if (totalCategoryBudget > 0) {
-                        contextBuilder.append("\nTỷ lệ phân bổ ngân sách:\n");
+                        contextBuilder.append("\n").append(context.getString(R.string.budget_allocation_percentage)).append("\n");
                         for (int i = 0; i < Math.min(5, categoryBudgets.size()); i++) {
                             CategoryBudgetEntity budget = categoryBudgets.get(i);
                             double percentage = (budget.getBudgetAmount() * 100.0) / totalCategoryBudget;
@@ -442,15 +442,15 @@ public class AiContextUseCase {
                         }
                     }
                 } else {
-                    contextBuilder.append("Chưa có ngân sách danh mục nào được thiết lập.\n");
+                    contextBuilder.append(context.getString(R.string.no_category_budget_set)).append("\n");
                 }
             } catch (Exception e) {
-                contextBuilder.append("Lỗi khi truy xuất ngân sách danh mục: ").append(e.getMessage()).append("\n");
+                contextBuilder.append(context.getString(R.string.error_getting_category_budget)).append(" ").append(e.getMessage()).append("\n");
                 Log.e("AiContextService", "Error getting category budget context", e);
             }
             
         } catch (Exception e) {
-            contextBuilder.append("Lỗi khi truy xuất dữ liệu ngân sách: ").append(e.getMessage());
+            contextBuilder.append(context.getString(R.string.error_getting_budget_data)).append(" ").append(e.getMessage());
             Log.e("AiContextService", "Error getting budget context", e);
         }
         

@@ -46,12 +46,12 @@ public class AuthViewModel extends ViewModel {
     /**
      * Register user
      */
-    public void register(String emailOrPhone, String password, String confirmPassword) {
+    public void register(String emailOrPhone, String password, String confirmPassword, android.content.Context context) {
         registerState.setValue(RegisterState.LOADING);
 
         // Run in background thread
         new Thread(() -> {
-            UserUseCase.RegisterResult result = userUseCase.registerUser(emailOrPhone, password, confirmPassword);
+            UserUseCase.RegisterResult result = userUseCase.registerUser(emailOrPhone, password, confirmPassword, context);
             if (result.success) {
                 currentUser.postValue(result.user);
                 registerState.postValue(RegisterState.SUCCESS);

@@ -5,6 +5,7 @@ import android.os.Handler;
 import android.os.Looper;
 
 import com.example.spending_management_app.BuildConfig;
+import com.example.spending_management_app.R;
 import com.example.spending_management_app.domain.usecase.ai.AiSystemInstructions;
 import com.example.spending_management_app.utils.LocaleHelper;
 import com.example.spending_management_app.utils.TextFormatHelper;
@@ -72,7 +73,7 @@ public final class GeminiApiService {
             client.newCall(request).enqueue(new Callback() {
                 @Override
                 public void onFailure(Call call, IOException e) {
-                    mainHandler.post(() -> callback.onFailure("Lỗi kết nối AI."));
+                    mainHandler.post(() -> callback.onFailure(context.getString(R.string.ai_connection_error)));
                 }
 
                 @Override
@@ -91,15 +92,15 @@ public final class GeminiApiService {
 
                             mainHandler.post(() -> callback.onSuccess(formattedText));
                         } catch (Exception e) {
-                            mainHandler.post(() -> callback.onFailure("Lỗi xử lý phản hồi AI."));
+                            mainHandler.post(() -> callback.onFailure(context.getString(R.string.ai_processing_error)));
                         }
                     } else {
-                        mainHandler.post(() -> callback.onFailure("Lỗi từ AI: " + response.code()));
+                        mainHandler.post(() -> callback.onFailure(context.getString(R.string.ai_send_error) + " " + response.code()));
                     }
                 }
             });
         } catch (Exception e) {
-            mainHandler.post(() -> callback.onFailure("Lỗi gửi tin nhắn."));
+            mainHandler.post(() -> callback.onFailure(context.getString(R.string.ai_send_error)));
         }
     }
     

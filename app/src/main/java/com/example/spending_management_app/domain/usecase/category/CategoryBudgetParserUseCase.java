@@ -43,6 +43,18 @@ public class CategoryBudgetParserUseCase {
             return operations;
         }
 
+        // Check if user wants to delete ALL category budgets (English)
+        if ((lowerText.contains("delete") || lowerText.contains("remove") ||
+             lowerText.contains("clear") || lowerText.contains("reset") ||
+             lowerText.contains("erase")) &&
+            (lowerText.contains("all") || lowerText.contains("everything") ||
+             lowerText.contains("entire"))) {
+
+            // Special operation: delete all categories
+            operations.add(new CategoryBudgetOperation("delete_all", "ALL", 0));
+            return operations;
+        }
+
         // Determine operation type
         String operationType = "edit"; // default
         if (lowerText.contains("xóa") || lowerText.contains("xoá")) {
@@ -53,21 +65,40 @@ public class CategoryBudgetParserUseCase {
             operationType = "edit";
         }
 
+        // Determine operation type (English)
+        if (lowerText.contains("delete") || lowerText.contains("remove")) {
+            operationType = "delete";
+        } else if (lowerText.contains("add") || lowerText.contains("set")) {
+            operationType = "add";
+        } else if (lowerText.contains("edit") || lowerText.contains("change") ||
+                   lowerText.contains("update") || lowerText.contains("modify")) {
+            operationType = "edit";
+        }
+
         // List of all categories with their aliases (shortened names)
         java.util.Map<String, String> categoryAliases = new java.util.HashMap<>();
 
-        // Full category names
+        // Full category names (Vietnamese + English)
         String[] allCategories = {
+            // Vietnamese names
             "Ăn uống", "Di chuyển", "Tiện ích", "Y tế", "Nhà ở",
             "Mua sắm", "Giáo dục", "Sách & Học tập", "Thể thao", "Sức khỏe & Làm đẹp",
             "Giải trí", "Du lịch", "Ăn ngoài & Cafe", "Quà tặng & Từ thiện", "Hội họp & Tiệc tụng",
             "Điện thoại & Internet", "Đăng ký & Dịch vụ", "Phần mềm & Apps", "Ngân hàng & Phí",
             "Con cái", "Thú cưng", "Gia đình",
             "Lương", "Đầu tư", "Thu nhập phụ", "Tiết kiệm",
-            "Khác"
+            "Khác",
+            // English names
+            "Food", "Transport", "Utilities", "Healthcare", "Housing",
+            "Shopping", "Education", "Books & Learning", "Sports", "Beauty & Health",
+            "Entertainment", "Travel", "Cafe & Dining Out", "Gifts & Charity", "Events & Parties",
+            "Phone & Internet", "Services & Subscriptions", "Software & Apps", "Banking & Fees",
+            "Children", "Pets", "Family",
+            "Salary", "Investment", "Side Income", "Savings",
+            "Other", "Budget"
         };
 
-        // Add aliases for categories with "&" (accept first part only)
+        // Add aliases for categories with "&" (accept first part only) - Vietnamese
         categoryAliases.put("sức khỏe", "Sức khỏe & Làm đẹp");
         categoryAliases.put("làm đẹp", "Sức khỏe & Làm đẹp");
         categoryAliases.put("ăn ngoài", "Ăn ngoài & Cafe");
@@ -87,6 +118,27 @@ public class CategoryBudgetParserUseCase {
         categoryAliases.put("phí", "Ngân hàng & Phí");
         categoryAliases.put("sách", "Sách & Học tập");
         categoryAliases.put("học tập", "Sách & Học tập");
+
+        // Add aliases for categories with "&" (accept first part only) - English
+        categoryAliases.put("beauty", "Beauty & Health");
+        categoryAliases.put("health", "Beauty & Health");
+        categoryAliases.put("dining", "Cafe & Dining Out");
+        categoryAliases.put("restaurant", "Cafe & Dining Out");
+        categoryAliases.put("coffee", "Cafe & Dining Out");
+        categoryAliases.put("gifts", "Gifts & Charity");
+        categoryAliases.put("charity", "Gifts & Charity");
+        categoryAliases.put("events", "Events & Parties");
+        categoryAliases.put("parties", "Events & Parties");
+        categoryAliases.put("phone", "Phone & Internet");
+        categoryAliases.put("internet", "Phone & Internet");
+        categoryAliases.put("services", "Services & Subscriptions");
+        categoryAliases.put("subscriptions", "Services & Subscriptions");
+        categoryAliases.put("software", "Software & Apps");
+        categoryAliases.put("apps", "Software & Apps");
+        categoryAliases.put("banking", "Banking & Fees");
+        categoryAliases.put("fees", "Banking & Fees");
+        categoryAliases.put("books", "Books & Learning");
+        categoryAliases.put("learning", "Books & Learning");
 
         // Parse text more carefully by looking for explicit "category + amount" pairs
         // Split text by common separators

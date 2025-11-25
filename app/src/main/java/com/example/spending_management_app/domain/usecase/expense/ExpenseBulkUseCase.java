@@ -148,10 +148,12 @@ public class ExpenseBulkUseCase {
 
         // Determine operation type
         String operationType = "add"; // default
-        if (lowerText.contains("xóa") || lowerText.contains("xoá") || lowerText.contains("xoa")) {
+        if (lowerText.contains("xóa") || lowerText.contains("xoá") || lowerText.contains("xoa") ||
+            lowerText.contains("delete") || lowerText.contains("remove")) {
             operationType = "delete";
             android.util.Log.d("ExpenseBulkService", "Detected DELETE operation");
-        } else if (lowerText.contains("sửa") || lowerText.contains("thay đổi") || lowerText.contains("cập nhật")) {
+        } else if (lowerText.contains("sửa") || lowerText.contains("thay đổi") || lowerText.contains("cập nhật") ||
+                   lowerText.contains("edit") || lowerText.contains("update") || lowerText.contains("change") || lowerText.contains("modify")) {
             operationType = "edit";
             android.util.Log.d("ExpenseBulkService", "Detected EDIT operation");
         } else {
@@ -180,7 +182,7 @@ public class ExpenseBulkUseCase {
                 // This prevents "tháng này" from being interpreted as "ngày này"
 
                 // First check if text contains year-related keywords
-                boolean hasYearKeywords = lowerText.contains("năm") || lowerText.contains("nam");
+                boolean hasYearKeywords = lowerText.contains("năm") || lowerText.contains("nam") || lowerText.contains("year");
                 android.util.Log.d("ExpenseBulkService", "Has year keywords: " + hasYearKeywords);
 
                 if (hasYearKeywords) {
@@ -202,7 +204,7 @@ public class ExpenseBulkUseCase {
 
                 // If no year found or no year keywords, check for month keywords
                 if (operations.isEmpty()) {
-                    boolean hasMonthKeywords = lowerText.contains("tháng") || lowerText.contains("thang");
+                    boolean hasMonthKeywords = lowerText.contains("tháng") || lowerText.contains("thang") || lowerText.contains("month");
                     android.util.Log.d("ExpenseBulkService", "Has month keywords: " + hasMonthKeywords);
 
                     if (hasMonthKeywords) {
@@ -261,7 +263,7 @@ public class ExpenseBulkUseCase {
             if (operations.isEmpty()) {
                 android.util.Log.d("ExpenseBulkService", "No date found, trying description extraction");
                 // Extract potential description from text (remove keywords)
-                String description = lowerText.replaceAll("(xóa|xoa|xoá|sửa|thay đổi|cập nhật|chi tiêu|giao dịch|tất cả|toàn bộ|thành|thanh)", "").trim();
+                String description = lowerText.replaceAll("(xóa|xoa|xoá|sửa|thay đổi|cập nhật|chi tiêu|giao dịch|tất cả|toàn bộ|thành|thanh|delete|remove|edit|update|change|modify|expense|transaction|all|everything|to|into)", "").trim();
                 android.util.Log.d("ExpenseBulkService", "Extracted description: [" + description + "]");
                 if (!description.isEmpty() && description.length() > 2) {
                     operations.add(new ExpenseOperation(operationType, "desc:" + description));

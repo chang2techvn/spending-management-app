@@ -53,6 +53,16 @@ public final class ExpenseMessageHelper {
                 lowerText.contains("danh mục") || lowerText.contains("thống kê") ||
                 lowerText.contains("ngày") && (lowerText.contains("/") || lowerText.matches(".*\\d+.*")) ||
                 lowerText.contains("so với") || lowerText.contains("tư vấn")
+        ) || lowerText.contains("spending") && (
+                lowerText.contains("today") || lowerText.contains("yesterday") ||
+                lowerText.contains("week") || lowerText.contains("month") ||
+                lowerText.contains("total") || lowerText.contains("how much") ||
+                lowerText.contains("analyze") || lowerText.contains("report") ||
+                lowerText.contains("category") || lowerText.contains("statistics") ||
+                lowerText.contains("day") && lowerText.matches(".*\\d+.*") ||
+                lowerText.contains("compared to") || lowerText.contains("consult") ||
+                lowerText.contains("expense") || lowerText.contains("expenses") ||
+                lowerText.contains("cost") || lowerText.contains("costs")
         );
     }
 }

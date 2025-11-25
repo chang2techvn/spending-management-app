@@ -1,5 +1,8 @@
 package com.example.spending_management_app.domain.usecase.user;
 
+import android.content.Context;
+
+import com.example.spending_management_app.R;
 import com.example.spending_management_app.data.local.entity.UserEntity;
 import com.example.spending_management_app.domain.repository.UserRepository;
 import com.example.spending_management_app.utils.PasswordUtils;
@@ -16,13 +19,14 @@ public class UserUseCase {
     }
 
     /**
-     * Register a new user
+     * Register new user
      * @param emailOrPhone Email or phone number
      * @param password Plain text password
      * @param confirmPassword Password confirmation
-     * @return Result with success status and message
+     * @param context Android context for string resources
+     * @return Result with success status and user data
      */
-    public RegisterResult registerUser(String emailOrPhone, String password, String confirmPassword) {
+    public RegisterResult registerUser(String emailOrPhone, String password, String confirmPassword, Context context) {
         // Validate input
         if (emailOrPhone == null || emailOrPhone.trim().isEmpty()) {
             return new RegisterResult(false, "Email hoặc số điện thoại không được để trống");
@@ -63,9 +67,9 @@ public class UserUseCase {
         long userId = userRepository.registerUser(user);
         if (userId > 0) {
             user.setId((int) userId);
-            return new RegisterResult(true, "Đăng ký thành công", user);
+            return new RegisterResult(true, context.getString(R.string.registration_success), user);
         } else {
-            return new RegisterResult(false, "Đăng ký thất bại, vui lòng thử lại");
+            return new RegisterResult(false, context.getString(R.string.registration_failed));
         }
     }
 

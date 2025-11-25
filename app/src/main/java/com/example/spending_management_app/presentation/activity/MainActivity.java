@@ -182,7 +182,7 @@ public class MainActivity extends AppCompatActivity {
             try {
                 startActivityForResult(intent, VOICE_REQUEST_CODE);
             } catch (Exception e) {
-                Toast.makeText(MainActivity.this, "Thiết bị không hỗ trợ nhận diện giọng nói", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, getString(R.string.voice_recognition_not_supported), Toast.LENGTH_SHORT).show();
             }
             return true; // Prevent onClick
         });
@@ -255,7 +255,7 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     startActivityForResult(intent, VOICE_REQUEST_CODE);
                 } catch (Exception e) {
-                    Toast.makeText(this, "Thiết bị không hỗ trợ nhận diện giọng nói", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, getString(R.string.voice_recognition_not_supported), Toast.LENGTH_SHORT).show();
                 }
             } else {
                 Toast.makeText(this, "Cần quyền ghi âm để sử dụng voice chat", Toast.LENGTH_SHORT).show();

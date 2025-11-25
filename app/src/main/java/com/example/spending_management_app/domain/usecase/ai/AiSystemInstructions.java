@@ -55,7 +55,7 @@ public class AiSystemInstructions {
                 ". Mặc định dùng ngày hiện tại.\n\n" +
                 "QUAN TRỌNG:\n" +
                 "- KHÔNG dùng markdown (*, **, ###)\n" +
-                "- Dùng XUỐNG DÒNG (\\n) để tách các mục\n" +
+                "- Dùng XUỐNG DÒNG để tách các mục\n" +
                 "- Dùng emoji thay vì bullet points\n" +
                 "- Căn chỉnh số tiền dễ đọc với dấu phẩy\n" +
                 "- Câu trả lời ngắn gọn, súc tích, dễ hiểu\n" +
@@ -106,7 +106,7 @@ public class AiSystemInstructions {
                 "   - Số thứ tự (1., 2., 3.)\n\n" +
                 "4. SỬ DỤNG:\n" +
                 "   - Emoji thay bullet points\n" +
-                "   - Xuống dòng (\\n) để tách mục\n" +
+                "   - Xuống dòng để tách mục\n" +
                 "   - Dấu phẩy ngăn cách số tiền\n" +
                 "   - Ngôn ngữ thân thiện, có thể hài hước\n" +
                 "   - Nhóm chi tiêu theo danh mục để dễ theo dõi\n\n" +

@@ -162,14 +162,14 @@ public class BudgetManagementDialog extends DialogFragment {
                 
                 // Show monthly budget info
                 if (monthlyBudget > 0) {
-                    message.append(CurrencyFormatter.formatCurrency(getContext(), monthlyBudget));
-                    message.append(CurrencyFormatter.formatCurrency(getContext(), totalCategoryBudget));
+                    message.append(getString(R.string.monthly_budget_label_short)).append(" ").append(CurrencyFormatter.formatCurrency(getContext(), monthlyBudget)).append("\n");
+                    message.append(getString(R.string.total_category_budget_label)).append(" ").append(CurrencyFormatter.formatCurrency(getContext(), totalCategoryBudget)).append("\n");
                     
                     long remaining = monthlyBudget - totalCategoryBudget;
                     if (remaining >= 0) {
-                        message.append(CurrencyFormatter.formatCurrency(getContext(), remaining));
+                        message.append(getString(R.string.remaining_budget_label)).append(" ").append(CurrencyFormatter.formatCurrency(getContext(), remaining)).append("\n\n");
                     } else {
-                        message.append(CurrencyFormatter.formatCurrency(getContext(), Math.abs(remaining)));
+                        message.append(getString(R.string.exceeded_budget_label)).append(" ").append(CurrencyFormatter.formatCurrency(getContext(), Math.abs(remaining))).append("\n\n");
                     }
                 } else {
                     message.append(getString(R.string.no_monthly_budget_set));

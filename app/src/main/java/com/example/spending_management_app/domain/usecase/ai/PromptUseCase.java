@@ -148,7 +148,7 @@ public class PromptUseCase {
                 public void onFailure(Call call, IOException e) {
                     activity.runOnUiThread(() -> {
                         // Replace analyzing message with error
-                        messages.set(analyzingIndex, new AiChatBottomSheet.ChatMessage("Lỗi kết nối AI.", false, "Bây giờ"));
+                        messages.set(analyzingIndex, new AiChatBottomSheet.ChatMessage(activity.getString(R.string.ai_connection_error), false, "Bây giờ"));
                         chatAdapter.notifyItemChanged(analyzingIndex);
                         // Update network status
                         updateNetworkStatusCallback.run();
@@ -211,7 +211,7 @@ public class PromptUseCase {
                         } catch (Exception e) {
                             activity.runOnUiThread(() -> {
                                 // Replace analyzing message with error
-                                messages.set(analyzingIndex, new AiChatBottomSheet.ChatMessage("Lỗi xử lý phản hồi AI.", false, "Bây giờ"));
+                                messages.set(analyzingIndex, new AiChatBottomSheet.ChatMessage(activity.getString(R.string.ai_processing_error), false, "Bây giờ"));
                                 chatAdapter.notifyItemChanged(analyzingIndex);
                                 updateNetworkStatusCallback.run();
                             });
@@ -219,7 +219,7 @@ public class PromptUseCase {
                     } else {
                         activity.runOnUiThread(() -> {
                             // Replace analyzing message with error
-                            messages.set(analyzingIndex, new AiChatBottomSheet.ChatMessage("Lỗi từ AI: " + response.code(), false, "Bây giờ"));
+                            messages.set(analyzingIndex, new AiChatBottomSheet.ChatMessage(activity.getString(R.string.ai_send_error) + " " + response.code(), false, "Bây giờ"));
                             chatAdapter.notifyItemChanged(analyzingIndex);
                             updateNetworkStatusCallback.run();
                         });
@@ -228,7 +228,7 @@ public class PromptUseCase {
             });
         } catch (Exception e) {
             // Replace analyzing message with error
-            messages.set(analyzingIndex, new AiChatBottomSheet.ChatMessage("Lỗi gửi tin nhắn.", false, "Bây giờ"));
+            messages.set(analyzingIndex, new AiChatBottomSheet.ChatMessage(activity.getString(R.string.ai_send_error), false, "Bây giờ"));
             chatAdapter.notifyItemChanged(analyzingIndex);
         }
     }
