@@ -61,6 +61,24 @@ public class RequestRouterUseCase {
         boolean isCategoryBudgetMode = args != null && "category_budget_management".equals(args.getString("mode"));
         boolean isExpenseBulkMode = args != null && "expense_bulk_management".equals(args.getString("mode"));
 
+        // Check if user is asking for financial analysis or reports FIRST (before bulk operations)
+        if (!isBudgetMode && ExpenseMessageHelper.isFinancialQuery(text)) {
+            // Get comprehensive financial data from database
+            Executors.newSingleThreadExecutor().execute(() -> {
+                try {
+                    String financialContext = aiContextUseCase.getFinancialContext(context);
+                    activity.runOnUiThread(() -> {
+                        aiContextUseCase.sendPromptToAIWithContext(text, financialContext, activity, messages, chatAdapter, messagesRecycler, textToSpeech, updateNetworkStatusCallback);
+                    });
+                } catch (Exception e) {
+                    activity.runOnUiThread(() -> {
+                        promptUseCase.sendPromptToAI(text, activity, messages, chatAdapter, messagesRecycler, textToSpeech, updateNetworkStatusCallback);
+                    });
+                }
+            });
+            return;
+        }
+
         // Also check if this is an expense bulk request based on text content
         // Even if mode is not set, detect expense bulk operations from text
         if (!isExpenseBulkMode) {
@@ -90,55 +108,6 @@ public class RequestRouterUseCase {
                     android.util.Log.d("RequestRouterUseCase", "Detected expense bulk request from text content: " + text);
                 }
             }
-        }
-
-        // If offline, try to handle with regex first
-        if (!isOnline) {
-            boolean handled = callback.handleOfflineRequest(text, isBudgetMode, isCategoryBudgetMode, isExpenseBulkMode);
-            if (handled) {
-                return;
-            }
-            // If not handled by regex, show error
-            messages.add(new ChatMessage("❌ Chức năng này cần kết nối internet. Vui lòng kiểm tra kết nối mạng của bạn.", false, "Bây giờ"));
-            chatAdapter.notifyItemInserted(messages.size() - 1);
-            messagesRecycler.smoothScrollToPosition(messages.size() - 1);
-            return;
-        }
-
-        // Handle expense bulk management
-        if (isExpenseBulkMode) {
-            callback.handleExpenseBulkRequest(text);
-            return;
-        }
-
-        // Handle category budget management
-        if (isCategoryBudgetMode) {
-            categoryBudgetUseCase.handleCategoryBudgetRequest(text, context, activity, messages, chatAdapter, messagesRecycler, callback::refreshHomeFragment, callback::refreshCategoryBudgetWelcomeMessage);
-            return;
-        }
-
-        // Check if user is asking for budget analysis, view, or delete
-        if (isBudgetMode || BudgetMessageHelper.isBudgetQuery(text)) {
-            callback.handleBudgetQuery(text);
-            return;
-        }
-
-        // Check if user is asking for financial analysis or reports
-        if (!isBudgetMode && ExpenseMessageHelper.isFinancialQuery(text)) {
-            // Get comprehensive financial data from database
-            Executors.newSingleThreadExecutor().execute(() -> {
-                try {
-                    String financialContext = aiContextUseCase.getFinancialContext(context);
-                    activity.runOnUiThread(() -> {
-                        aiContextUseCase.sendPromptToAIWithContext(text, financialContext, activity, messages, chatAdapter, messagesRecycler, textToSpeech, updateNetworkStatusCallback);
-                    });
-                } catch (Exception e) {
-                    activity.runOnUiThread(() -> {
-                        promptUseCase.sendPromptToAI(text, activity, messages, chatAdapter, messagesRecycler, textToSpeech, updateNetworkStatusCallback);
-                    });
-                }
-            });
-            return;
         }
 
         // Normal send to AI for expense tracking

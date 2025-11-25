@@ -19,6 +19,7 @@ import com.example.spending_management_app.presentation.dialog.AiChatBottomSheet
 import com.example.spending_management_app.utils.LocaleHelper;
 import com.example.spending_management_app.utils.TextFormatHelper;
 import com.example.spending_management_app.utils.CurrencyFormatter;
+import com.example.spending_management_app.utils.SettingsHelper;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -252,7 +253,12 @@ public class AiContextUseCase {
                                 messages.set(analyzingIndex, new AiChatBottomSheet.ChatMessage(formattedText, false, "Bây giờ"));
                                 chatAdapter.notifyItemChanged(analyzingIndex);
                                 messagesRecycler.smoothScrollToPosition(messages.size() - 1);
-                                textToSpeech.speak(formattedText, TextToSpeech.QUEUE_FLUSH, null, null);
+                                
+                                // Check chat feedback setting before speaking
+                                if (SettingsHelper.isChatFeedbackEnabled(activity.getApplicationContext())) {
+                                    textToSpeech.speak(formattedText, TextToSpeech.QUEUE_FLUSH, null, null);
+                                }
+                                
                                 updateNetworkStatus.run();
                             });
                         } catch (Exception e) {
@@ -479,7 +485,12 @@ public class AiContextUseCase {
                 messages.set(analyzingIndex, new AiChatBottomSheet.ChatMessage(formattedResponse, false, "Bây giờ"));
                 chatAdapter.notifyItemChanged(analyzingIndex);
                 messagesRecycler.smoothScrollToPosition(messages.size() - 1);
-                textToSpeech.speak(formattedResponse, TextToSpeech.QUEUE_FLUSH, null, null);
+                
+                // Check chat feedback setting before speaking
+                if (SettingsHelper.isChatFeedbackEnabled(context.getApplicationContext())) {
+                    textToSpeech.speak(formattedResponse, TextToSpeech.QUEUE_FLUSH, null, null);
+                }
+                
                 updateNetworkStatus.run();
             }
 

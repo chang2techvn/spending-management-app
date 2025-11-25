@@ -60,6 +60,29 @@
 
     </LinearLayout>
 
+    <!-- Đọc kết quả chat -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="16dp"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/chat_feedback_label"
+            android:textSize="16sp"
+            android:textColor="?android:attr/textColorPrimary" />
+
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/chat_feedback_switch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+    </LinearLayout>
+
     <!-- Ngôn ngữ -->
     <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"

@@ -17,6 +17,7 @@ import com.example.spending_management_app.presentation.dialog.AiChatBottomSheet
 import com.example.spending_management_app.utils.ExtractorHelper;
 import com.example.spending_management_app.utils.LocaleHelper;
 import com.example.spending_management_app.utils.TextFormatHelper;
+import com.example.spending_management_app.utils.SettingsHelper;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -187,7 +188,11 @@ public class PromptUseCase {
                                 Log.d("PromptService", "AI response: " + formattedDisplayText);
 
                                 messagesRecycler.smoothScrollToPosition(messages.size() - 1);
-                                textToSpeech.speak(formattedDisplayText, TextToSpeech.QUEUE_FLUSH, null, null);
+                                
+                                // Check chat feedback setting before speaking
+                                if (SettingsHelper.isChatFeedbackEnabled(activity.getApplicationContext())) {
+                                    textToSpeech.speak(formattedDisplayText, TextToSpeech.QUEUE_FLUSH, null, null);
+                                }
 
                                 // Process ALL JSON objects found
                                 if (!allJsonParts.isEmpty()) {

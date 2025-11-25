@@ -46,6 +46,7 @@
     <string name="settings_title">Cài đặt</string>
     <string name="notifications_label">Thông báo</string>
     <string name="dark_mode_label">Chế độ tối</string>
+    <string name="chat_feedback_label">Đọc kết quả chat</string>
     <string name="language_label">Ngôn ngữ</string>
     <string name="currency_label">Đơn vị tiền tệ</string>
     <string name="cancel_button">Hủy</string>

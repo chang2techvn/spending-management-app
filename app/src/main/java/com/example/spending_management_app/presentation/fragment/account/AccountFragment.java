@@ -281,6 +281,7 @@ public class AccountFragment extends Fragment {
         // Find views
         SwitchCompat notificationSwitch = dialogView.findViewById(R.id.notification_switch);
         SwitchCompat darkModeSwitch = dialogView.findViewById(R.id.dark_mode_switch);
+        SwitchCompat chatFeedbackSwitch = dialogView.findViewById(R.id.chat_feedback_switch);
         AutoCompleteTextView languageDropdown = dialogView.findViewById(R.id.language_dropdown);
         AutoCompleteTextView currencyDropdown = dialogView.findViewById(R.id.currency_dropdown);
 
@@ -298,9 +299,11 @@ public class AccountFragment extends Fragment {
         String currentLanguage = LocaleHelper.getLanguage(getContext());
         boolean notificationsEnabled = true; // Default, can be loaded from preferences
         boolean darkModeEnabled = SettingsHelper.isDarkModeEnabled(getContext());
+        boolean chatFeedbackEnabled = SettingsHelper.isChatFeedbackEnabled(getContext());
 
         notificationSwitch.setChecked(notificationsEnabled);
         darkModeSwitch.setChecked(darkModeEnabled);
+        chatFeedbackSwitch.setChecked(chatFeedbackEnabled);
         languageDropdown.setText(currentLanguage.equals("vi") ? getString(R.string.vietnamese) : getString(R.string.english), false);
         currencyDropdown.setText("VND", false); // Default VND
 
@@ -312,6 +315,7 @@ public class AccountFragment extends Fragment {
             String selectedLanguage = languageDropdown.getText().toString();
             String selectedCurrency = currencyDropdown.getText().toString();
             boolean darkModeSelected = darkModeSwitch.isChecked();
+            boolean chatFeedbackSelected = chatFeedbackSwitch.isChecked();
 
             // Convert display text to language code
             String languageCode = selectedLanguage.equals(getString(R.string.vietnamese)) ? "vi" : "en";
@@ -321,6 +325,9 @@ public class AccountFragment extends Fragment {
 
             // Persist dark mode setting
             SettingsHelper.setDarkModeEnabled(getContext(), darkModeSelected);
+
+            // Persist chat feedback setting
+            SettingsHelper.setChatFeedbackEnabled(getContext(), chatFeedbackSelected);
 
             // Apply theme change immediately
             applyTheme(darkModeSelected);
