@@ -11,7 +11,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/feedback_title"
-        android:textColor="#212121"
+    android:textColor="?android:attr/textColorPrimary"
         android:textSize="20sp"
         android:textStyle="bold"
         android:layout_marginBottom="16dp"
@@ -23,15 +23,15 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="24dp"
         android:hint="@string/feedback_hint"
-        app:hintTextColor="#757575"
-        app:boxBackgroundColor="@android:color/white">
+    app:hintTextColor="?android:attr/textColorSecondary"
+        app:boxBackgroundColor="?android:attr/colorBackground">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/feedback_input"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:inputType="textMultiLine"
-            android:textColor="#212121"
+            android:textColor="?android:attr/textColorPrimary"
             android:minLines="3"
             android:maxLines="5" />
 
@@ -50,7 +50,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="@string/cancel_button"
-            android:textColor="#757575"
+            android:textColor="?android:attr/textColorSecondary"
             android:background="?android:attr/selectableItemBackground"
             style="?android:attr/buttonStyle" />
 
@@ -60,7 +60,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="@string/send_button"
-            android:textColor="#FFFFFF"
+            android:textColor="?attr/colorOnPrimary"
             android:backgroundTint="#4CAF50"
             style="?android:attr/buttonStyle" />
 

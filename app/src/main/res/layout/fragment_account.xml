@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FAFAFA"
+    android:background="?android:attr/colorBackground"
     android:fillViewport="true"
     tools:context=".presentation.fragment.account.AccountFragment">
 
@@ -21,7 +21,7 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:padding="16dp"
-            android:background="@android:color/white"
+            android:background="?android:attr/colorBackground"
             android:elevation="2dp"
             android:layout_marginBottom="16dp">
 
@@ -29,7 +29,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/account_header_title"
-                android:textColor="#212121"
+                android:textColor="?android:attr/textColorPrimary"
                 android:textSize="20sp"
                 android:textStyle="bold" />
 
@@ -37,7 +37,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/account_header_subtitle"
-                android:textColor="#757575"
+                android:textColor="?android:attr/textColorSecondary"
                 android:textSize="14sp"
                 android:layout_marginTop="4dp" />
 
@@ -85,7 +85,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Nguyễn Văn A"
-                            android:textColor="#212121"
+                            android:textColor="?android:attr/textColorPrimary"
                             android:textSize="18sp"
                             android:textStyle="bold" />
 
@@ -94,7 +94,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="nguyenvana@example.com"
-                            android:textColor="#757575"
+                            android:textColor="?android:attr/textColorSecondary"
                             android:textSize="14sp" />
 
                     </LinearLayout>
@@ -133,14 +133,14 @@
                         android:layout_width="24dp"
                         android:layout_height="24dp"
                         android:src="@drawable/ic_edit_profile"
-                        android:tint="#757575" />
+                        android:tint="?android:attr/textColorSecondary" />
 
                     <TextView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="@string/edit_profile"
-                        android:textColor="#212121"
+                        android:textColor="?android:attr/textColorPrimary"
                         android:textSize="16sp"
                         android:layout_marginStart="16dp" />
 
@@ -171,14 +171,14 @@
                         android:layout_width="24dp"
                         android:layout_height="24dp"
                         android:src="@drawable/ic_change_password"
-                        android:tint="#757575" />
+                        android:tint="?android:attr/textColorSecondary" />
 
                     <TextView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="@string/change_password"
-                        android:textColor="#212121"
+                        android:textColor="?android:attr/textColorPrimary"
                         android:textSize="16sp"
                         android:layout_marginStart="16dp" />
 
@@ -209,14 +209,14 @@
                         android:layout_width="24dp"
                         android:layout_height="24dp"
                         android:src="@drawable/ic_settings"
-                        android:tint="#757575" />
+                        android:tint="?android:attr/textColorSecondary" />
 
                     <TextView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="@string/settings"
-                        android:textColor="#212121"
+                        android:textColor="?android:attr/textColorPrimary"
                         android:textSize="16sp"
                         android:layout_marginStart="16dp" />
 
@@ -247,14 +247,14 @@
                         android:layout_width="24dp"
                         android:layout_height="24dp"
                         android:src="@drawable/ic_help"
-                        android:tint="#757575" />
+                        android:tint="?android:attr/textColorSecondary" />
 
                     <TextView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="@string/help_support"
-                        android:textColor="#212121"
+                        android:textColor="?android:attr/textColorPrimary"
                         android:textSize="16sp"
                         android:layout_marginStart="16dp" />
 

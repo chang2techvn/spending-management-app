@@ -280,6 +280,7 @@ public class AccountFragment extends Fragment {
 
         // Find views
         SwitchCompat notificationSwitch = dialogView.findViewById(R.id.notification_switch);
+        SwitchCompat darkModeSwitch = dialogView.findViewById(R.id.dark_mode_switch);
         AutoCompleteTextView languageDropdown = dialogView.findViewById(R.id.language_dropdown);
         AutoCompleteTextView currencyDropdown = dialogView.findViewById(R.id.currency_dropdown);
 
@@ -296,8 +297,10 @@ public class AccountFragment extends Fragment {
         // Load current settings
         String currentLanguage = LocaleHelper.getLanguage(getContext());
         boolean notificationsEnabled = true; // Default, can be loaded from preferences
+        boolean darkModeEnabled = SettingsHelper.isDarkModeEnabled(getContext());
 
         notificationSwitch.setChecked(notificationsEnabled);
+        darkModeSwitch.setChecked(darkModeEnabled);
         languageDropdown.setText(currentLanguage.equals("vi") ? getString(R.string.vietnamese) : getString(R.string.english), false);
         currencyDropdown.setText("VND", false); // Default VND
 
@@ -308,12 +311,19 @@ public class AccountFragment extends Fragment {
         dialogView.findViewById(R.id.btn_save).setOnClickListener(v -> {
             String selectedLanguage = languageDropdown.getText().toString();
             String selectedCurrency = currencyDropdown.getText().toString();
+            boolean darkModeSelected = darkModeSwitch.isChecked();
 
             // Convert display text to language code
             String languageCode = selectedLanguage.equals(getString(R.string.vietnamese)) ? "vi" : "en";
 
             // Persist selected currency
             SettingsHelper.setSelectedCurrency(getContext(), selectedCurrency);
+
+            // Persist dark mode setting
+            SettingsHelper.setDarkModeEnabled(getContext(), darkModeSelected);
+
+            // Apply theme change immediately
+            applyTheme(darkModeSelected);
 
             // If user changed currency, fetch latest exchange rate using AI (fallback)
             CurrencyConversionUseCase.fetchAndStoreRate(getContext(), selectedCurrency, (success, rate, msg) -> {
@@ -344,6 +354,16 @@ public class AccountFragment extends Fragment {
         });
 
         dialog.show();
+    }
+
+    private void applyTheme(boolean isDarkMode) {
+        if (getActivity() != null) {
+            // Use AppCompatDelegate to set night mode
+            androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(
+                isDarkMode ? androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES
+                          : androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO
+            );
+        }
     }
 
     private void navigateToHelpSupport() {

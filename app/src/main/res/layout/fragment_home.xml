@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FAFAFA"
+        android:background="?android:attr/colorBackground"
     android:fillViewport="true"
     tools:context=".presentation.fragment.home.HomeFragment">
 
@@ -37,7 +37,7 @@
                     android:layout_height="wrap_content"
                     android:alpha="0.8"
                     android:text="@string/current_balance_label"
-                    android:textColor="#FFFFFF"
+                    android:textColor="?attr/colorOnPrimary"
                     android:textSize="14sp" />
 
                 <TextView
@@ -46,7 +46,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
                     android:text="12,500,000 VND"
-                    android:textColor="#FFFFFF"
+                    android:textColor="?attr/colorOnPrimary"
                     android:textSize="28sp"
                     android:textStyle="bold" />
 
@@ -67,7 +67,7 @@
                             android:layout_height="wrap_content"
                             android:alpha="0.8"
                             android:text="@string/monthly_budget_label"
-                            android:textColor="#FFFFFF"
+                            android:textColor="?attr/colorOnPrimary"
                             android:textSize="12sp" />
 
                         <TextView
@@ -75,7 +75,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="+8,000,000"
-                            android:textColor="#FFFFFF"
+                            android:textColor="?attr/colorOnPrimary"
                             android:textSize="16sp"
                             android:textStyle="bold" />
 
@@ -92,7 +92,7 @@
                             android:layout_height="wrap_content"
                             android:alpha="0.8"
                             android:text="@string/monthly_expense_label"
-                            android:textColor="#FFFFFF"
+                            android:textColor="?attr/colorOnPrimary"
                             android:textSize="12sp" />
 
                         <TextView
@@ -100,7 +100,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="-5,500,000"
-                            android:textColor="#FFFFFF"
+                            android:textColor="?attr/colorOnPrimary"
                             android:textSize="16sp"
                             android:textStyle="bold" />
 
@@ -151,7 +151,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
                         android:text="@string/manage_budget"
-                        android:textColor="#212121"
+                        android:textColor="?android:attr/textColorPrimary"
                         android:textSize="14sp"
                         android:textStyle="bold" />
 
@@ -189,7 +189,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
                         android:text="@string/add_expense"
-                        android:textColor="#212121"
+                        android:textColor="?android:attr/textColorPrimary"
                         android:textSize="14sp"
                         android:textStyle="bold" />
 
@@ -218,7 +218,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/recent_transactions"
-                    android:textColor="#212121"
+                    android:textColor="?android:attr/textColorPrimary"
                     android:textSize="18sp"
                     android:textStyle="bold" />
 
@@ -267,7 +267,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/monthly_overview"
-                    android:textColor="#212121"
+                    android:textColor="?android:attr/textColorPrimary"
                     android:textSize="18sp"
                     android:textStyle="bold" />
 
@@ -293,7 +293,7 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:text="@string/food_category"
-                            android:textColor="#212121"
+                            android:textColor="?android:attr/textColorPrimary"
                             android:textSize="14sp"
                             android:textStyle="bold" />
 
@@ -323,7 +323,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
                         android:text="2,500,000/3,000,000 VND"
-                        android:textColor="#757575"
+                        android:textColor="?android:attr/textColorSecondary"
                         android:textSize="12sp" />
 
                 </LinearLayout>
@@ -349,7 +349,7 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:text="@string/transport_category"
-                            android:textColor="#212121"
+                            android:textColor="@color/text_primary"
                             android:textSize="14sp"
                             android:textStyle="bold" />
 
@@ -379,7 +379,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
                         android:text="1,200,000/2,000,000 VND"
-                        android:textColor="#757575"
+                        android:textColor="?android:attr/textColorSecondary"
                         android:textSize="12sp" />
 
                 </LinearLayout>
@@ -405,7 +405,7 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:text="@string/shopping_category"
-                            android:textColor="#212121"
+                            android:textColor="@color/text_primary"
                             android:textSize="14sp"
                             android:textStyle="bold" />
 
@@ -414,7 +414,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="15%"
-                            android:textColor="#9C27B0"
+                                android:textColor="?android:attr/textColorSecondary"
                             android:textSize="14sp"
                             android:textStyle="bold" />
 
@@ -435,7 +435,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
                         android:text="800,000/1,500,000 VND"
-                        android:textColor="#757575"
+                            android:textColor="?android:attr/textColorSecondary"
                         android:textSize="12sp" />
 
                 </LinearLayout>

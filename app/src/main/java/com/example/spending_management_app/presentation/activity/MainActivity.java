@@ -49,6 +49,13 @@ public class MainActivity extends AppCompatActivity {
         // Set app language before setting content view
         LocaleHelper.setLocale(this, LocaleHelper.getLanguage(this));
 
+        // Set app theme based on user preference
+        boolean isDarkMode = com.example.spending_management_app.utils.SettingsHelper.isDarkModeEnabled(this);
+        androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(
+            isDarkMode ? androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES
+                      : androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO
+        );
+
         super.onCreate(savedInstanceState);
 
         // Check authentication first

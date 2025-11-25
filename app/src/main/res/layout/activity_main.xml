@@ -9,7 +9,7 @@
         android:id="@+id/home_header"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/header_bg"
+        android:background="?android:attr/colorBackground"
         android:fitsSystemWindows="true"
         android:gravity="center_vertical"
         android:orientation="horizontal"
@@ -31,7 +31,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Chào buổi sáng"
-                android:textColor="#FF424242"
+                android:textColor="?android:attr/textColorPrimary"
                 android:textSize="20sp"
                 android:textStyle="bold" />
 
@@ -39,7 +39,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/home_subtitle"
-                android:textColor="#FF757575"
+                android:textColor="?android:attr/textColorSecondary"
                 android:textSize="14sp" />
 
         </LinearLayout>

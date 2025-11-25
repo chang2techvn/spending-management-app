@@ -11,7 +11,7 @@
         android:text="@string/settings_title"
         android:textSize="20sp"
         android:textStyle="bold"
-        android:textColor="#212121"
+        android:textColor="?android:attr/textColorPrimary"
         android:layout_marginBottom="24dp" />
 
     <!-- Thông báo -->
@@ -28,10 +28,33 @@
             android:layout_weight="1"
             android:text="@string/notifications_label"
             android:textSize="16sp"
-            android:textColor="#212121" />
+            android:textColor="?android:attr/textColorPrimary" />
 
         <androidx.appcompat.widget.SwitchCompat
             android:id="@+id/notification_switch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+    </LinearLayout>
+
+    <!-- Chế độ tối -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="16dp"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/dark_mode_label"
+            android:textSize="16sp"
+            android:textColor="?android:attr/textColorPrimary" />
+
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/dark_mode_switch"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
 
@@ -81,7 +104,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="@string/cancel_button"
-            android:textColor="#757575"
+            android:textColor="?android:attr/textColorSecondary"
             android:background="?android:attr/selectableItemBackground"
             android:layout_marginEnd="8dp" />
 
@@ -91,8 +114,8 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="@string/save_button"
-            android:textColor="#FFFFFF"
-            android:background="#2196F3"
+            android:textColor="?attr/colorOnPrimary"
+            android:background="?attr/colorPrimary"
             android:layout_marginStart="8dp" />
 
     </LinearLayout>

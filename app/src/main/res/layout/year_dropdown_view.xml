@@ -16,7 +16,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="2025"
-        android:textColor="#212121"
+    android:textColor="?android:attr/textColorPrimary"
         android:textSize="16sp"
         android:textStyle="bold"
         android:layout_marginEnd="8dp" />
@@ -26,6 +26,6 @@
         android:layout_width="16dp"
         android:layout_height="16dp"
         android:src="@drawable/ic_arrow_drop_down"
-        android:tint="#757575" />
+    android:tint="?android:attr/textColorSecondary" />
 
 </LinearLayout>

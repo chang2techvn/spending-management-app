@@ -498,8 +498,7 @@ public class StatisticsFragment extends Fragment {
         String localizedCategoryName = CategoryUtils.getLocalizedCategoryName(getContext(), category);
         String icon = getIconEmojiForCategory(category);
         nameView.setText(icon + " " + localizedCategoryName);
-        nameView.setTextColor(0xFF212121);
-        nameView.setTextSize(14);
+        nameView.setTextColor(androidx.core.content.ContextCompat.getColor(getContext(), R.color.text_primary));        nameView.setTextSize(14);
         nameView.setTypeface(null, android.graphics.Typeface.BOLD);
         
         // Percentage with 1 decimal place for accuracy

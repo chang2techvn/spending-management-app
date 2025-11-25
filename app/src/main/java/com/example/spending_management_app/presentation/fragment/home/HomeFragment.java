@@ -495,7 +495,7 @@ public class HomeFragment extends Fragment {
     String localizedName = CategoryUtils.getLocalizedCategoryName(getContext(), category);
     String icon = CategoryUtils.getIconForCategory(localizedName);
     nameView.setText(icon + " " + localizedName);
-        nameView.setTextColor(0xFF212121);
+        nameView.setTextColor(androidx.core.content.ContextCompat.getColor(getContext(), R.color.text_primary));
         nameView.setTextSize(14);
         nameView.setTypeface(null, android.graphics.Typeface.BOLD);
         

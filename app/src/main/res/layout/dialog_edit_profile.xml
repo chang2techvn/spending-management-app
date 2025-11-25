@@ -11,7 +11,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/edit_profile_title"
-        android:textColor="#212121"
+    android:textColor="?android:attr/textColorPrimary"
         android:textSize="20sp"
         android:textStyle="bold"
         android:layout_marginBottom="16dp"
@@ -53,15 +53,15 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"
         android:hint="@string/full_name_hint"
-        app:hintTextColor="#757575"
-        app:boxBackgroundColor="@android:color/white">
+    app:hintTextColor="?android:attr/textColorSecondary"
+    app:boxBackgroundColor="?android:attr/colorBackground">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/name_input"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:inputType="textPersonName"
-            android:textColor="#212121"
+            android:textColor="?android:attr/textColorPrimary"
             android:background="@null" />
 
     </com.google.android.material.textfield.TextInputLayout>
@@ -72,15 +72,15 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="24dp"
         android:hint="@string/email_or_phone_hint"
-        app:hintTextColor="#757575"
-        app:boxBackgroundColor="@android:color/white">
+    app:hintTextColor="?android:attr/textColorSecondary"
+    app:boxBackgroundColor="?android:attr/colorBackground">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/email_phone_input"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:inputType="textEmailAddress"
-            android:textColor="#212121"
+            android:textColor="?android:attr/textColorPrimary"
             android:background="@null" />
 
     </com.google.android.material.textfield.TextInputLayout>
@@ -98,7 +98,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="@string/cancel_button"
-            android:textColor="#757575"
+            android:textColor="?android:attr/textColorSecondary"
             android:background="?android:attr/selectableItemBackground"
             style="?android:attr/buttonStyle" />
 
@@ -108,8 +108,8 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="@string/save_button"
-            android:textColor="#FFFFFF"
-            android:backgroundTint="#4CAF50"
+            android:textColor="?attr/colorOnPrimary"
+            android:backgroundTint="?attr/colorPrimary"
             style="?android:attr/buttonStyle" />
 
     </LinearLayout>
