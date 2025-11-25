@@ -14,6 +14,7 @@ import com.example.spending_management_app.domain.repository.BudgetRepository;
 import com.example.spending_management_app.domain.repository.CategoryBudgetRepository;
 import com.example.spending_management_app.domain.repository.ExpenseRepository;
 import com.example.spending_management_app.domain.usecase.ai.AiContextUseCase;
+import com.example.spending_management_app.presentation.dialog.AiChatBottomSheet;
 import com.example.spending_management_app.utils.BudgetMessageHelper;
 import com.example.spending_management_app.domain.usecase.category.CategoryBudgetUseCase;
 import com.example.spending_management_app.utils.ExpenseMessageHelper;
@@ -61,7 +62,61 @@ public class RequestRouterUseCase {
         boolean isCategoryBudgetMode = args != null && "category_budget_management".equals(args.getString("mode"));
         boolean isExpenseBulkMode = args != null && "expense_bulk_management".equals(args.getString("mode"));
 
-        // Check if user is asking for financial analysis or reports FIRST (before bulk operations)
+        // Lowercase text for heuristics
+        String lowerText = text.toLowerCase();
+
+        // Heuristic routing: prioritize based on content regardless of mode
+        // - If has amount and no time, route to category budget (add/update/delete)
+        // - If has time indicators, route to expense (AI)
+        // - If has amount but no time and no category, will be handled by category budget parser (shows error)
+        boolean containsDigit = lowerText.matches(".*\\d+.*");
+        boolean hasTimeIndicator = lowerText.contains("hôm") || lowerText.contains("hom") || lowerText.contains("hôm nay") ||
+                lowerText.contains("hôm qua") || lowerText.contains("ngày") || lowerText.contains("tháng") || lowerText.contains("năm") ||
+                lowerText.contains("sáng") || lowerText.contains("tối") || lowerText.contains("chiều") || lowerText.contains("trưa") ||
+                lowerText.contains("today") || lowerText.contains("yesterday") || lowerText.contains("day") || lowerText.contains("month") || lowerText.contains("year") ||
+                lowerText.matches(".*\\d{1,2}[/\\-]\\d{1,2}.*");
+        boolean explicitBudget = BudgetMessageHelper.isBudgetQuery(text) || lowerText.contains("danh mục") || lowerText.contains("category") || lowerText.contains("ngân sách");
+
+        // Check if this is a query (not an operation)
+        boolean isQuery = lowerText.contains("bao nhiêu") || lowerText.contains("là bao nhiêu") || lowerText.contains("hiển thị") ||
+                lowerText.contains("xem") || lowerText.contains("tất cả") || lowerText.contains("tat ca") ||
+                lowerText.contains("how much") || lowerText.contains("show") || lowerText.contains("view") ||
+                lowerText.contains("all") || lowerText.contains("what");
+
+        android.util.Log.d("RequestRouterUseCase", "Heuristic: text=" + text + ", containsDigit=" + containsDigit + ", hasTimeIndicator=" + hasTimeIndicator + ", explicitBudget=" + explicitBudget + ", isQuery=" + isQuery);
+
+        if (containsDigit && !hasTimeIndicator && !isQuery) {
+            android.util.Log.d("RequestRouterUseCase", "Routing to CategoryBudgetUseCase for text: " + text);
+            categoryBudgetUseCase.handleCategoryBudgetRequest(text, context, activity, messages, chatAdapter, messagesRecycler,
+                    () -> callback.refreshHomeFragment(), () -> callback.refreshCategoryBudgetWelcomeMessage());
+            return;
+        }
+
+        if (containsDigit && hasTimeIndicator) {
+            android.util.Log.d("RequestRouterUseCase", "Routing to expense AI for text: " + text);
+            promptUseCase.sendPromptToAI(text, activity, messages, chatAdapter, messagesRecycler, textToSpeech, updateNetworkStatusCallback);
+            return;
+        }
+
+        // Check if user is asking for budget analysis or reports FIRST (before financial queries)
+        if (!isBudgetMode && !isCategoryBudgetMode && BudgetMessageHelper.isBudgetQuery(text)) {
+            // Get comprehensive budget data from database
+            Executors.newSingleThreadExecutor().execute(() -> {
+                try {
+                    String budgetContext = aiContextUseCase.getBudgetContext(context);
+                    activity.runOnUiThread(() -> {
+                        aiContextUseCase.sendPromptToAIWithBudgetContext(context, text, budgetContext, messages, chatAdapter, messagesRecycler, textToSpeech, updateNetworkStatusCallback);
+                    });
+                } catch (Exception e) {
+                    activity.runOnUiThread(() -> {
+                        promptUseCase.sendPromptToAI(text, activity, messages, chatAdapter, messagesRecycler, textToSpeech, updateNetworkStatusCallback);
+                    });
+                }
+            });
+            return;
+        }
+
+        // Check if user is asking for financial analysis or reports (before bulk operations)
         if (!isBudgetMode && ExpenseMessageHelper.isFinancialQuery(text)) {
             // Get comprehensive financial data from database
             Executors.newSingleThreadExecutor().execute(() -> {
@@ -82,7 +137,6 @@ public class RequestRouterUseCase {
         // Also check if this is an expense bulk request based on text content
         // Even if mode is not set, detect expense bulk operations from text
         if (!isExpenseBulkMode) {
-            String lowerText = text.toLowerCase();
             // Check for expense bulk keywords in Vietnamese
             boolean hasVietnameseKeywords = lowerText.contains("xóa") || lowerText.contains("xoá") || lowerText.contains("xoa") ||
                 lowerText.contains("thêm chi tiêu") || lowerText.contains("them chi tieu") ||
@@ -94,16 +148,18 @@ public class RequestRouterUseCase {
                 lowerText.contains("spending") || lowerText.contains("cost");
 
             if (hasVietnameseKeywords || hasEnglishKeywords) {
-                // Check if it looks like a bulk operation (contains amounts, dates, or multiple items)
+                // Check if it looks like a bulk operation (contains dates, or multiple items)
                 boolean hasBulkIndicators = lowerText.contains("ngày") || lowerText.contains("hôm") || lowerText.contains("tháng") ||
                     lowerText.contains("tất cả") || lowerText.contains("tat ca") ||
-                    lowerText.matches(".*\\d+.*k.*") || lowerText.matches(".*\\d+.*000.*") ||
                     lowerText.contains("và") || lowerText.contains("cả") ||
                     lowerText.contains("day") || lowerText.contains("today") || lowerText.contains("yesterday") ||
                     lowerText.contains("month") || lowerText.contains("year") || lowerText.contains("all") || lowerText.contains("and") ||
                     lowerText.contains("with") || lowerText.contains("for");
 
-                if (hasBulkIndicators) {
+                // Check if this is actually a budget or category budget request
+                boolean isBudgetRequest = BudgetMessageHelper.isBudgetQuery(text) || lowerText.contains("danh mục") || lowerText.contains("category");
+
+                if (hasBulkIndicators && !isBudgetRequest) {
                     isExpenseBulkMode = true;
                     android.util.Log.d("RequestRouterUseCase", "Detected expense bulk request from text content: " + text);
                 }

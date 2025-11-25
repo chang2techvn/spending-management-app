@@ -40,8 +40,8 @@
             android:layout_weight="1"
             android:layout_marginEnd="8dp"
             android:text="@string/today"
-            android:textColor="?attr/colorPrimary"
-            app:strokeColor="?attr/colorPrimary" />
+            android:textColor="#1976D2"
+            app:strokeColor="#1976D2" />
 
         <Button
             android:id="@+id/btn_this_week"

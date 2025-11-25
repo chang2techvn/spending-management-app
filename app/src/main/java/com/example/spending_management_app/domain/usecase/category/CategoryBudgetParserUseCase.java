@@ -59,7 +59,7 @@ public class CategoryBudgetParserUseCase {
         String operationType = "edit"; // default
         if (lowerText.contains("xóa") || lowerText.contains("xoá")) {
             operationType = "delete";
-        } else if (lowerText.contains("thêm")) {
+        } else if (lowerText.contains("thêm") || lowerText.contains("đặt")) {
             operationType = "add";
         } else if (lowerText.contains("sửa") || lowerText.contains("thay đổi")) {
             operationType = "edit";
@@ -68,7 +68,7 @@ public class CategoryBudgetParserUseCase {
         // Determine operation type (English)
         if (lowerText.contains("delete") || lowerText.contains("remove")) {
             operationType = "delete";
-        } else if (lowerText.contains("add") || lowerText.contains("set")) {
+        } else if (lowerText.contains("add") || lowerText.contains("set") || lowerText.contains("đặt")) {
             operationType = "add";
         } else if (lowerText.contains("edit") || lowerText.contains("change") ||
                    lowerText.contains("update") || lowerText.contains("modify")) {
