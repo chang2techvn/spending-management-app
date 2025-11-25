@@ -22,4 +22,10 @@
         <item name="android:windowBackground">@color/background_dark</item>
         <!-- Customize your theme here. -->
     </style>
+
+    <style name="RoundedDialog" parent="Theme.MaterialComponents.Dialog.Alert">
+        <item name="android:windowBackground">@drawable/dialog_background</item>
+        <item name="android:windowMinWidthMajor">90%</item>
+        <item name="android:windowMinWidthMinor">90%</item>
+    </style>
 </resources>

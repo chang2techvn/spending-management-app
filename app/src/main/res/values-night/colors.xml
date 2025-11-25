@@ -13,4 +13,8 @@
     <color name="background_dark">#FF121212</color>
     <color name="surface_dark">#FF1E1E1E</color>
     <color name="card_dark">#FF2A2A2A</color>
+
+    <!-- Chat button colors for dark mode -->
+    <color name="chat_button_background">#FF1E3A5F</color>
+    <color name="chat_button_icon">#FFFFFFFF</color>
 </resources>

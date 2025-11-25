@@ -40,4 +40,8 @@
     <color name="category_service">#FFF5F5F5</color>
     <color name="category_family">#FFF8BBD0</color>
     <color name="category_default">#FFF5F5F5</color>
+
+    <!-- Chat button colors -->
+    <color name="chat_button_background">#FF1565C0</color>
+    <color name="chat_button_icon">#FFFFFFFF</color>
 </resources>
