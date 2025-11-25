@@ -170,12 +170,40 @@ public class MainActivity extends AppCompatActivity {
         navAccount.setOnClickListener(v -> navController.navigate(R.id.navigation_account));
 
         navAiAssistant.setOnClickListener(v -> {
+            // Thêm hiệu ứng scale khi click
+            v.animate()
+                .scaleX(0.9f)
+                .scaleY(0.9f)
+                .setDuration(100)
+                .withEndAction(() -> {
+                    v.animate()
+                        .scaleX(1.0f)
+                        .scaleY(1.0f)
+                        .setDuration(100)
+                        .start();
+                })
+                .start();
+
             // Mở dialog chat AI
             AiChatBottomSheet aiChatBottomSheet = new AiChatBottomSheet();
             aiChatBottomSheet.show(getSupportFragmentManager(), aiChatBottomSheet.getTag());
         });
 
         navAiAssistant.setOnLongClickListener(v -> {
+            // Thêm hiệu ứng scale và thay đổi màu khi long press
+            v.animate()
+                .scaleX(1.1f)
+                .scaleY(1.1f)
+                .setDuration(150)
+                .withEndAction(() -> {
+                    v.animate()
+                        .scaleX(1.0f)
+                        .scaleY(1.0f)
+                        .setDuration(150)
+                        .start();
+                })
+                .start();
+
             // Kích hoạt voice chat
             if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
                 ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.RECORD_AUDIO}, 1);
