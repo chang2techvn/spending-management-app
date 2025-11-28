@@ -7,11 +7,17 @@ import android.util.Log;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.spending_management_app.BuildConfig;
+import com.example.spending_management_app.R;
+import com.example.spending_management_app.domain.usecase.expense.ExpenseBulkUseCase;
+import com.example.spending_management_app.domain.repository.ExpenseRepository;
+import com.example.spending_management_app.data.local.database.AppDatabase;
+import com.example.spending_management_app.data.repository.ExpenseRepositoryImpl;
 import com.example.spending_management_app.domain.usecase.expense.ExpenseUseCase;
 import com.example.spending_management_app.presentation.dialog.AiChatBottomSheet;
 import com.example.spending_management_app.utils.ExtractorHelper;
 import com.example.spending_management_app.utils.LocaleHelper;
 import com.example.spending_management_app.utils.TextFormatHelper;
+import com.example.spending_management_app.utils.SettingsHelper;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -44,9 +50,17 @@ public class PromptUseCase {
     public void sendPromptToAI(String text, Activity activity, List<AiChatBottomSheet.ChatMessage> messages,
                                AiChatBottomSheet.ChatAdapter chatAdapter, RecyclerView messagesRecycler,
                                TextToSpeech textToSpeech, Runnable updateNetworkStatusCallback) {
+
+        // Check if this is a delete request - handle locally instead of sending to AI
+        if (isDeleteRequest(text)) {
+            android.util.Log.d("PromptService", "Detected delete request, routing to ExpenseBulkUseCase");
+            handleDeleteRequestLocally(text, activity, messages, chatAdapter, messagesRecycler, updateNetworkStatusCallback);
+            return;
+        }
+
         // Add temporary "Đang phân tích..." message
         int analyzingIndex = messages.size();
-        messages.add(new AiChatBottomSheet.ChatMessage("Đang phân tích...", false, "Bây giờ"));
+        messages.add(new AiChatBottomSheet.ChatMessage(activity.getString(R.string.analyzing), false, activity.getString(R.string.now_label)));
         chatAdapter.notifyItemInserted(messages.size() - 1);
         messagesRecycler.smoothScrollToPosition(messages.size() - 1);
 
@@ -135,7 +149,7 @@ public class PromptUseCase {
                 public void onFailure(Call call, IOException e) {
                     activity.runOnUiThread(() -> {
                         // Replace analyzing message with error
-                        messages.set(analyzingIndex, new AiChatBottomSheet.ChatMessage("Lỗi kết nối AI.", false, "Bây giờ"));
+                        messages.set(analyzingIndex, new AiChatBottomSheet.ChatMessage(activity.getString(R.string.ai_connection_error), false, "Bây giờ"));
                         chatAdapter.notifyItemChanged(analyzingIndex);
                         // Update network status
                         updateNetworkStatusCallback.run();
@@ -174,7 +188,11 @@ public class PromptUseCase {
                                 Log.d("PromptService", "AI response: " + formattedDisplayText);
 
                                 messagesRecycler.smoothScrollToPosition(messages.size() - 1);
-                                textToSpeech.speak(formattedDisplayText, TextToSpeech.QUEUE_FLUSH, null, null);
+                                
+                                // Check chat feedback setting before speaking
+                                if (SettingsHelper.isChatFeedbackEnabled(activity.getApplicationContext())) {
+                                    textToSpeech.speak(formattedDisplayText, TextToSpeech.QUEUE_FLUSH, null, null);
+                                }
 
                                 // Process ALL JSON objects found
                                 if (!allJsonParts.isEmpty()) {
@@ -198,7 +216,7 @@ public class PromptUseCase {
                         } catch (Exception e) {
                             activity.runOnUiThread(() -> {
                                 // Replace analyzing message with error
-                                messages.set(analyzingIndex, new AiChatBottomSheet.ChatMessage("Lỗi xử lý phản hồi AI.", false, "Bây giờ"));
+                                messages.set(analyzingIndex, new AiChatBottomSheet.ChatMessage(activity.getString(R.string.ai_processing_error), false, "Bây giờ"));
                                 chatAdapter.notifyItemChanged(analyzingIndex);
                                 updateNetworkStatusCallback.run();
                             });
@@ -206,7 +224,7 @@ public class PromptUseCase {
                     } else {
                         activity.runOnUiThread(() -> {
                             // Replace analyzing message with error
-                            messages.set(analyzingIndex, new AiChatBottomSheet.ChatMessage("Lỗi từ AI: " + response.code(), false, "Bây giờ"));
+                            messages.set(analyzingIndex, new AiChatBottomSheet.ChatMessage(activity.getString(R.string.ai_send_error) + " " + response.code(), false, "Bây giờ"));
                             chatAdapter.notifyItemChanged(analyzingIndex);
                             updateNetworkStatusCallback.run();
                         });
@@ -215,8 +233,50 @@ public class PromptUseCase {
             });
         } catch (Exception e) {
             // Replace analyzing message with error
-            messages.set(analyzingIndex, new AiChatBottomSheet.ChatMessage("Lỗi gửi tin nhắn.", false, "Bây giờ"));
+            messages.set(analyzingIndex, new AiChatBottomSheet.ChatMessage(activity.getString(R.string.ai_send_error), false, "Bây giờ"));
             chatAdapter.notifyItemChanged(analyzingIndex);
         }
+    }
+
+    /**
+     * Check if the user input is a delete request
+     */
+    private boolean isDeleteRequest(String text) {
+        String lowerText = text.toLowerCase();
+        return lowerText.contains("xóa") || lowerText.contains("xoá") || lowerText.contains("xoa") ||
+               lowerText.contains("delete") || lowerText.contains("remove");
+    }
+
+    /**
+     * Handle delete requests locally using ExpenseBulkUseCase
+     */
+    private void handleDeleteRequestLocally(String text, Activity activity, List<AiChatBottomSheet.ChatMessage> messages,
+                                           AiChatBottomSheet.ChatAdapter chatAdapter, RecyclerView messagesRecycler,
+                                           Runnable updateNetworkStatusCallback) {
+
+        android.util.Log.d("PromptService", "Handling delete request locally: " + text);
+
+        // Initialize ExpenseBulkUseCase with proper context
+        AppDatabase appDatabase = AppDatabase.getInstance(activity.getApplicationContext());
+        ExpenseRepository expenseRepository = new ExpenseRepositoryImpl(appDatabase);
+        ExpenseBulkUseCase bulkUseCase = new ExpenseBulkUseCase(expenseRepository);
+
+        // Create refresh callbacks
+        Runnable refreshHomeFragment = () -> {
+            // This will be called by ExpenseBulkUseCase
+            android.util.Log.d("PromptService", "Refresh home fragment called");
+        };
+
+        Runnable refreshExpenseWelcomeMessage = () -> {
+            // This will be called by ExpenseBulkUseCase
+            android.util.Log.d("PromptService", "Refresh expense welcome message called");
+        };
+
+        // Call ExpenseBulkUseCase to handle the delete request
+        bulkUseCase.handleExpenseBulkRequest(text, activity.getApplicationContext(), activity, messages,
+                                           chatAdapter, messagesRecycler, refreshHomeFragment, refreshExpenseWelcomeMessage);
+
+        // Update network status
+        updateNetworkStatusCallback.run();
     }
 }

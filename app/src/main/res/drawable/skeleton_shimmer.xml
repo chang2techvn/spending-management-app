@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<animated-vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt">
+    <aapt:attr name="android:drawable">
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="0"
+                android:endColor="#E0E0E0"
+                android:startColor="#F5F5F5"
+                android:type="linear" />
+            <corners android:radius="4dp" />
+        </shape>
+    </aapt:attr>
+    <target android:name="shimmer">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:duration="1500"
+                android:propertyName="translateX"
+                android:repeatCount="infinite"
+                android:repeatMode="restart"
+                android:valueFrom="-300"
+                android:valueTo="300"
+                android:valueType="floatType" />
+        </aapt:attr>
+    </target>
+</animated-vector>

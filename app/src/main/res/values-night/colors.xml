@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Dark mode text colors -->
+    <color name="text_primary">#FFFFFFFF</color>
+    <color name="text_secondary">#FFB0B0B0</color>
+    <color name="textPrimary">#FFFFFFFF</color>
+    <color name="textSecondary">#FFB0B0B0</color>
+
+    <!-- Dark mode navigation color -->
+    <color name="nav_item_color">#FFB0B0B0</color>
+
+    <!-- Dark mode background colors -->
+    <color name="background_dark">#FF121212</color>
+    <color name="surface_dark">#FF1E1E1E</color>
+    <color name="card_dark">#FF2A2A2A</color>
+
+    <!-- Chat button colors for dark mode -->
+    <color name="chat_button_background">#FF1E3A5F</color>
+    <color name="chat_button_icon">#FFFFFFFF</color>
+</resources>

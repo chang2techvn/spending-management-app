@@ -8,72 +8,101 @@ public final class CategoryIconHelper {
     
     public static String getIconEmoji(String category) {
         switch (category) {
-            // Nhu cầu thiết yếu
+            // Vietnamese + English mappings so icons work regardless of app language
+            // Essential needs
             case "Ăn uống":
+            case "Food":
                 return "🍽️";
             case "Di chuyển":
+            case "Transportation":
                 return "🚗";
             case "Tiện ích":
+            case "Utilities":
+            case "Bills":
                 return "⚡";
             case "Y tế":
+            case "Healthcare":
                 return "🏥";
             case "Nhà ở":
+            case "Housing":
                 return "🏠";
-            
-            // Mua sắm & Phát triển bản thân
+
+            // Shopping & personal development
             case "Mua sắm":
+            case "Shopping":
                 return "🛍️";
             case "Giáo dục":
+            case "Education":
                 return "📚";
             case "Sách & Học tập":
+            case "Books & Learning":
                 return "📖";
             case "Thể thao":
+            case "Sports":
                 return "⚽";
             case "Sức khỏe & Làm đẹp":
+            case "Beauty & Health":
                 return "💆";
-            
-            // Giải trí & Xã hội
+
+            // Entertainment & social
             case "Giải trí":
+            case "Entertainment":
                 return "🎬";
             case "Du lịch":
+            case "Travel":
                 return "✈️";
             case "Ăn ngoài & Cafe":
+            case "Cafe & Dining Out":
                 return "☕";
             case "Quà tặng & Từ thiện":
+            case "Gifts & Charity":
                 return "🎁";
             case "Hội họp & Tiệc tụng":
+            case "Events & Parties":
                 return "🎉";
-            
-            // Công nghệ & Dịch vụ
+
+            // Technology & services
             case "Điện thoại & Internet":
+            case "Phone & Internet":
                 return "📱";
             case "Đăng ký & Dịch vụ":
+            case "Services & Subscriptions":
                 return "💳";
             case "Phần mềm & Apps":
+            case "Software & Apps":
                 return "💻";
             case "Ngân hàng & Phí":
+            case "Banking & Fees":
                 return "🏦";
-            
-            // Gia đình & Con cái
+
+            // Family & children
             case "Con cái":
+            case "Children":
                 return "👶";
             case "Thú cưng":
+            case "Pets":
                 return "🐕";
             case "Gia đình":
+            case "Family":
                 return "👨‍👩‍👧‍👦";
-            
-            // Thu nhập & Tài chính
+
+            // Income & finance
             case "Lương":
+            case "Salary":
                 return "💰";
             case "Đầu tư":
+            case "Investment":
                 return "📈";
             case "Thu nhập phụ":
+            case "Side Income":
                 return "💵";
             case "Tiết kiệm":
+            case "Savings":
                 return "🏦";
-            
-            // Khác
+
+            // Other
             case "Khác":
+            case "Other":
                 return "📌";
             default:
                 return "💳";

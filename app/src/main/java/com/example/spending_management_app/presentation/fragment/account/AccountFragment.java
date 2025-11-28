@@ -280,6 +280,8 @@ public class AccountFragment extends Fragment {
 
         // Find views
         SwitchCompat notificationSwitch = dialogView.findViewById(R.id.notification_switch);
+        SwitchCompat darkModeSwitch = dialogView.findViewById(R.id.dark_mode_switch);
+        SwitchCompat chatFeedbackSwitch = dialogView.findViewById(R.id.chat_feedback_switch);
         AutoCompleteTextView languageDropdown = dialogView.findViewById(R.id.language_dropdown);
         AutoCompleteTextView currencyDropdown = dialogView.findViewById(R.id.currency_dropdown);
 
@@ -296,8 +298,12 @@ public class AccountFragment extends Fragment {
         // Load current settings
         String currentLanguage = LocaleHelper.getLanguage(getContext());
         boolean notificationsEnabled = true; // Default, can be loaded from preferences
+        boolean darkModeEnabled = SettingsHelper.isDarkModeEnabled(getContext());
+        boolean chatFeedbackEnabled = SettingsHelper.isChatFeedbackEnabled(getContext());
 
         notificationSwitch.setChecked(notificationsEnabled);
+        darkModeSwitch.setChecked(darkModeEnabled);
+        chatFeedbackSwitch.setChecked(chatFeedbackEnabled);
         languageDropdown.setText(currentLanguage.equals("vi") ? getString(R.string.vietnamese) : getString(R.string.english), false);
         currencyDropdown.setText("VND", false); // Default VND
 
@@ -308,12 +314,23 @@ public class AccountFragment extends Fragment {
         dialogView.findViewById(R.id.btn_save).setOnClickListener(v -> {
             String selectedLanguage = languageDropdown.getText().toString();
             String selectedCurrency = currencyDropdown.getText().toString();
+            boolean darkModeSelected = darkModeSwitch.isChecked();
+            boolean chatFeedbackSelected = chatFeedbackSwitch.isChecked();
 
             // Convert display text to language code
             String languageCode = selectedLanguage.equals(getString(R.string.vietnamese)) ? "vi" : "en";
 
             // Persist selected currency
             SettingsHelper.setSelectedCurrency(getContext(), selectedCurrency);
+
+            // Persist dark mode setting
+            SettingsHelper.setDarkModeEnabled(getContext(), darkModeSelected);
+
+            // Persist chat feedback setting
+            SettingsHelper.setChatFeedbackEnabled(getContext(), chatFeedbackSelected);
+
+            // Apply theme change immediately
+            applyTheme(darkModeSelected);
 
             // If user changed currency, fetch latest exchange rate using AI (fallback)
             CurrencyConversionUseCase.fetchAndStoreRate(getContext(), selectedCurrency, (success, rate, msg) -> {
@@ -325,7 +342,7 @@ public class AccountFragment extends Fragment {
                     }
                 } else {
                     if (getActivity() != null) {
-                        getActivity().runOnUiThread(() -> Toast.makeText(getContext(), "Lấy tỷ giá thất bại: " + msg, Toast.LENGTH_SHORT).show());
+                        getActivity().runOnUiThread(() -> Toast.makeText(getContext(), getString(R.string.exchange_rate_fetch_failed, msg), Toast.LENGTH_SHORT).show());
                     }
                 }
             });
@@ -344,6 +361,16 @@ public class AccountFragment extends Fragment {
         });
 
         dialog.show();
+    }
+
+    private void applyTheme(boolean isDarkMode) {
+        if (getActivity() != null) {
+            // Use AppCompatDelegate to set night mode
+            androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(
+                isDarkMode ? androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES
+                          : androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO
+            );
+        }
     }
 
     private void navigateToHelpSupport() {
@@ -367,8 +394,14 @@ public class AccountFragment extends Fragment {
             getActivity().finish();
         });
 
-        builder.setNegativeButton("Hủy", null);
-        builder.show();
+        builder.setNegativeButton(getString(R.string.cancel), (dialog, which) -> dialog.dismiss());
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
+
+        // Ensure buttons are visible by setting explicit layout params if needed
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(ContextCompat.getColor(getContext(), R.color.expense_color));
+        dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(ContextCompat.getColor(getContext(), R.color.text_secondary));
     }
 
     @Override

@@ -44,6 +44,13 @@ public class RegisterActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        // Set app theme based on user preference
+        boolean isDarkMode = com.example.spending_management_app.utils.SettingsHelper.isDarkModeEnabled(this);
+        androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(
+            isDarkMode ? androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES
+                      : androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO
+        );
+
         super.onCreate(savedInstanceState);
 
         // Check if user is already logged in
@@ -124,28 +131,28 @@ public class RegisterActivity extends AppCompatActivity {
         boolean isValid = true;
 
         if (emailOrPhone.isEmpty()) {
-            emailInput.setError("Vui lòng nhập email hoặc số điện thoại");
+            emailInput.setError(getString(R.string.email_or_phone_required));
             isValid = false;
         }
 
         if (password.isEmpty()) {
-            passwordInput.setError("Vui lòng nhập mật khẩu");
+            passwordInput.setError(getString(R.string.password_required));
             isValid = false;
         } else if (password.length() < 6) {
-            passwordInput.setError("Mật khẩu phải có ít nhất 6 ký tự");
+            passwordInput.setError(getString(R.string.password_too_short));
             isValid = false;
         }
 
         if (confirmPassword.isEmpty()) {
-            confirmPasswordInput.setError("Vui lòng xác nhận mật khẩu");
+            confirmPasswordInput.setError(getString(R.string.confirm_password_required));
             isValid = false;
         } else if (!password.equals(confirmPassword)) {
-            confirmPasswordInput.setError("Mật khẩu xác nhận không khớp");
+            confirmPasswordInput.setError(getString(R.string.passwords_not_match));
             isValid = false;
         }
 
         if (isValid) {
-            authViewModel.register(emailOrPhone, password, confirmPassword);
+            authViewModel.register(emailOrPhone, password, confirmPassword, this);
         }
     }
 
@@ -154,7 +161,7 @@ public class RegisterActivity extends AppCompatActivity {
         authViewModel.getCurrentUser().observe(this, user -> {
             if (user != null) {
                 sessionManager.createLoginSession(user);
-                Toast.makeText(this, "Đăng ký thành công! Chào mừng " + user.getName(), Toast.LENGTH_LONG).show();
+                Toast.makeText(this, getString(R.string.registration_success_with_name, user.getName()), Toast.LENGTH_LONG).show();
                 navigateToMain();
             }
         });
@@ -163,7 +170,7 @@ public class RegisterActivity extends AppCompatActivity {
     private void showLoading() {
         progressBar.setVisibility(View.VISIBLE);
         signupButton.setEnabled(false);
-        signupButton.setText("Đang đăng ký...");
+        signupButton.setText(getString(R.string.registering));
     }
 
     private void hideLoading() {

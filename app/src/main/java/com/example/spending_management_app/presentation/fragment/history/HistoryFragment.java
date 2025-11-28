@@ -68,7 +68,12 @@ public class HistoryFragment extends Fragment implements DateRangePickerDialog.D
         // Initialize empty lists first
         allTransactions = new ArrayList<>();
         filteredTransactions = new ArrayList<>();
-        
+
+        // Show skeleton loading
+        if (transactionAdapter != null) {
+            transactionAdapter.setLoading(true);
+        }
+
         // Load data from database in background thread
         Executors.newSingleThreadExecutor().execute(() -> {
             try {
@@ -102,7 +107,9 @@ public class HistoryFragment extends Fragment implements DateRangePickerDialog.D
                 
                 // Convert BudgetHistoryEntity to Transaction objects
                 for (BudgetHistoryEntity entity : budgetHistoryEntities) {
-                    String category = entity.getBudgetType().equals("monthly") ? "Ngân sách tháng" : entity.getCategory();
+                    // Use localized string for monthly budget label so it follows app language
+                    String monthlyBudgetLabel = getString(R.string.monthly_budget_button);
+                    String category = entity.getBudgetType().equals("monthly") ? monthlyBudgetLabel : entity.getCategory();
                     String iconName = "ic_account_balance_wallet";
                     
                     // Determine amount sign based on action
@@ -142,7 +149,7 @@ public class HistoryFragment extends Fragment implements DateRangePickerDialog.D
                         filteredTransactions.clear();
                         filteredTransactions.addAll(allTransactions);
                         
-                        // Refresh adapter
+                        // Update adapter with loaded data (this will hide skeleton)
                         if (transactionAdapter != null) {
                             transactionAdapter.updateTransactions(filteredTransactions);
                         }
@@ -194,6 +201,12 @@ public class HistoryFragment extends Fragment implements DateRangePickerDialog.D
 
         filteredTransactions = new ArrayList<>(allTransactions);
         
+        // Update adapter with sample data
+        if (transactionAdapter != null) {
+            transactionAdapter.updateTransactions(filteredTransactions);
+        }
+        updateEmptyState();
+        
         android.util.Log.d("HistoryFragment", "Sample data loaded with " + allTransactions.size() + " transactions");
     }
 
@@ -218,7 +231,8 @@ public class HistoryFragment extends Fragment implements DateRangePickerDialog.D
     }
 
     private void setupRecyclerView() {
-        transactionAdapter = new SectionedTransactionAdapter(filteredTransactions);
+        transactionAdapter = new SectionedTransactionAdapter(new ArrayList<>()); // Start with empty list
+        // Don't set loading here - loadTransactionsFromDatabase() will handle it
         binding.transactionsRecycler.setLayoutManager(new LinearLayoutManager(getContext()));
         binding.transactionsRecycler.setAdapter(transactionAdapter);
 
@@ -371,7 +385,7 @@ public class HistoryFragment extends Fragment implements DateRangePickerDialog.D
     // Helper method to get appropriate icon for category
     private String getIconForCategory(String category, String type) {
         if ("income".equals(type)) {
-            return "ic_home_black_24dp";
+            return "ic_home";
         }
         // For non-income types, use centralized CategoryUtils so localization updates reflect immediately
         String localized = CategoryUtils.getLocalizedCategoryName(getContext(), category);

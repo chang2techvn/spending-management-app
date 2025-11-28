@@ -5,6 +5,7 @@ import android.content.Context;
 
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.spending_management_app.R;
 import com.example.spending_management_app.data.local.entity.BudgetEntity;
 import com.example.spending_management_app.domain.repository.BudgetRepository;
 import com.example.spending_management_app.domain.usecase.ai.AiContextUseCase;
@@ -47,7 +48,7 @@ public class BudgetUseCase {
                                          Runnable refreshHomeFragmentCallback) {
         // Add analyzing message
         int analyzingIndex = messages.size();
-        messages.add(new AiChatBottomSheet.ChatMessage("Đang xử lý yêu cầu...", false, "Bây giờ"));
+        messages.add(new AiChatBottomSheet.ChatMessage(context.getString(R.string.processing_request), false, context.getString(R.string.now_label)));
         chatAdapter.notifyItemInserted(messages.size() - 1);
         messagesRecycler.smoothScrollToPosition(messages.size() - 1);
 
@@ -58,33 +59,64 @@ public class BudgetUseCase {
         android.util.Log.d("BudgetService", "Original text: [" + text + "]");
         android.util.Log.d("BudgetService", "Lowercase text: [" + textLower + "]");
 
-        // Check for ABSOLUTE set commands with "lên" or "xuống"
+        // Check for ABSOLUTE set commands with "lên" or "xuống" (Vietnamese)
         // "Tăng lên 10 triệu", "Nâng lên 10 triệu", "Hạ xuống 10 triệu", "Giảm xuống 10 triệu"
         boolean hasLenKeyword = textLower.contains("lên");
         boolean hasXuongKeyword = textLower.contains("xuống");
-        boolean isAbsoluteSet = ((textLower.contains("tăng") || textLower.contains("nâng")) && hasLenKeyword) ||
+        boolean isAbsoluteSetVietnamese = ((textLower.contains("tăng") || textLower.contains("nâng")) && hasLenKeyword) ||
                                 ((textLower.contains("giảm") || textLower.contains("hạ")) && hasXuongKeyword);
 
+        // Check for ABSOLUTE set commands (English)
+        // "Set to 10 million", "Increase to 10 million", "Decrease to 10 million", "Raise to 10 million", "Lower to 10 million"
+        boolean hasToKeyword = textLower.contains(" to ");
+        boolean isAbsoluteSetEnglish = ((textLower.contains("set") || textLower.contains("increase") ||
+                                        textLower.contains("raise") || textLower.contains("change")) && hasToKeyword) ||
+                                      ((textLower.contains("decrease") || textLower.contains("lower") ||
+                                        textLower.contains("reduce")) && hasToKeyword);
+
+        boolean isAbsoluteSet = isAbsoluteSetVietnamese || isAbsoluteSetEnglish;
+
         android.util.Log.d("BudgetService", "Has 'lên': " + hasLenKeyword + ", Has 'xuống': " + hasXuongKeyword);
+        android.util.Log.d("BudgetService", "Has 'to': " + hasToKeyword);
         android.util.Log.d("BudgetService", "isAbsoluteSet: " + isAbsoluteSet);
 
-        // Check for RELATIVE increase (add more) - only if NOT absolute set
+        // Check for RELATIVE increase (add more) - only if NOT absolute set (Vietnamese)
         // "Nâng ngân sách 10 triệu", "Tăng ngân sách 10 triệu", "Tăng thêm 10 triệu"
-        boolean hasIncreaseKeyword = textLower.contains("nâng") ||
+        boolean hasIncreaseKeywordVietnamese = textLower.contains("nâng") ||
                                      textLower.contains("tăng") ||
                                      textLower.contains("cộng") ||
                                      textLower.contains("thêm");
+
+        // Check for RELATIVE increase (add more) - only if NOT absolute set (English)
+        // "Increase budget by 10 million", "Add 10 million", "Raise budget 10 million"
+        boolean hasIncreaseKeywordEnglish = textLower.contains("increase") ||
+                                           textLower.contains("add") ||
+                                           textLower.contains("raise") ||
+                                           textLower.contains("plus");
+
+        boolean hasIncreaseKeyword = hasIncreaseKeywordVietnamese || hasIncreaseKeywordEnglish;
         boolean isIncrease = !isAbsoluteSet && hasIncreaseKeyword;
 
         android.util.Log.d("BudgetService", "Has increase keyword: " + hasIncreaseKeyword + ", isIncrease: " + isIncrease);
 
-        // Check for RELATIVE decrease (subtract) - only if NOT absolute set
+        // Check for RELATIVE decrease (subtract) - only if NOT absolute set (Vietnamese)
         // "Giảm ngân sách 2 triệu", "Hạ ngân sách 1 triệu", "Trừ 2 triệu"
-        boolean hasDecreaseKeyword = textLower.contains("giảm") ||
+        boolean hasDecreaseKeywordVietnamese = textLower.contains("giảm") ||
                                      textLower.contains("hạ") ||
                                      textLower.contains("trừ") ||
                                      textLower.contains("bớt") ||
                                      textLower.contains("cắt");
+
+        // Check for RELATIVE decrease (subtract) - only if NOT absolute set (English)
+        // "Decrease budget by 2 million", "Reduce budget 1 million", "Subtract 2 million"
+        boolean hasDecreaseKeywordEnglish = textLower.contains("decrease") ||
+                                           textLower.contains("reduce") ||
+                                           textLower.contains("lower") ||
+                                           textLower.contains("subtract") ||
+                                           textLower.contains("minus") ||
+                                           textLower.contains("cut");
+
+        boolean hasDecreaseKeyword = hasDecreaseKeywordVietnamese || hasDecreaseKeywordEnglish;
         boolean isDecrease = !isAbsoluteSet && hasDecreaseKeyword;
 
         android.util.Log.d("BudgetService", "Has decrease keyword: " + hasDecreaseKeyword + ", isDecrease: " + isDecrease);
@@ -109,7 +141,7 @@ public class BudgetUseCase {
                 messages.set(analyzingIndex, new AiChatBottomSheet.ChatMessage(
                         "⚠️ Không thể thêm hoặc sửa ngân sách cho tháng trong quá khứ!\n\n" +
                         "Bạn chỉ có thể quản lý ngân sách từ tháng " + currentMonth + "/" + currentYear + " trở đi.",
-                        false, "Bây giờ"));
+                        false, context.getString(R.string.now_label)));
                 chatAdapter.notifyItemChanged(analyzingIndex);
             });
             return;
@@ -209,7 +241,7 @@ public class BudgetUseCase {
                                             (isIncrease ? "nâng" : "giảm") + "!\n\n" +
                                             "Vui lòng đặt ngân sách trước. Ví dụ:\n" +
                                             "   • \"Đặt ngân sách tháng " + monthYearStr + " là 15 triệu\"",
-                                            false, "Bây giờ"));
+                                            false, context.getString(R.string.now_label)));
                                     chatAdapter.notifyItemChanged(analyzingIndex);
                                 });
                             }
@@ -265,7 +297,7 @@ public class BudgetUseCase {
                                 toastMessage = "✅ Đã thiết lập ngân sách tháng " + monthYearStr + ": " + formattedFinalAmount;
                             }
 
-                            messages.set(analyzingIndex, new AiChatBottomSheet.ChatMessage(responseMessage, false, "Bây giờ"));
+                            messages.set(analyzingIndex, new AiChatBottomSheet.ChatMessage(responseMessage, false, context.getString(R.string.now_label)));
                             chatAdapter.notifyItemChanged(analyzingIndex);
                             messagesRecycler.smoothScrollToPosition(messages.size() - 1);
 
@@ -283,9 +315,9 @@ public class BudgetUseCase {
                         activity.runOnUiThread(() -> {
                             messages.set(analyzingIndex, new AiChatBottomSheet.ChatMessage(
                                     "❌ Có lỗi xảy ra khi lưu ngân sách. Vui lòng thử lại!",
-                                    false, "Bây giờ"));
+                                    false, context.getString(R.string.now_label)));
                             chatAdapter.notifyItemChanged(analyzingIndex);
-                            ToastHelper.showErrorToast(activity, "Lỗi lưu ngân sách");
+                            ToastHelper.showErrorToast(activity, activity.getString(R.string.budget_save_error));
                         });
                     }
                 }
@@ -308,7 +340,7 @@ public class BudgetUseCase {
                         "🎯 Đặt lại thành số cụ thể:\n" +
                         "   • \"Tăng ngân sách lên 10 triệu\"\n" +
                         "   • \"Giảm ngân sách xuống 8 triệu\"",
-                        false, "Bây giờ"));
+                        false, context.getString(R.string.now_label)));
                 chatAdapter.notifyItemChanged(analyzingIndex);
             });
         }
@@ -324,7 +356,7 @@ public class BudgetUseCase {
                                         Runnable refreshHomeFragmentCallback) {
         // Add analyzing message
         int analyzingIndex = messages.size();
-        messages.add(new AiChatBottomSheet.ChatMessage("Đang xử lý yêu cầu xóa...", false, "Bây giờ"));
+        messages.add(new AiChatBottomSheet.ChatMessage(context.getString(R.string.processing_delete_request), false, context.getString(R.string.now_label)));
         chatAdapter.notifyItemInserted(messages.size() - 1);
         messagesRecycler.smoothScrollToPosition(messages.size() - 1);
 
@@ -376,11 +408,11 @@ public class BudgetUseCase {
                             String responseMessage = "✅ Đã xóa ngân sách tháng " + monthYearStr + "!\n\n" +
                                     "Bạn có thể thiết lập lại bất cứ lúc nào. 💰";
 
-                            messages.set(analyzingIndex, new AiChatBottomSheet.ChatMessage(responseMessage, false, "Bây giờ"));
+                            messages.set(analyzingIndex, new AiChatBottomSheet.ChatMessage(responseMessage, false, context.getString(R.string.now_label)));
                             chatAdapter.notifyItemChanged(analyzingIndex);
                             messagesRecycler.smoothScrollToPosition(messages.size() - 1);
 
-                            ToastHelper.showToastOnTop(activity, "✅ Đã xóa ngân sách tháng " + monthYearStr);
+                            ToastHelper.showToastOnTop(activity, String.format(activity.getString(R.string.budget_deleted_toast), monthYearStr));
                             refreshHomeFragmentCallback.run();
                         });
                     }
@@ -392,7 +424,7 @@ public class BudgetUseCase {
                         activity.runOnUiThread(() -> {
                             String responseMessage = "⚠️ Không tìm thấy ngân sách tháng " + monthYearStr + " để xóa!";
 
-                            messages.set(analyzingIndex, new AiChatBottomSheet.ChatMessage(responseMessage, false, "Bây giờ"));
+                            messages.set(analyzingIndex, new AiChatBottomSheet.ChatMessage(responseMessage, false, context.getString(R.string.now_label)));
                             chatAdapter.notifyItemChanged(analyzingIndex);
                         });
                     }
@@ -405,9 +437,9 @@ public class BudgetUseCase {
                     activity.runOnUiThread(() -> {
                         messages.set(analyzingIndex, new AiChatBottomSheet.ChatMessage(
                                 "❌ Có lỗi xảy ra khi xóa ngân sách. Vui lòng thử lại!",
-                                false, "Bây giờ"));
+                                false, context.getString(R.string.now_label)));
                         chatAdapter.notifyItemChanged(analyzingIndex);
-                        ToastHelper.showErrorToast(activity, "Lỗi xóa ngân sách");
+                        ToastHelper.showErrorToast(activity, activity.getString(R.string.budget_delete_error));
                     });
                 }
             }
@@ -473,13 +505,14 @@ public class BudgetUseCase {
                                        Runnable refreshHomeFragmentCallback) {
         String lowerText = text.toLowerCase();
 
-        // Check if user wants to delete budget
-        if (lowerText.contains("xóa") || lowerText.contains("xoá")) {
+        // Check if user wants to delete budget (Vietnamese + English)
+        if (lowerText.contains("xóa") || lowerText.contains("xoá") ||
+            lowerText.contains("delete") || lowerText.contains("remove")) {
             handleDeleteBudget(text, context, activity, messages, chatAdapter, messagesRecycler, refreshHomeFragmentCallback);
             return;
         }
 
-        // Check if user wants to add/edit/increase/decrease budget
+        // Check if user wants to add/edit/increase/decrease budget (Vietnamese + English)
         // Include: set, add, edit, increase, decrease keywords
         if (lowerText.contains("thêm") || lowerText.contains("đặt") ||
             lowerText.contains("sửa") || lowerText.contains("thay đổi") ||
@@ -487,7 +520,14 @@ public class BudgetUseCase {
             lowerText.contains("tăng") || lowerText.contains("nâng") ||
             lowerText.contains("giảm") || lowerText.contains("hạ") ||
             lowerText.contains("cộng") || lowerText.contains("trừ") ||
-            lowerText.contains("bớt") || lowerText.contains("cắt")) {
+            lowerText.contains("bớt") || lowerText.contains("cắt") ||
+            lowerText.contains("set") || lowerText.contains("add") ||
+            lowerText.contains("edit") || lowerText.contains("change") ||
+            lowerText.contains("establish") || lowerText.contains("establish") ||
+            lowerText.contains("increase") || lowerText.contains("raise") ||
+            lowerText.contains("decrease") || lowerText.contains("reduce") ||
+            lowerText.contains("lower") || lowerText.contains("plus") ||
+            lowerText.contains("minus") || lowerText.contains("cut")) {
             handleBudgetRequest(text, context, activity, messages, chatAdapter, messagesRecycler, refreshHomeFragmentCallback);
             return;
         }

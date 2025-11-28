@@ -5,6 +5,7 @@ import android.content.Context;
 
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.spending_management_app.R;
 import com.example.spending_management_app.data.local.entity.BudgetEntity;
 import com.example.spending_management_app.data.local.entity.CategoryBudgetEntity;
 import com.example.spending_management_app.domain.repository.BudgetRepository;
@@ -46,7 +47,7 @@ public class CategoryBudgetUseCase {
 
         // Add analyzing message
         int analyzingIndex = messages.size();
-        messages.add(new AiChatBottomSheet.ChatMessage("Đang xử lý yêu cầu...", false, "Bây giờ"));
+        messages.add(new AiChatBottomSheet.ChatMessage(context.getString(R.string.processing_request), false, context.getString(R.string.now_label)));
         chatAdapter.notifyItemInserted(messages.size() - 1);
         messagesRecycler.smoothScrollToPosition(messages.size() - 1);
 
@@ -147,11 +148,11 @@ public class CategoryBudgetUseCase {
                                 chatAdapter.notifyItemChanged(analyzingIndex);
 
                                 if (counts[0] > 0) {
-                                    ToastHelper.showToastOnTop(activity, "✅ Đã xóa tất cả ngân sách danh mục");
+                                    ToastHelper.showToastOnTop(activity, context.getString(R.string.all_category_budgets_deleted));
                                     refreshHomeFragmentCallback.run();
                                     refreshCategoryBudgetWelcomeMessageCallback.run();
                                 } else {
-                                    ToastHelper.showErrorToast(activity, "⚠️ Không có ngân sách nào để xóa");
+                                    ToastHelper.showErrorToast(activity, context.getString(R.string.no_budgets_to_delete));
                                 }
                             });
                         }
@@ -165,7 +166,7 @@ public class CategoryBudgetUseCase {
                                         "❌ Có lỗi xảy ra khi xóa tất cả ngân sách danh mục!",
                                         false, "Bây giờ"));
                                 chatAdapter.notifyItemChanged(analyzingIndex);
-                                ToastHelper.showErrorToast(activity, "Lỗi xóa ngân sách");
+                                ToastHelper.showErrorToast(activity, context.getString(R.string.category_budget_delete_error));
                             });
                         }
                     }
@@ -303,14 +304,14 @@ public class CategoryBudgetUseCase {
                             // Has failures - show error toast in red
                             if (counts[0] > 0) {
                                 // Mixed results
-                                ToastHelper.showErrorToast(activity, "⚠️ " + counts[0] + " thành công, " + counts[1] + " thất bại");
+                                ToastHelper.showErrorToast(activity, String.format(context.getString(R.string.partial_success_toast), counts[0], counts[1]));
                             } else {
                                 // All failed
-                                ToastHelper.showErrorToast(activity, "❌ Thất bại: " + counts[1] + " danh mục");
+                                ToastHelper.showErrorToast(activity, String.format(context.getString(R.string.complete_failure_toast), counts[1], context.getString(R.string.categories_label)));
                             }
                         } else {
                             // All success - show success toast in green
-                            ToastHelper.showToastOnTop(activity, "✅ Cập nhật " + counts[0] + " danh mục");
+                            ToastHelper.showToastOnTop(activity, String.format(context.getString(R.string.categories_updated_toast), counts[0]));
                         }
 
                         refreshHomeFragmentCallback.run();

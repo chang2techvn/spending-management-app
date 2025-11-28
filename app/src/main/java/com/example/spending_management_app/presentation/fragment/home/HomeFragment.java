@@ -117,8 +117,8 @@ public class HomeFragment extends Fragment {
                             binding.monthlyIncome.setText(CurrencyFormatter.formatCurrency(getContext(), budgetValue));
                             android.util.Log.d("HomeFragment", "Budget displayed: " + budgetValue);
                         } else {
-                            binding.monthlyIncome.setText("Chưa thiết lập");
-                            android.util.Log.d("HomeFragment", "No budget found - displaying 'Chưa thiết lập'");
+                            binding.monthlyIncome.setText(getString(R.string.not_set));
+                            android.util.Log.d("HomeFragment", "No budget found - displaying '" + getString(R.string.not_set) + "'");
                         }
                         
                         // Set monthly expense (absolute value, should be negative)
@@ -158,19 +158,19 @@ public class HomeFragment extends Fragment {
         dialog.setOnActionSelectedListener(new BudgetManagementDialog.OnActionSelectedListener() {
             @Override
             public void onAddIncomeSelected() {
-                ((MainActivity) getActivity()).openAiChat("Tôi muốn thêm thu nhập");
+                ((MainActivity) getActivity()).openAiChat(getString(R.string.add_income_chat_message));
             }
 
             @Override
             public void onSetBudgetSelected() {
-                ((MainActivity) getActivity()).openAiChat("Tôi muốn thiết lập ngân sách");
+                ((MainActivity) getActivity()).openAiChat(getString(R.string.set_budget_chat_message));
             }
         });
         dialog.show(getParentFragmentManager(), "BudgetManagementDialog");
     }
 
     private void showAddTransactionDialog() {
-        ((MainActivity) getActivity()).openAiChat("Tôi muốn thêm chi tiêu");
+        ((MainActivity) getActivity()).openAiChat(getString(R.string.add_expense_chat_message));
     }
 
     private void openAiChat(String prompt) {
@@ -182,7 +182,20 @@ public class HomeFragment extends Fragment {
     private void loadRecentTransactionsFromDatabase() {
         // Initialize empty list first
         transactions = new ArrayList<>();
-        
+
+        // Show skeleton loading
+        if (transactionAdapter == null) {
+            transactionAdapter = new TransactionAdapter(transactions);
+            binding.recentTransactionsRecycler.setLayoutManager(new LinearLayoutManager(getContext()));
+            binding.recentTransactionsRecycler.setAdapter(transactionAdapter);
+
+            // Setup view all transactions click
+            binding.viewAllTransactions.setOnClickListener(v -> {
+                Navigation.findNavController(v).navigate(R.id.navigation_history);
+            });
+        }
+        transactionAdapter.setLoading(true);
+
         // Load data from database in background thread
         Executors.newSingleThreadExecutor().execute(() -> {
             try {
@@ -215,26 +228,13 @@ public class HomeFragment extends Fragment {
                             android.util.Log.w("HomeFragment", "Fragment not added or context null, skipping UI update");
                             return;
                         }
-                        
+
                         transactions.clear();
                         transactions.addAll(recentTransactions);
-                        
-                        // Setup RecyclerView if not done yet
-                        if (transactionAdapter == null) {
-                            transactionAdapter = new TransactionAdapter(transactions);
-                            binding.recentTransactionsRecycler.setLayoutManager(new LinearLayoutManager(getContext()));
-                            binding.recentTransactionsRecycler.setAdapter(transactionAdapter);
-                            
-                            // Setup view all transactions click
-                            binding.viewAllTransactions.setOnClickListener(v -> {
-                                Navigation.findNavController(v).navigate(R.id.navigation_history);
-                            });
-                            android.util.Log.d("HomeFragment", "Created new adapter with " + recentTransactions.size() + " transactions");
-                        } else {
-                            // Update adapter data and notify
-                            transactionAdapter.updateTransactions(recentTransactions);
-                            android.util.Log.d("HomeFragment", "Updated adapter with " + recentTransactions.size() + " transactions");
-                        }
+
+                        // Update adapter data and notify
+                        transactionAdapter.updateTransactions(recentTransactions);
+                        android.util.Log.d("HomeFragment", "Created new adapter with " + recentTransactions.size() + " transactions");
                     });
                 }
                 
@@ -261,19 +261,24 @@ public class HomeFragment extends Fragment {
         transactions.add(new Transaction("Lương tháng 10", "Ngân sách", 8000000, "ic_home_black_24dp", new Date(), "income"));
 
         // Setup RecyclerView
-        transactionAdapter = new TransactionAdapter(transactions);
-        binding.recentTransactionsRecycler.setLayoutManager(new LinearLayoutManager(getContext()));
-        binding.recentTransactionsRecycler.setAdapter(transactionAdapter);
+        if (transactionAdapter == null) {
+            transactionAdapter = new TransactionAdapter(transactions);
+            binding.recentTransactionsRecycler.setLayoutManager(new LinearLayoutManager(getContext()));
+            binding.recentTransactionsRecycler.setAdapter(transactionAdapter);
 
-        // Setup view all transactions click
-        binding.viewAllTransactions.setOnClickListener(v -> {
-            Navigation.findNavController(v).navigate(R.id.navigation_history);
-        });
-        
+            // Setup view all transactions click
+            binding.viewAllTransactions.setOnClickListener(v -> {
+                Navigation.findNavController(v).navigate(R.id.navigation_history);
+            });
+        } else {
+            transactionAdapter.updateTransactions(transactions);
+        }
+
         android.util.Log.d("HomeFragment", "Sample recent transactions loaded with " + transactions.size() + " items");
     }
 
     private void loadCategorySpendingFromDatabase() {
+        android.util.Log.d("HomeFragment", "=== loadCategorySpendingFromDatabase START ===");
         Executors.newSingleThreadExecutor().execute(() -> {
             try {
                 // Calculate month range
@@ -292,10 +297,18 @@ public class HomeFragment extends Fragment {
                 cal.set(Calendar.MILLISECOND, 999);
                 Date endOfMonth = cal.getTime();
                 
+                android.util.Log.d("HomeFragment", "Loading category spending for month: " + startOfMonth + " to " + endOfMonth);
+                
                 // Get all transactions for this month by category
                 List<TransactionEntity> allTransactions = AppDatabase.getInstance(getContext())
                         .transactionDao()
                         .getTransactionsByDateRange(startOfMonth, endOfMonth);
+                
+                android.util.Log.d("HomeFragment", "Found " + allTransactions.size() + " transactions in current month");
+                for (TransactionEntity transaction : allTransactions) {
+                    android.util.Log.d("HomeFragment", "Transaction: " + transaction.description + 
+                            " - " + transaction.category + " - " + transaction.amount + " - " + transaction.date);
+                }
                 
                 // Get all category budgets for this month
                 List<CategoryBudgetEntity> categoryBudgets =
@@ -387,6 +400,7 @@ public class HomeFragment extends Fragment {
                 // Update UI on main thread
                 if (getActivity() != null) {
                     getActivity().runOnUiThread(() -> {
+                        android.util.Log.d("HomeFragment", "Updating UI with " + allCategoryData.size() + " categories");
                         updateCategoryUI(allCategoryData, finalTotalCategorySpending);
                     });
                 }
@@ -395,10 +409,12 @@ public class HomeFragment extends Fragment {
                 android.util.Log.e("HomeFragment", "Error loading category spending", e);
             }
         });
+        android.util.Log.d("HomeFragment", "=== loadCategorySpendingFromDatabase END ===");
     }
     
     private void updateCategoryUI(List<?> allCategories, long totalSpending) {
-        android.util.Log.d("HomeFragment", "updateCategoryUI called with " + allCategories.size() + " categories");
+        android.util.Log.d("HomeFragment", "=== updateCategoryUI START ===");
+        android.util.Log.d("HomeFragment", "updateCategoryUI called with " + allCategories.size() + " categories, totalSpending=" + totalSpending);
         
         // Clear existing category views (except the title)
         ViewGroup container = binding.categoriesContainer;
@@ -444,6 +460,7 @@ public class HomeFragment extends Fragment {
         }
         
         android.util.Log.d("HomeFragment", "Total views in container: " + container.getChildCount());
+        android.util.Log.d("HomeFragment", "=== updateCategoryUI END ===");
     }
     
     private View createCategoryView(String category, long spending, long budget, long totalSpending) {
@@ -478,7 +495,7 @@ public class HomeFragment extends Fragment {
     String localizedName = CategoryUtils.getLocalizedCategoryName(getContext(), category);
     String icon = CategoryUtils.getIconForCategory(localizedName);
     nameView.setText(icon + " " + localizedName);
-        nameView.setTextColor(0xFF212121);
+        nameView.setTextColor(androidx.core.content.ContextCompat.getColor(getContext(), R.color.text_primary));
         nameView.setTextSize(14);
         nameView.setTypeface(null, android.graphics.Typeface.BOLD);
         
@@ -555,7 +572,7 @@ public class HomeFragment extends Fragment {
         if (budget > 0) {
             amountView.setText(CurrencyFormatter.formatCurrency(getContext(), spending) + "/" + CurrencyFormatter.formatCurrency(getContext(), budget));
         } else {
-            amountView.setText(CurrencyFormatter.formatCurrency(getContext(), spending) + " (Chưa đặt ngân sách)");
+            amountView.setText(CurrencyFormatter.formatCurrency(getContext(), spending) + " (" + getString(R.string.budget_not_set_context) + ")");
         }
         amountView.setTextColor(0xFF757575);
         amountView.setTextSize(12);
@@ -606,7 +623,7 @@ public class HomeFragment extends Fragment {
     // Helper method to get appropriate icon for category
     private String getIconForCategory(String category, String type) {
         if ("income".equals(type)) {
-            return "ic_home_black_24dp";
+            return "ic_home";
         }
         String localized = CategoryUtils.getLocalizedCategoryName(getContext(), category);
         // Keep "income" behavior; for others return emoji/icon from CategoryUtils

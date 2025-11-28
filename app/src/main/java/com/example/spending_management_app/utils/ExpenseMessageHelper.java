@@ -45,14 +45,29 @@ public final class ExpenseMessageHelper {
         // Check if user is asking for financial analysis
     public static boolean isFinancialQuery(String text) {
         String lowerText = text.toLowerCase();
-        return lowerText.contains("chi tiêu") && (
+        return (lowerText.contains("chi tiêu") || lowerText.contains("tiêu") || lowerText.contains("spending") || lowerText.contains("expense")) && (
                 lowerText.contains("hôm nay") || lowerText.contains("hôm qua") || 
                 lowerText.contains("tuần") || lowerText.contains("tháng") ||
                 lowerText.contains("tổng") || lowerText.contains("bao nhiêu") ||
                 lowerText.contains("phân tích") || lowerText.contains("báo cáo") ||
                 lowerText.contains("danh mục") || lowerText.contains("thống kê") ||
+                lowerText.contains("những gì") || lowerText.contains("gì") ||
                 lowerText.contains("ngày") && (lowerText.contains("/") || lowerText.matches(".*\\d+.*")) ||
-                lowerText.contains("so với") || lowerText.contains("tư vấn")
+                lowerText.contains("so với") || lowerText.contains("tư vấn") ||
+                lowerText.contains("hôm kia") || lowerText.contains("tháng trước") ||
+                lowerText.contains("tháng này") || lowerText.contains("tuần này") ||
+                lowerText.contains("tuần trước")
+        ) || lowerText.contains("spending") && (
+                lowerText.contains("today") || lowerText.contains("yesterday") ||
+                lowerText.contains("week") || lowerText.contains("month") ||
+                lowerText.contains("total") || lowerText.contains("how much") ||
+                lowerText.contains("analyze") || lowerText.contains("report") ||
+                lowerText.contains("category") || lowerText.contains("statistics") ||
+                lowerText.contains("day") && lowerText.matches(".*\\d+.*") ||
+                lowerText.contains("compared to") || lowerText.contains("consult") ||
+                lowerText.contains("expense") || lowerText.contains("expenses") ||
+                lowerText.contains("cost") || lowerText.contains("costs") ||
+                lowerText.contains("what")
         );
     }
 }

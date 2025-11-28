@@ -4,6 +4,7 @@ import android.app.Activity;
 
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.spending_management_app.R;
 import com.example.spending_management_app.data.local.entity.TransactionEntity;
 import com.example.spending_management_app.domain.repository.ExpenseRepository;
 import com.example.spending_management_app.presentation.dialog.AiChatBottomSheet;
@@ -79,9 +80,12 @@ public class ExpenseUseCase {
                         // Hiển thị toast trên main thread với layer cao nhất
                         activity.runOnUiThread(() -> {
                             android.util.Log.d("ExpenseService", "Back on UI thread, preparing toast");
-                            String toastMessage = String.format("✅ Đã thêm %s %,.0f %s - %s",
-                                type.equals("expense") ? "chi tiêu" : "thu nhập",
-                                amount, currency, category);
+                            String transactionType = type.equals("expense") ? 
+                                activity.getString(R.string.expense_type) :
+                                activity.getString(R.string.income_type);
+                            
+                            String toastMessage = String.format(activity.getString(R.string.expense_added_toast),
+                                transactionType, amount, currency, category);
 
                             android.util.Log.d("ExpenseService", "Toast message: " + toastMessage);
 
@@ -104,7 +108,7 @@ public class ExpenseUseCase {
                     } catch (Exception e) {
                         e.printStackTrace();
                         activity.runOnUiThread(() -> {
-                            String errorMessage = "❌ Có lỗi xảy ra khi lưu dữ liệu: " + e.getMessage();
+                            String errorMessage = String.format(activity.getString(R.string.save_data_error), e.getMessage());
                             ToastHelper.showErrorToast(activity, errorMessage);
                             android.util.Log.e("ExpenseService", "Error saving expense", e);
                         });
@@ -114,7 +118,7 @@ public class ExpenseUseCase {
 
         } catch (Exception e) {
             e.printStackTrace();
-            String errorMessage = "❌ Có lỗi xảy ra khi xử lý dữ liệu: " + e.getMessage();
+            String errorMessage = String.format(activity.getString(R.string.process_data_error), e.getMessage());
             ToastHelper.showErrorToast(activity, errorMessage);
             android.util.Log.e("ExpenseService", "Error processing data", e);
         }

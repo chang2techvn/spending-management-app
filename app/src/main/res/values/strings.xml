@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">spending-management-app</string>
+    <string name="app_name">Meco</string>
     <string name="title_home">Home</string>
     <string name="title_dashboard">Dashboard</string>
     <string name="title_notifications">Notifications</string>
@@ -38,13 +38,15 @@
     <string name="lastname_hint">Nhập họ của bạn</string>
     <string name="email_hint">Nhập địa chỉ email hoặc số điện thoại</string>
     <string name="confirmPassword_hint">Xác nhận mật khẩu</string>
-    <string name="signupSuggest_text">Đã có tài khoản?</string>
+    <string name="signupSuggest_text">Chưa có tài khoản?</string>
     <string name="title_remember">Ghi nhớ đăng nhập</string>
     <string name="forgotPassword_text">Quên mật khẩu?</string>
 
     <!-- Settings strings -->
     <string name="settings_title">Cài đặt</string>
     <string name="notifications_label">Thông báo</string>
+    <string name="dark_mode_label">Chế độ tối</string>
+    <string name="chat_feedback_label">Đọc kết quả chat</string>
     <string name="language_label">Ngôn ngữ</string>
     <string name="currency_label">Đơn vị tiền tệ</string>
     <string name="cancel_button">Hủy</string>
@@ -148,6 +150,10 @@
     <string name="this_month_label">Tháng này</string>
     <string name="difference_label">Chênh lệch</string>
     <string name="no_statistics_data">Chưa có dữ liệu thống kê</string>
+
+    <!-- Chart and data messages -->
+    <string name="no_expense_data">Chưa có dữ liệu chi tiêu</string>
+    <string name="no_expense_data_this_year">Chưa có dữ liệu chi tiêu trong năm này</string>
 
     <!-- History page -->
     <string name="history_title">Lịch sử giao dịch</string>
@@ -263,12 +269,22 @@
     <string name="register_terms">Bằng việc đăng ký, bạn đồng ý với Điều khoản sử dụng và Chính sách bảo mật của chúng tôi.</string>
     <string name="create_account_button">Tạo tài khoản</string>
     <string name="or_text"> hoặc </string>
-    <string name="login_link_text">Đã có tài khoản? Đăng nhập</string>
+    <string name="login_link_text">Chưa có tài khoản? Đăng nhập</string>
     <string name="budget_category">💰 Ngân sách</string>
     <string name="loading">Đang tải...</string>
     <string name="loading_budget_info">Đang tải thông tin ngân sách...</string>
     <string name="welcome_greeting">Chào bạn! 👋</string>
     <string name="now_label">Bây giờ</string>
+    <string name="processing_request">Đang xử lý yêu cầu...</string>
+    <string name="processing_delete_request">Đang xử lý yêu cầu xóa...</string>
+    <string name="analyzing_financial_data">Đang phân tích dữ liệu tài chính...</string>
+    <string name="analyzing_budget">Đang phân tích ngân sách...</string>
+    <string name="analyzing">Đang phân tích...</string>
+    <string name="ai_connection_error">Lỗi kết nối AI.</string>
+    <string name="ai_processing_error">Lỗi xử lý phản hồi AI.</string>
+    <string name="ai_send_error">Lỗi gửi tin nhắn.</string>
+    <string name="voice_recognition_not_supported">Thiết bị không hỗ trợ nhận diện giọng nói</string>
+    <string name="internet_required">❌ Chức năng này cần kết nối internet. Vui lòng kiểm tra kết nối mạng của bạn.</string>
     <string name="offline_mode_header">⚠️ CHẾ ĐỘ OFFLINE</string>
     <string name="offline_mode_details">Bạn có thể:\n✅ Thêm, sửa, xóa chi tiêu\n✅ Quản lý ngân sách\n❌ Không thể phân tích và tư vấn với AI\n\n</string>
     <string name="budget_history_title">📊 Ngân sách 6 tháng gần đây:</string>
@@ -292,4 +308,66 @@
     <string name="category_budget_instructions_header">\n💡 Hướng dẫn:\n</string>
     <string name="category_budget_instructions">        • Thêm: \'Thêm 500 ngàn ăn uống và 300 ngàn di chuyển\'\n        • Sửa: \'Sửa ăn uống 700 ngàn, mua sắm 400 ngàn\'\n        • Xóa: \'Xóa ngân sách ăn uống và di chuyển\'\n\n⚠️ Lưu ý: Tổng ngân sách danh mục không vượt quá ngân sách tháng</string>
     <string name="default_category_budget_message">📊 Ngân sách theo danh mục\n\n💡 Hướng dẫn:\n• Đặt: \'Đặt ngân sách ăn uống 2 triệu\'\n• Sửa: \'Sửa ngân sách di chuyển 1 triệu\'\n• Xóa: \'Xóa ngân sách cafe\'\n• Nhiều: \'Thêm 500k ăn uống và 300k di chuyển\'\n\n📂 Danh mục: Ăn uống, Di chuyển, Tiện ích, Y tế, Nhà ở, Mua sắm, v.v.</string>
+    <string name="registering">Đang đăng ký...</string>
+    <string name="logging_in">Đang đăng nhập...</string>
+    <string name="expense_type">chi tiêu</string>
+    <string name="income_type">thu nhập</string>
+    <string name="expense_added_toast">✅ Đã thêm %s %,.0f %s - %s</string>
+    <string name="budget_save_error">Lỗi lưu ngân sách</string>
+    <string name="budget_deleted_toast">✅ Đã xóa ngân sách tháng %s</string>
+    <string name="budget_delete_error">Lỗi xóa ngân sách</string>
+    <string name="all_category_budgets_deleted">✅ Đã xóa tất cả ngân sách danh mục</string>
+    <string name="no_budgets_to_delete">⚠️ Không có ngân sách nào để xóa</string>
+    <string name="category_budget_delete_error">Lỗi xóa ngân sách</string>
+    <string name="partial_success_toast">⚠️ %d thành công, %d thất bại</string>
+    <string name="complete_failure_toast">❌ Thất bại: %d %s</string>
+    <string name="categories_updated_toast">✅ Cập nhật %d danh mục</string>
+    <string name="expenses_deleted_toast">✅ Xóa %d chi tiêu</string>
+    <string name="expenses_added_toast">✅ Thêm %d chi tiêu</string>
+    <string name="transactions_label">giao dịch</string>
+    <string name="categories_label">danh mục</string>
+    <string name="save_data_error">❌ Có lỗi xảy ra khi lưu dữ liệu: %s</string>
+    <string name="process_data_error">❌ Có lỗi xảy ra khi xử lý dữ liệu: %s</string>
+    <string name="exchange_rate_fetch_failed">Lấy tỷ giá thất bại: %s</string>
+    <string name="invalid_args">Tham số không hợp lệ</string>
+    <string name="currency_not_supported">Tiền tệ %s không được hỗ trợ bởi API</string>
+    <string name="invalid_api_response">Phản hồi API không hợp lệ: %s</string>
+    <string name="http_error">Lỗi HTTP: %d</string>
+    <string name="network_error">Lỗi mạng: %s</string>
+    <string name="registration_failed">Đăng ký thất bại, vui lòng thử lại</string>
+    <string name="registration_success">Đăng ký thành công</string>
+    <string name="email_or_phone_required">Vui lòng nhập email hoặc số điện thoại</string>
+    <string name="password_required">Vui lòng nhập mật khẩu</string>
+    <string name="password_too_short">Mật khẩu phải có ít nhất 6 ký tự</string>
+    <string name="confirm_password_required">Vui lòng xác nhận mật khẩu</string>
+    <string name="registration_success_with_name">Đăng ký thành công! Chào mừng %s</string>
+    <string name="financial_info_this_month">THÔNG TIN TÀI CHÍNH THÁNG NÀY:</string>
+    <string name="total_income_label">Tổng thu nhập:</string>
+    <string name="estimated_balance_label">Số dư ước tính:</string>
+    <string name="monthly_budget_label_context">Ngân sách tháng:</string>
+    <string name="remaining_label">Còn lại:</string>
+    <string name="usage_rate_label">Tỷ lệ sử dụng:</string>
+    <string name="spending_by_category_label">CHI TIÊU THEO DANH MỤC:</string>
+    <string name="recent_transactions_label">GIAO DỊCH GẦN ĐÂY:</string>
+    <string name="budget_info_label">THÔNG TIN NGÂN SÁCH:</string>
+    <string name="budget_list_by_month">Danh sách ngân sách theo tháng:</string>
+    <string name="average_budget_label">Ngân sách trung bình:</string>
+    <string name="current_month_budget_context">Ngân sách tháng hiện tại:</string>
+    <string name="budget_not_set_context">Chưa thiết lập</string>
+    <string name="no_budget_set_message">Chưa có ngân sách nào được thiết lập.</string>
+    <string name="category_budget_section">NGÂN SÁCH THEO DANH MỤC (THÁNG HIỆN TẠI):</string>
+    <string name="total_allocated_budget">Tổng ngân sách đã phân bổ:</string>
+    <string name="category_budget_details">Chi tiết ngân sách từng danh mục:</string>
+    <string name="budget_allocation_percentage">Tỷ lệ phân bổ ngân sách:</string>
+    <string name="no_category_budget_set">Chưa có ngân sách danh mục nào được thiết lập.</string>
+    <string name="error_getting_category_budget">Lỗi khi truy xuất ngân sách danh mục:</string>
+    <string name="error_getting_budget_data">Lỗi khi truy xuất dữ liệu ngân sách:</string>
+    <string name="error_getting_financial_data">Lỗi khi truy xuất dữ liệu tài chính:</string>
+    <string name="current_month_marker">(Tháng hiện tại)</string>
+    <string name="highest_budget_month">Ngân sách cao nhất: %s (Tháng %s)</string>
+    <string name="lowest_budget_month">Ngân sách thấp nhất: %s (Tháng %s)</string>
+    <string name="total_months_set">Tổng số tháng đã thiết lập:</string>
+    <string name="add_income_chat_message">Tôi muốn thêm thu nhập</string>
+    <string name="set_budget_chat_message">Tôi muốn thiết lập ngân sách</string>
+    <string name="add_expense_chat_message">Tôi muốn thêm chi tiêu</string>
 </resources>

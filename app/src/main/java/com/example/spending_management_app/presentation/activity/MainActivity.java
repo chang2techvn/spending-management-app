@@ -49,6 +49,13 @@ public class MainActivity extends AppCompatActivity {
         // Set app language before setting content view
         LocaleHelper.setLocale(this, LocaleHelper.getLanguage(this));
 
+        // Set app theme based on user preference
+        boolean isDarkMode = com.example.spending_management_app.utils.SettingsHelper.isDarkModeEnabled(this);
+        androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(
+            isDarkMode ? androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES
+                      : androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO
+        );
+
         super.onCreate(savedInstanceState);
 
         // Check authentication first
@@ -163,12 +170,40 @@ public class MainActivity extends AppCompatActivity {
         navAccount.setOnClickListener(v -> navController.navigate(R.id.navigation_account));
 
         navAiAssistant.setOnClickListener(v -> {
+            // Thêm hiệu ứng scale khi click
+            v.animate()
+                .scaleX(0.9f)
+                .scaleY(0.9f)
+                .setDuration(100)
+                .withEndAction(() -> {
+                    v.animate()
+                        .scaleX(1.0f)
+                        .scaleY(1.0f)
+                        .setDuration(100)
+                        .start();
+                })
+                .start();
+
             // Mở dialog chat AI
             AiChatBottomSheet aiChatBottomSheet = new AiChatBottomSheet();
             aiChatBottomSheet.show(getSupportFragmentManager(), aiChatBottomSheet.getTag());
         });
 
         navAiAssistant.setOnLongClickListener(v -> {
+            // Thêm hiệu ứng scale và thay đổi màu khi long press
+            v.animate()
+                .scaleX(1.1f)
+                .scaleY(1.1f)
+                .setDuration(150)
+                .withEndAction(() -> {
+                    v.animate()
+                        .scaleX(1.0f)
+                        .scaleY(1.0f)
+                        .setDuration(150)
+                        .start();
+                })
+                .start();
+
             // Kích hoạt voice chat
             if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
                 ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.RECORD_AUDIO}, 1);
@@ -182,7 +217,7 @@ public class MainActivity extends AppCompatActivity {
             try {
                 startActivityForResult(intent, VOICE_REQUEST_CODE);
             } catch (Exception e) {
-                Toast.makeText(MainActivity.this, "Thiết bị không hỗ trợ nhận diện giọng nói", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, getString(R.string.voice_recognition_not_supported), Toast.LENGTH_SHORT).show();
             }
             return true; // Prevent onClick
         });
@@ -255,7 +290,7 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     startActivityForResult(intent, VOICE_REQUEST_CODE);
                 } catch (Exception e) {
-                    Toast.makeText(this, "Thiết bị không hỗ trợ nhận diện giọng nói", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, getString(R.string.voice_recognition_not_supported), Toast.LENGTH_SHORT).show();
                 }
             } else {
                 Toast.makeText(this, "Cần quyền ghi âm để sử dụng voice chat", Toast.LENGTH_SHORT).show();

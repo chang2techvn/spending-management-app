@@ -11,18 +11,40 @@ public final class SettingsHelper {
 
     private static final String KEY_SELECTED_CURRENCY = "selected_currency";
     private static final String KEY_EXCHANGE_RATE_PREFIX = "exchange_rate_"; // stored as VND per unit, e.g. 26000 for USD
+    private static final String KEY_DARK_MODE = "dark_mode";
+    private static final String KEY_CHAT_FEEDBACK = "chat_feedback";
     private static final String DEFAULT_CURRENCY = "VND";
 
     private SettingsHelper() { throw new UnsupportedOperationException("Utility class"); }
+
+    public static String getSelectedCurrency(Context context) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        return prefs.getString(KEY_SELECTED_CURRENCY, DEFAULT_CURRENCY);
+    }
 
     public static void setSelectedCurrency(Context context, String currency) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         prefs.edit().putString(KEY_SELECTED_CURRENCY, currency).apply();
     }
 
-    public static String getSelectedCurrency(Context context) {
+    public static void setDarkModeEnabled(Context context, boolean enabled) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        return prefs.getString(KEY_SELECTED_CURRENCY, DEFAULT_CURRENCY);
+        prefs.edit().putBoolean(KEY_DARK_MODE, enabled).apply();
+    }
+
+    public static boolean isDarkModeEnabled(Context context) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        return prefs.getBoolean(KEY_DARK_MODE, false); // Default to light mode
+    }
+
+    public static void setChatFeedbackEnabled(Context context, boolean enabled) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        prefs.edit().putBoolean(KEY_CHAT_FEEDBACK, enabled).apply();
+    }
+
+    public static boolean isChatFeedbackEnabled(Context context) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        return prefs.getBoolean(KEY_CHAT_FEEDBACK, true); // Default to enabled
     }
 
     public static void setExchangeRateVndPerUnit(Context context, String currency, double rateVndPerUnit) {

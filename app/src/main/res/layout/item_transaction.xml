@@ -28,7 +28,7 @@
                 android:gravity="center"
                 android:text="🍽️"
                 android:textSize="18sp"
-                android:background="#FFF3E0" />
+                android:background="?android:attr/colorBackground" />
 
         </androidx.cardview.widget.CardView>
 
@@ -45,7 +45,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Ăn trưa tại quán cơm"
-                android:textColor="#212121"
+                android:textColor="?android:attr/textColorPrimary"
                 android:textSize="14sp"
                 android:textStyle="bold" />
 
@@ -54,7 +54,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Category"
-                    android:textColor="#757575"
+                    android:textColor="?android:attr/textColorSecondary"
                     android:textSize="12sp" />
 
                 <TextView
@@ -62,7 +62,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Date"
-                    android:textColor="#757575"
+                    android:textColor="?android:attr/textColorSecondary"
                     android:textSize="12sp"
                     android:layout_marginTop="2dp" />
 
@@ -74,7 +74,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="-45,000 VND"
-            android:textColor="#F44336"
+            android:textColor="@color/expense_color"
             android:textSize="14sp"
             android:textStyle="bold" />
 

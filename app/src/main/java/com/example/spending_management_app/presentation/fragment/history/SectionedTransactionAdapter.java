@@ -24,9 +24,12 @@ public class SectionedTransactionAdapter extends RecyclerView.Adapter<RecyclerVi
 
     private static final int VIEW_TYPE_HEADER = 0;
     private static final int VIEW_TYPE_ITEM = 1;
+    private static final int VIEW_TYPE_SKELETON_HEADER = 2;
+    private static final int VIEW_TYPE_SKELETON_ITEM = 3;
 
     private List<Object> items;
     private Context context;
+    private boolean isLoading = false;
 
     public SectionedTransactionAdapter(List<Transaction> transactions) {
         this.items = groupTransactionsByDate(transactions);
@@ -85,11 +88,21 @@ public class SectionedTransactionAdapter extends RecyclerView.Adapter<RecyclerVi
 
     @Override
     public int getItemViewType(int position) {
-        if (items.get(position) instanceof String) {
-            return VIEW_TYPE_HEADER;
+        if (isLoading) {
+            // Alternate between skeleton header and skeleton item for loading effect
+            return position % 2 == 0 ? VIEW_TYPE_SKELETON_HEADER : VIEW_TYPE_SKELETON_ITEM;
         } else {
-            return VIEW_TYPE_ITEM;
+            if (items.get(position) instanceof String) {
+                return VIEW_TYPE_HEADER;
+            } else {
+                return VIEW_TYPE_ITEM;
+            }
         }
+    }
+
+    public void setLoading(boolean loading) {
+        this.isLoading = loading;
+        notifyDataSetChanged();
     }
 
     @NonNull
@@ -101,14 +114,25 @@ public class SectionedTransactionAdapter extends RecyclerView.Adapter<RecyclerVi
         if (viewType == VIEW_TYPE_HEADER) {
             View view = inflater.inflate(R.layout.item_date_header, parent, false);
             return new HeaderViewHolder(view);
-        } else {
+        } else if (viewType == VIEW_TYPE_ITEM) {
             View view = inflater.inflate(R.layout.item_transaction, parent, false);
             return new TransactionViewHolder(view);
+        } else if (viewType == VIEW_TYPE_SKELETON_HEADER) {
+            View view = inflater.inflate(R.layout.skeleton_item_date_header, parent, false);
+            return new SkeletonHeaderViewHolder(view);
+        } else {
+            View view = inflater.inflate(R.layout.skeleton_item_transaction, parent, false);
+            return new SkeletonTransactionViewHolder(view);
         }
     }
 
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
+        if (isLoading) {
+            // Skeleton views don't need binding
+            return;
+        }
+
         if (holder instanceof HeaderViewHolder) {
             String headerText = (String) items.get(position);
             ((HeaderViewHolder) holder).bind(headerText);
@@ -120,11 +144,12 @@ public class SectionedTransactionAdapter extends RecyclerView.Adapter<RecyclerVi
 
     @Override
     public int getItemCount() {
-        return items.size();
+        return isLoading ? 6 : items.size(); // Show 6 skeleton items (3 headers + 3 transactions)
     }
 
     public void updateTransactions(List<Transaction> transactions) {
         this.items = groupTransactionsByDate(transactions);
+        this.isLoading = false; // Hide skeleton when data is loaded
         notifyDataSetChanged();
     }
 
@@ -194,6 +219,18 @@ public class SectionedTransactionAdapter extends RecyclerView.Adapter<RecyclerVi
 
         private String getLocalizedCategoryName(String category) {
             return CategoryUtils.getLocalizedCategoryName(itemView.getContext(), category);
+        }
+    }
+
+    static class SkeletonHeaderViewHolder extends RecyclerView.ViewHolder {
+        public SkeletonHeaderViewHolder(@NonNull View itemView) {
+            super(itemView);
+        }
+    }
+
+    static class SkeletonTransactionViewHolder extends RecyclerView.ViewHolder {
+        public SkeletonTransactionViewHolder(@NonNull View itemView) {
+            super(itemView);
         }
     }
 }

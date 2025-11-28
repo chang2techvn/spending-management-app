@@ -3,6 +3,8 @@ package com.example.spending_management_app.domain.usecase.currency;
 import android.content.Context;
 import android.util.Log;
 
+import com.example.spending_management_app.R;
+
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
@@ -23,23 +25,18 @@ public class CurrencyConversionUseCase {
 
     /**
      * Fetch today's rate of targetCurrency in VND from exchangerate.host API and store it.
-     * Currently supports USD only, as the API is USD-based.
+     * Supports all currencies by calculating cross-rates when needed.
      */
     public static void fetchAndStoreRate(Context context, String targetCurrency, Callback callback) {
         if (context == null || targetCurrency == null) {
-            if (callback != null) callback.onResult(false, 0.0, "Invalid args");
-            return;
-        }
-
-        // Only support USD for now
-        if (!"USD".equalsIgnoreCase(targetCurrency)) {
-            if (callback != null) callback.onResult(false, 0.0, "Only USD supported via API");
+            if (callback != null) callback.onResult(false, 0.0, context.getString(R.string.invalid_args));
             return;
         }
 
         // Run HTTP request on background thread
         new Thread(() -> {
             try {
+                // Use USD as base currency for reliable API response
                 URL url = new URL("https://api.exchangerate-api.com/v4/latest/USD");
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("GET");
@@ -62,10 +59,32 @@ public class CurrencyConversionUseCase {
                     Log.d(TAG, "API response: " + response.toString());
                     if (json.has("rates")) {
                         JSONObject rates = json.getJSONObject("rates");
-                        if (rates.has("VND")) {
-                            double rateVndPerUnit = rates.getDouble("VND");
-                            Log.d(TAG, "Fetched rate for USD: " + rateVndPerUnit + " VND per unit from API");
 
+                        double rateVndPerUnit = 0.0;
+
+                        if ("USD".equalsIgnoreCase(targetCurrency)) {
+                            // Direct rate for USD
+                            if (rates.has("VND")) {
+                                rateVndPerUnit = rates.getDouble("VND");
+                                Log.d(TAG, "Fetched direct rate for USD: " + rateVndPerUnit + " VND per USD");
+                            }
+                        } else {
+                            // Calculate cross-rate for other currencies
+                            // Rate = (USD per targetCurrency) * (VND per USD)
+                            if (rates.has(targetCurrency.toUpperCase()) && rates.has("VND")) {
+                                double usdPerTarget = rates.getDouble(targetCurrency.toUpperCase());
+                                double vndPerUsd = rates.getDouble("VND");
+                                rateVndPerUnit = vndPerUsd / usdPerTarget;
+                                Log.d(TAG, "Calculated cross-rate for " + targetCurrency + ": " + rateVndPerUnit + " VND per " + targetCurrency +
+                                      " (USD/" + targetCurrency + ": " + usdPerTarget + ", VND/USD: " + vndPerUsd + ")");
+                            } else {
+                                // Currency not supported by API
+                                if (callback != null) callback.onResult(false, 0.0, context.getString(R.string.currency_not_supported, targetCurrency.toUpperCase()));
+                                return;
+                            }
+                        }
+
+                        if (rateVndPerUnit > 0.0) {
                             // Store the rate
                             com.example.spending_management_app.utils.SettingsHelper.setExchangeRateVndPerUnit(context, targetCurrency, rateVndPerUnit);
                             com.example.spending_management_app.utils.SettingsHelper.setSelectedCurrency(context, targetCurrency);
@@ -75,15 +94,15 @@ public class CurrencyConversionUseCase {
                         }
                     }
 
-                    if (callback != null) callback.onResult(false, 0.0, "Invalid API response: " + response.toString());
+                    if (callback != null) callback.onResult(false, 0.0, context.getString(R.string.invalid_api_response, response.toString()));
                 } else {
-                    if (callback != null) callback.onResult(false, 0.0, "HTTP error: " + responseCode);
+                    if (callback != null) callback.onResult(false, 0.0, context.getString(R.string.http_error, responseCode));
                 }
 
                 conn.disconnect();
             } catch (Exception e) {
                 Log.e(TAG, "Error fetching rate from API", e);
-                if (callback != null) callback.onResult(false, 0.0, "Network error: " + e.getMessage());
+                if (callback != null) callback.onResult(false, 0.0, context.getString(R.string.network_error, e.getMessage()));
             }
         }).start();
     }

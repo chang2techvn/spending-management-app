@@ -17,11 +17,14 @@ public class CategoryUtils {
     static {
         // Initialize icon mappings
         CATEGORY_ICON_MAP.put("Ăn uống", "🍽️");
+        CATEGORY_ICON_MAP.put("Food", "🍽️");
         CATEGORY_ICON_MAP.put("Food & Dining", "🍽️");
         CATEGORY_ICON_MAP.put("Di chuyển", "🚗");
+        CATEGORY_ICON_MAP.put("Transport", "🚗");
         CATEGORY_ICON_MAP.put("Transportation", "🚗");
         CATEGORY_ICON_MAP.put("Tiện ích", "⚡");
         CATEGORY_ICON_MAP.put("Utilities", "⚡");
+        CATEGORY_ICON_MAP.put("Bills", "⚡");
         CATEGORY_ICON_MAP.put("Y tế", "🏥");
         CATEGORY_ICON_MAP.put("Healthcare", "🏥");
         CATEGORY_ICON_MAP.put("Nhà ở", "🏠");
@@ -70,16 +73,20 @@ public class CategoryUtils {
         CATEGORY_ICON_MAP.put("Savings", "🏦");
         CATEGORY_ICON_MAP.put("Khác", "📱");
         CATEGORY_ICON_MAP.put("Other", "📱");
+        CATEGORY_ICON_MAP.put("📱 Other", "📱");
         CATEGORY_ICON_MAP.put("Ngân sách", "💰");
         CATEGORY_ICON_MAP.put("Budget", "💰");
 
         // Initialize color mappings (using resource IDs)
         CATEGORY_COLOR_MAP.put("Ăn uống", R.color.category_food);
+        CATEGORY_COLOR_MAP.put("Food", R.color.category_food);
         CATEGORY_COLOR_MAP.put("Food & Dining", R.color.category_food);
         CATEGORY_COLOR_MAP.put("Di chuyển", R.color.category_transport);
+        CATEGORY_COLOR_MAP.put("Transport", R.color.category_transport);
         CATEGORY_COLOR_MAP.put("Transportation", R.color.category_transport);
         CATEGORY_COLOR_MAP.put("Tiện ích", R.color.category_utility);
         CATEGORY_COLOR_MAP.put("Utilities", R.color.category_utility);
+        CATEGORY_COLOR_MAP.put("Bills", R.color.category_utility);
         CATEGORY_COLOR_MAP.put("Y tế", R.color.category_health);
         CATEGORY_COLOR_MAP.put("Healthcare", R.color.category_health);
         CATEGORY_COLOR_MAP.put("Nhà ở", R.color.category_housing);
@@ -128,6 +135,7 @@ public class CategoryUtils {
         CATEGORY_COLOR_MAP.put("Savings", R.color.category_income);
         CATEGORY_COLOR_MAP.put("Khác", R.color.category_default);
         CATEGORY_COLOR_MAP.put("Other", R.color.category_default);
+        CATEGORY_COLOR_MAP.put("📱 Other", R.color.category_default);
         CATEGORY_COLOR_MAP.put("Ngân sách", R.color.category_income);
         CATEGORY_COLOR_MAP.put("Budget", R.color.category_income);
     }

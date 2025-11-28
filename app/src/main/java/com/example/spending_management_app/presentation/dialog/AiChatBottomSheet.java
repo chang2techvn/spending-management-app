@@ -164,7 +164,7 @@ public class AiChatBottomSheet extends DialogFragment {
                     android.util.Log.d("AiChatBottomSheet", "Add expense/expense bulk request - showing welcome message only");
                 } else if (lower.contains("ngân sách") || lower.contains("thiet lap ngan sach") || lower.contains("thiết lập ngân sách")) {
                     // For budget management, send to AI
-                    String userVisibleMessage = "Thiết lập ngân sách tháng này";
+                    String userVisibleMessage = getString(R.string.set_budget_chat_message);
                     messages.add(new ChatMessage(userVisibleMessage, true, "Bây giờ"));
                     chatAdapter.notifyItemInserted(messages.size() - 1);
                     messagesRecycler.smoothScrollToPosition(messages.size() - 1);
@@ -235,17 +235,14 @@ public class AiChatBottomSheet extends DialogFragment {
                 // This should not happen since category budget always provides welcome_message
                 // But add fallback just in case
                 boolean isOnline = isNetworkAvailable();
-                String fallbackMessage = "📊 Ngân sách theo danh mục\n\n";
+                String fallbackMessage = getString(R.string.category_budget_title) + "\n\n";
                 
                 if (!isOnline) {
-                    fallbackMessage += "⚠️ Offline: Chỉ có thể thêm/sửa/xóa ngân sách danh mục\n\n";
+                    fallbackMessage += getString(R.string.offline_mode_details);
                 }
                 
-                fallbackMessage += "💡 Hướng dẫn:\n" +
-                        "• Thêm: 'Đặt ngân sách ăn uống 2 triệu'\n" +
-                        "• Sửa: 'Sửa ngân sách di chuyển 1 triệu'\n" +
-                        "• Xóa: 'Xóa ngân sách cafe'\n\n" +
-                        "📂 Danh mục: Ăn uống, Di chuyển, Tiện ích, Y tế, Nhà ở, Mua sắm, v.v.";
+                fallbackMessage += getString(R.string.category_budget_instructions_header) +
+                        getString(R.string.category_budget_instructions);
                 messages.add(new ChatMessage(fallbackMessage, false, getString(R.string.now_label)));
             } else if ("expense_bulk_management".equals(mode)) {
                 // Load expense bulk management welcome message
@@ -287,7 +284,7 @@ public class AiChatBottomSheet extends DialogFragment {
         try {
             startActivityForResult(intent, VOICE_REQUEST_CODE);
         } catch (Exception e) {
-            ToastHelper.showTopToast(getActivity(), "Thiết bị không hỗ trợ nhận diện giọng nói", Toast.LENGTH_SHORT);
+            ToastHelper.showErrorToast(getActivity(), getString(R.string.voice_recognition_not_supported));
         }
     }
 
