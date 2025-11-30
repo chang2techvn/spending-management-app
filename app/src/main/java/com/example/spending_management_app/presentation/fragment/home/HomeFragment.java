@@ -411,6 +411,115 @@ public class HomeFragment extends Fragment {
         });
         android.util.Log.d("HomeFragment", "=== loadCategorySpendingFromDatabase END ===");
     }
+
+    private void loadMonthComparison() {
+        Executors.newSingleThreadExecutor().execute(() -> {
+            try {
+                if (getContext() == null) return;
+
+                Calendar cal = Calendar.getInstance();
+                
+                // Calculate THIS MONTH range
+                cal.set(Calendar.DAY_OF_MONTH, 1);
+                cal.set(Calendar.HOUR_OF_DAY, 0);
+                cal.set(Calendar.MINUTE, 0);
+                cal.set(Calendar.SECOND, 0);
+                cal.set(Calendar.MILLISECOND, 0);
+                java.util.Date startOfThisMonth = cal.getTime();
+                
+                cal.set(Calendar.DAY_OF_MONTH, cal.getActualMaximum(Calendar.DAY_OF_MONTH));
+                cal.set(Calendar.HOUR_OF_DAY, 23);
+                cal.set(Calendar.MINUTE, 59);
+                cal.set(Calendar.SECOND, 59);
+                cal.set(Calendar.MILLISECOND, 999);
+                java.util.Date endOfThisMonth = cal.getTime();
+                
+                // Calculate LAST MONTH range
+                cal.set(Calendar.DAY_OF_MONTH, 1);
+                cal.set(Calendar.HOUR_OF_DAY, 0);
+                cal.set(Calendar.MINUTE, 0);
+                cal.set(Calendar.SECOND, 0);
+                cal.set(Calendar.MILLISECOND, 0);
+                cal.add(Calendar.MONTH, -1); // Go back 1 month
+                java.util.Date startOfLastMonth = cal.getTime();
+                
+                cal.set(Calendar.DAY_OF_MONTH, cal.getActualMaximum(Calendar.DAY_OF_MONTH));
+                cal.set(Calendar.HOUR_OF_DAY, 23);
+                cal.set(Calendar.MINUTE, 59);
+                cal.set(Calendar.SECOND, 59);
+                cal.set(Calendar.MILLISECOND, 999);
+                java.util.Date endOfLastMonth = cal.getTime();
+                
+                // Get this month spending
+                Long thisMonthSpendingLong = AppDatabase.getInstance(getContext()).transactionDao().getTotalExpenseByDateRange(startOfThisMonth, endOfThisMonth);
+                long thisMonthSpending = (thisMonthSpendingLong != null) ? Math.abs(thisMonthSpendingLong) : 0;
+                
+                // Get last month spending
+                Long lastMonthSpendingLong = AppDatabase.getInstance(getContext()).transactionDao().getTotalExpenseByDateRange(startOfLastMonth, endOfLastMonth);
+                long lastMonthSpending = (lastMonthSpendingLong != null) ? Math.abs(lastMonthSpendingLong) : 0;
+                
+                // Calculate difference
+                long difference = thisMonthSpending - lastMonthSpending;
+                
+                android.util.Log.d("HomeFragment", "This month spending: " + thisMonthSpending);
+                android.util.Log.d("HomeFragment", "Last month spending: " + lastMonthSpending);
+                android.util.Log.d("HomeFragment", "Difference: " + difference);
+                
+                // Update UI on main thread
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(() -> {
+                        updateMonthComparisonUI(lastMonthSpending, thisMonthSpending, difference);
+                    });
+                }
+                
+            } catch (Exception e) {
+                android.util.Log.e("HomeFragment", "Error loading month comparison", e);
+            }
+        });
+    }
+    
+    private void updateMonthComparisonUI(long lastMonthSpending, long thisMonthSpending, long difference) {
+        if (binding == null) return;
+
+        // Update last month spending
+        if (binding.lastMonthSpending != null) {
+            binding.lastMonthSpending.setText(formatCurrencyShort(lastMonthSpending));
+        }
+        
+        // Update this month spending
+        if (binding.thisMonthSpending != null) {
+            binding.thisMonthSpending.setText(formatCurrencyShort(thisMonthSpending));
+        }
+        
+        // Update difference with color
+        String differenceText;
+        int differenceColor;
+        
+        if (difference > 0) {
+            // Spending increased (bad)
+            differenceText = "+" + formatCurrencyShort(difference);
+            differenceColor = 0xFFF44336; // Red
+        } else if (difference < 0) {
+            // Spending decreased (good)
+            differenceText = "-" + formatCurrencyShort(Math.abs(difference));
+            differenceColor = 0xFF4CAF50; // Green
+        } else {
+            // No change
+            differenceText = "0";
+            differenceColor = 0xFF757575; // Gray
+        }
+        
+        if (binding.differenceSpending != null) {
+            binding.differenceSpending.setText(differenceText);
+            binding.differenceSpending.setTextColor(differenceColor);
+        }
+        
+        android.util.Log.d("HomeFragment", "Month comparison UI updated");
+    }
+
+    private String formatCurrencyShort(long amount) {
+        return CurrencyFormatter.formatCurrencyShort(getContext(), amount);
+    }
     
     private void updateCategoryUI(List<?> allCategories, long totalSpending) {
         android.util.Log.d("HomeFragment", "=== updateCategoryUI START ===");
@@ -605,6 +714,7 @@ public class HomeFragment extends Fragment {
                     loadRecentTransactionsFromDatabase();
                     loadBalanceDataFromDatabase();
                     loadCategorySpendingFromDatabase(); // Also refresh category spending
+                    loadMonthComparison(); // Refresh month comparison
                 }
             });
         }
@@ -618,6 +728,7 @@ public class HomeFragment extends Fragment {
         loadRecentTransactionsFromDatabase();
         loadBalanceDataFromDatabase();
         loadCategorySpendingFromDatabase();
+        loadMonthComparison();
     }
     
     // Helper method to get appropriate icon for category

@@ -71,9 +71,6 @@ public class StatisticsFragment extends Fragment {
         // Setup category spending (will be updated when year changes)
         loadCategorySpendingForYear(selectedYear);
         
-        // Setup month comparison
-        loadMonthComparison();
-        
         // Load year statistics (will be updated when year changes)
         loadYearStatistics(selectedYear);
 
@@ -572,101 +569,6 @@ public class StatisticsFragment extends Fragment {
         return CategoryUtils.getIconForCategory(localizedCategory);
     }
 
-    private void loadMonthComparison() {
-        Executors.newSingleThreadExecutor().execute(() -> {
-            try {
-                Calendar cal = Calendar.getInstance();
-                
-                // Calculate THIS MONTH range
-                cal.set(Calendar.DAY_OF_MONTH, 1);
-                cal.set(Calendar.HOUR_OF_DAY, 0);
-                cal.set(Calendar.MINUTE, 0);
-                cal.set(Calendar.SECOND, 0);
-                cal.set(Calendar.MILLISECOND, 0);
-                java.util.Date startOfThisMonth = cal.getTime();
-                
-                cal.set(Calendar.DAY_OF_MONTH, cal.getActualMaximum(Calendar.DAY_OF_MONTH));
-                cal.set(Calendar.HOUR_OF_DAY, 23);
-                cal.set(Calendar.MINUTE, 59);
-                cal.set(Calendar.SECOND, 59);
-                cal.set(Calendar.MILLISECOND, 999);
-                java.util.Date endOfThisMonth = cal.getTime();
-                
-                // Calculate LAST MONTH range
-                cal.set(Calendar.DAY_OF_MONTH, 1);
-                cal.set(Calendar.HOUR_OF_DAY, 0);
-                cal.set(Calendar.MINUTE, 0);
-                cal.set(Calendar.SECOND, 0);
-                cal.set(Calendar.MILLISECOND, 0);
-                cal.add(Calendar.MONTH, -1); // Go back 1 month
-                java.util.Date startOfLastMonth = cal.getTime();
-                
-                cal.set(Calendar.DAY_OF_MONTH, cal.getActualMaximum(Calendar.DAY_OF_MONTH));
-                cal.set(Calendar.HOUR_OF_DAY, 23);
-                cal.set(Calendar.MINUTE, 59);
-                cal.set(Calendar.SECOND, 59);
-                cal.set(Calendar.MILLISECOND, 999);
-                java.util.Date endOfLastMonth = cal.getTime();
-                
-                // Get this month spending
-                Long thisMonthSpendingLong = transactionDao.getTotalExpenseByDateRange(startOfThisMonth, endOfThisMonth);
-                long thisMonthSpending = (thisMonthSpendingLong != null) ? Math.abs(thisMonthSpendingLong) : 0;
-                
-                // Get last month spending
-                Long lastMonthSpendingLong = transactionDao.getTotalExpenseByDateRange(startOfLastMonth, endOfLastMonth);
-                long lastMonthSpending = (lastMonthSpendingLong != null) ? Math.abs(lastMonthSpendingLong) : 0;
-                
-                // Calculate difference
-                long difference = thisMonthSpending - lastMonthSpending;
-                
-                android.util.Log.d("StatisticsFragment", "This month spending: " + thisMonthSpending);
-                android.util.Log.d("StatisticsFragment", "Last month spending: " + lastMonthSpending);
-                android.util.Log.d("StatisticsFragment", "Difference: " + difference);
-                
-                // Update UI on main thread
-                if (getActivity() != null) {
-                    getActivity().runOnUiThread(() -> {
-                        updateMonthComparisonUI(lastMonthSpending, thisMonthSpending, difference);
-                    });
-                }
-                
-            } catch (Exception e) {
-                android.util.Log.e("StatisticsFragment", "Error loading month comparison", e);
-            }
-        });
-    }
-    
-    private void updateMonthComparisonUI(long lastMonthSpending, long thisMonthSpending, long difference) {
-        // Update last month spending
-        binding.lastMonthSpending.setText(formatCurrencyShort(lastMonthSpending));
-        
-        // Update this month spending
-        binding.thisMonthSpending.setText(formatCurrencyShort(thisMonthSpending));
-        
-        // Update difference with color
-        String differenceText;
-        int differenceColor;
-        
-        if (difference > 0) {
-            // Spending increased (bad)
-            differenceText = "+" + formatCurrencyShort(difference);
-            differenceColor = 0xFFF44336; // Red
-        } else if (difference < 0) {
-            // Spending decreased (good)
-            differenceText = "-" + formatCurrencyShort(Math.abs(difference));
-            differenceColor = 0xFF4CAF50; // Green
-        } else {
-            // No change
-            differenceText = "0";
-            differenceColor = 0xFF757575; // Gray
-        }
-        
-        binding.differenceSpending.setText(differenceText);
-        binding.differenceSpending.setTextColor(differenceColor);
-        
-        android.util.Log.d("StatisticsFragment", "Month comparison UI updated");
-    }
-    
     @Override
     public void onDestroyView() {
         super.onDestroyView();
