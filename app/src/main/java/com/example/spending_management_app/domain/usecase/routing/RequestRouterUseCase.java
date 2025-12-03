@@ -22,6 +22,7 @@ import com.example.spending_management_app.presentation.dialog.AiChatBottomSheet
 import com.example.spending_management_app.presentation.dialog.AiChatBottomSheet.ChatAdapter;
 import com.example.spending_management_app.domain.usecase.ai.PromptUseCase;
 import com.example.spending_management_app.domain.usecase.expense.ExpenseUseCase;
+import com.example.spending_management_app.domain.usecase.budget.BudgetUseCase;
 
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -53,6 +54,7 @@ public class RequestRouterUseCase {
         CategoryBudgetUseCase categoryBudgetUseCase = new CategoryBudgetUseCase(budgetRepository, categoryBudgetRepository);
         ExpenseUseCase expenseUseCase = new ExpenseUseCase(expenseRepository);
         PromptUseCase promptUseCase = new PromptUseCase(expenseUseCase);
+        BudgetUseCase budgetUseCase = new BudgetUseCase(budgetRepository, promptUseCase, aiContextUseCase);
 
         // Check network connectivity first
         boolean isOnline = callback.isNetworkAvailable();
@@ -85,6 +87,31 @@ public class RequestRouterUseCase {
 
         android.util.Log.d("RequestRouterUseCase", "Heuristic: text=" + text + ", containsDigit=" + containsDigit + ", hasTimeIndicator=" + hasTimeIndicator + ", explicitBudget=" + explicitBudget + ", isQuery=" + isQuery);
 
+        // Check for budget set actions FIRST (before other routing)
+        if (explicitBudget && containsDigit && !isQuery) {
+            // Check if this is a budget set action (not just query)
+            boolean isBudgetSetAction = lowerText.contains("thêm") || lowerText.contains("đặt") ||
+                    lowerText.contains("sửa") || lowerText.contains("thay đổi") ||
+                    lowerText.contains("thiết lập") ||
+                    lowerText.contains("tăng") || lowerText.contains("nâng") ||
+                    lowerText.contains("giảm") || lowerText.contains("hạ") ||
+                    lowerText.contains("cộng") || lowerText.contains("trừ") ||
+                    lowerText.contains("bớt") || lowerText.contains("cắt") ||
+                    lowerText.contains("set") || lowerText.contains("add") ||
+                    lowerText.contains("edit") || lowerText.contains("change") ||
+                    lowerText.contains("establish") || lowerText.contains("establish") ||
+                    lowerText.contains("increase") || lowerText.contains("raise") ||
+                    lowerText.contains("decrease") || lowerText.contains("reduce") ||
+                    lowerText.contains("lower") || lowerText.contains("plus") ||
+                    lowerText.contains("minus") || lowerText.contains("cut");
+
+            if (isBudgetSetAction) {
+                android.util.Log.d("RequestRouterUseCase", "Routing to BudgetUseCase for text: " + text);
+                budgetUseCase.handleBudgetQuery(text, context, activity, messages, chatAdapter, messagesRecycler, textToSpeech, updateNetworkStatusCallback, () -> callback.refreshHomeFragment());
+                return;
+            }
+        }
+
         if (containsDigit && !hasTimeIndicator && !isQuery) {
             android.util.Log.d("RequestRouterUseCase", "Routing to CategoryBudgetUseCase for text: " + text);
             categoryBudgetUseCase.handleCategoryBudgetRequest(text, context, activity, messages, chatAdapter, messagesRecycler,
@@ -94,7 +121,7 @@ public class RequestRouterUseCase {
 
         if (containsDigit && hasTimeIndicator) {
             android.util.Log.d("RequestRouterUseCase", "Routing to expense AI for text: " + text);
-            promptUseCase.sendPromptToAI(text, activity, messages, chatAdapter, messagesRecycler, textToSpeech, updateNetworkStatusCallback);
+            promptUseCase.sendPromptToAI(text, activity, messages, chatAdapter, messagesRecycler, textToSpeech, updateNetworkStatusCallback, () -> callback.refreshExpenseWelcomeMessage());
             return;
         }
 
@@ -109,7 +136,7 @@ public class RequestRouterUseCase {
                     });
                 } catch (Exception e) {
                     activity.runOnUiThread(() -> {
-                        promptUseCase.sendPromptToAI(text, activity, messages, chatAdapter, messagesRecycler, textToSpeech, updateNetworkStatusCallback);
+                        promptUseCase.sendPromptToAI(text, activity, messages, chatAdapter, messagesRecycler, textToSpeech, updateNetworkStatusCallback, () -> callback.refreshExpenseWelcomeMessage());
                     });
                 }
             });
@@ -127,7 +154,7 @@ public class RequestRouterUseCase {
                     });
                 } catch (Exception e) {
                     activity.runOnUiThread(() -> {
-                        promptUseCase.sendPromptToAI(text, activity, messages, chatAdapter, messagesRecycler, textToSpeech, updateNetworkStatusCallback);
+                        promptUseCase.sendPromptToAI(text, activity, messages, chatAdapter, messagesRecycler, textToSpeech, updateNetworkStatusCallback, () -> callback.refreshExpenseWelcomeMessage());
                     });
                 }
             });
@@ -167,6 +194,6 @@ public class RequestRouterUseCase {
         }
 
         // Normal send to AI for expense tracking
-        promptUseCase.sendPromptToAI(text, activity, messages, chatAdapter, messagesRecycler, textToSpeech, updateNetworkStatusCallback);
+        promptUseCase.sendPromptToAI(text, activity, messages, chatAdapter, messagesRecycler, textToSpeech, updateNetworkStatusCallback, () -> callback.refreshExpenseWelcomeMessage());
     }
 }

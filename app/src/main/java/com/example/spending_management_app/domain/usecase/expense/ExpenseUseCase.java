@@ -33,7 +33,8 @@ public class ExpenseUseCase {
     public void saveExpenseDirectly(String jsonString, Activity activity,
                                          List<AiChatBottomSheet.ChatMessage> messages,
                                          AiChatBottomSheet.ChatAdapter chatAdapter,
-                                         RecyclerView messagesRecycler) {
+                                         RecyclerView messagesRecycler,
+                                         Runnable refreshExpenseWelcomeMessageCallback) {
         android.util.Log.d("ExpenseService", "saveExpenseDirectly called with: " + jsonString);
 
         try {
@@ -97,6 +98,11 @@ public class ExpenseUseCase {
 
                             // Also refresh HistoryFragment if it exists
                             refreshHistoryFragment(activity);
+
+                            // Refresh expense welcome message
+                            if (refreshExpenseWelcomeMessageCallback != null) {
+                                refreshExpenseWelcomeMessageCallback.run();
+                            }
                         });
 
                         // Hiển thị message trong chat trên main thread

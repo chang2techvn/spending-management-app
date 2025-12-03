@@ -49,7 +49,8 @@ public class PromptUseCase {
      */
     public void sendPromptToAI(String text, Activity activity, List<AiChatBottomSheet.ChatMessage> messages,
                                AiChatBottomSheet.ChatAdapter chatAdapter, RecyclerView messagesRecycler,
-                               TextToSpeech textToSpeech, Runnable updateNetworkStatusCallback) {
+                               TextToSpeech textToSpeech, Runnable updateNetworkStatusCallback,
+                               Runnable refreshExpenseWelcomeMessageCallback) {
 
         // Check if this is a delete request - handle locally instead of sending to AI
         if (isDeleteRequest(text)) {
@@ -201,7 +202,7 @@ public class PromptUseCase {
                                     for (String jsonPart : allJsonParts) {
                                         try {
                                             android.util.Log.d("PromptService", "Routing to saveExpenseDirectly");
-                                            expenseUseCase.saveExpenseDirectly(jsonPart, activity, messages, chatAdapter, messagesRecycler);
+                                            expenseUseCase.saveExpenseDirectly(jsonPart, activity, messages, chatAdapter, messagesRecycler, refreshExpenseWelcomeMessageCallback);
                                         } catch (Exception e) {
                                             android.util.Log.e("PromptService", "Error processing JSON: " + jsonPart, e);
                                         }

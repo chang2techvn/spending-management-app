@@ -487,7 +487,7 @@ public class BudgetUseCase {
             } catch (Exception e) {
                 android.util.Log.e("BudgetService", "Error getting budget context", e);
                 activity.runOnUiThread(() -> {
-                    promptUseCase.sendPromptToAI(text, activity, messages, chatAdapter, messagesRecycler, textToSpeech, updateNetworkStatusCallback);
+                    promptUseCase.sendPromptToAI(text, activity, messages, chatAdapter, messagesRecycler, textToSpeech, updateNetworkStatusCallback, () -> {});
                 });
             }
         });
