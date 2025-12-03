@@ -300,12 +300,13 @@ public class AccountFragment extends Fragment {
         boolean notificationsEnabled = true; // Default, can be loaded from preferences
         boolean darkModeEnabled = SettingsHelper.isDarkModeEnabled(getContext());
         boolean chatFeedbackEnabled = SettingsHelper.isChatFeedbackEnabled(getContext());
+        String currentCurrency = SettingsHelper.getSelectedCurrency(getContext());
 
         notificationSwitch.setChecked(notificationsEnabled);
         darkModeSwitch.setChecked(darkModeEnabled);
         chatFeedbackSwitch.setChecked(chatFeedbackEnabled);
         languageDropdown.setText(currentLanguage.equals("vi") ? getString(R.string.vietnamese) : getString(R.string.english), false);
-        currencyDropdown.setText("VND", false); // Default VND
+        currencyDropdown.setText(currentCurrency, false);
 
         // Cancel button
         dialogView.findViewById(R.id.btn_cancel).setOnClickListener(v -> dialog.dismiss());
