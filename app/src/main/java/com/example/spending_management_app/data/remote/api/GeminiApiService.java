@@ -9,6 +9,7 @@ import com.example.spending_management_app.R;
 import com.example.spending_management_app.domain.usecase.ai.AiSystemInstructions;
 import com.example.spending_management_app.utils.LocaleHelper;
 import com.example.spending_management_app.utils.TextFormatHelper;
+import com.example.spending_management_app.utils.SettingsHelper;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -142,7 +143,8 @@ public final class GeminiApiService {
 
             // Get app language and currency
             String appLanguage = LocaleHelper.getLanguage(context);
-            String appCurrency = "VND"; // Currently hardcoded, can be made configurable later
+            String appCurrency = SettingsHelper.getSelectedCurrency(context);
+            if (appCurrency == null || appCurrency.isEmpty()) appCurrency = "VND";
 
             String instruction = AiSystemInstructions.getBudgetAnalysisInstruction(currentDateInfo, budgetContext, appLanguage, appCurrency);
 

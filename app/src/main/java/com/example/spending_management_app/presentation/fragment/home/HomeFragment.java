@@ -1,5 +1,6 @@
 package com.example.spending_management_app.presentation.fragment.home;
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,6 +19,7 @@ import com.example.spending_management_app.R;
 import com.example.spending_management_app.data.local.entity.CategoryBudgetEntity;
 import com.example.spending_management_app.databinding.FragmentHomeBinding;
 import com.example.spending_management_app.utils.CategoryUtils;
+import com.example.spending_management_app.utils.ToastHelper;
 
 import com.example.spending_management_app.data.local.database.AppDatabase;
 import com.example.spending_management_app.data.local.entity.BudgetEntity;
@@ -37,6 +39,8 @@ public class HomeFragment extends Fragment {
     private FragmentHomeBinding binding;
     private TransactionAdapter transactionAdapter;
     private List<Transaction> transactions;
+    private static final String PREFS_NAME = "BudgetWarnings";
+    private static final String KEY_WARNED_CATEGORIES = "warned_categories_";
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
@@ -54,6 +58,9 @@ public class HomeFragment extends Fragment {
 
         // Setup recent transactions from database
         loadRecentTransactionsFromDatabase();
+
+        // Setup month comparison
+        loadMonthComparison();
 
         return root;
     }
@@ -128,6 +135,21 @@ public class HomeFragment extends Fragment {
                         // Calculate and set remaining balance (budget - expense)
                         long remainingBalance = budgetValue - expenseValue;
                         binding.currentBalance.setText(CurrencyFormatter.formatCurrency(getContext(), remainingBalance));
+                        
+                        // Show warning toast if expense exceeds budget (only once per month)
+                        if (budgetValue > 0 && expenseValue > budgetValue) {
+                            Calendar calForKey = Calendar.getInstance();
+                            String monthKey = calForKey.get(Calendar.YEAR) + "_" + (calForKey.get(Calendar.MONTH) + 1);
+                            String monthlyBudgetKey = "monthly_budget_" + monthKey;
+                            
+                            SharedPreferences prefs = getContext().getSharedPreferences(PREFS_NAME, android.content.Context.MODE_PRIVATE);
+                            boolean alreadyWarned = prefs.getBoolean(monthlyBudgetKey, false);
+                            
+                            if (!alreadyWarned && getActivity() != null) {
+                                ToastHelper.showErrorToast(getActivity(), getString(R.string.budget_exceeded_warning));
+                                prefs.edit().putBoolean(monthlyBudgetKey, true).apply();
+                            }
+                        }
                         
                         android.util.Log.d("HomeFragment", "Balance updated - Budget: " + budgetValue + 
                                 ", Expense: " + expenseValue + ", Remaining: " + remainingBalance);
@@ -397,11 +419,50 @@ public class HomeFragment extends Fragment {
                 
                 long finalTotalCategorySpending = totalCategorySpending;
                 
+                // Get current month key for storing warnings
+                Calendar calForKey = Calendar.getInstance();
+                String monthKey = calForKey.get(Calendar.YEAR) + "_" + (calForKey.get(Calendar.MONTH) + 1);
+                
+                // Get SharedPreferences
+                SharedPreferences prefs = getContext().getSharedPreferences(PREFS_NAME, android.content.Context.MODE_PRIVATE);
+                java.util.Set<String> warnedCategories = prefs.getStringSet(KEY_WARNED_CATEGORIES + monthKey, new java.util.HashSet<>());
+                
+                // Check for NEW category budget warnings
+                List<String> newExceededCategories = new ArrayList<>();
+                java.util.Set<String> currentExceededCategories = new java.util.HashSet<>();
+                
+                for (CategoryData data : allCategoryData) {
+                    if (data.budget > 0 && data.spending > data.budget) {
+                        currentExceededCategories.add(data.category);
+                        
+                        // Only warn if this category hasn't been warned before this month
+                        if (!warnedCategories.contains(data.category)) {
+                            String localizedName = CategoryUtils.getLocalizedCategoryName(getContext(), data.category);
+                            newExceededCategories.add(localizedName);
+                        }
+                    }
+                }
+                
+                // Update warned categories in SharedPreferences
+                if (!newExceededCategories.isEmpty()) {
+                    java.util.Set<String> updatedWarnedCategories = new java.util.HashSet<>(warnedCategories);
+                    updatedWarnedCategories.addAll(currentExceededCategories);
+                    prefs.edit().putStringSet(KEY_WARNED_CATEGORIES + monthKey, updatedWarnedCategories).apply();
+                }
+                
                 // Update UI on main thread
                 if (getActivity() != null) {
                     getActivity().runOnUiThread(() -> {
                         android.util.Log.d("HomeFragment", "Updating UI with " + allCategoryData.size() + " categories");
                         updateCategoryUI(allCategoryData, finalTotalCategorySpending);
+                        
+                        // Show warning toast ONLY for NEW exceeded category budgets
+                        if (!newExceededCategories.isEmpty() && getActivity() != null) {
+                            for (String categoryName : newExceededCategories) {
+                                String message = getString(R.string.category_budget_exceeded_warning, categoryName);
+                                ToastHelper.showErrorToast(getActivity(), message);
+                            }
+                        }
                     });
                 }
                 
@@ -605,6 +666,7 @@ public class HomeFragment extends Fragment {
                     loadRecentTransactionsFromDatabase();
                     loadBalanceDataFromDatabase();
                     loadCategorySpendingFromDatabase(); // Also refresh category spending
+                    loadMonthComparison(); // Also refresh month comparison
                 }
             });
         }
@@ -618,8 +680,106 @@ public class HomeFragment extends Fragment {
         loadRecentTransactionsFromDatabase();
         loadBalanceDataFromDatabase();
         loadCategorySpendingFromDatabase();
+        loadMonthComparison();
     }
-    
+
+    private void loadMonthComparison() {
+        Executors.newSingleThreadExecutor().execute(() -> {
+            try {
+                Calendar cal = Calendar.getInstance();
+
+                // Calculate THIS MONTH range
+                cal.set(Calendar.DAY_OF_MONTH, 1);
+                cal.set(Calendar.HOUR_OF_DAY, 0);
+                cal.set(Calendar.MINUTE, 0);
+                cal.set(Calendar.SECOND, 0);
+                cal.set(Calendar.MILLISECOND, 0);
+                java.util.Date startOfThisMonth = cal.getTime();
+
+                cal.set(Calendar.DAY_OF_MONTH, cal.getActualMaximum(Calendar.DAY_OF_MONTH));
+                cal.set(Calendar.HOUR_OF_DAY, 23);
+                cal.set(Calendar.MINUTE, 59);
+                cal.set(Calendar.SECOND, 59);
+                cal.set(Calendar.MILLISECOND, 999);
+                java.util.Date endOfThisMonth = cal.getTime();
+
+                // Calculate LAST MONTH range
+                cal.set(Calendar.DAY_OF_MONTH, 1);
+                cal.set(Calendar.HOUR_OF_DAY, 0);
+                cal.set(Calendar.MINUTE, 0);
+                cal.set(Calendar.SECOND, 0);
+                cal.set(Calendar.MILLISECOND, 0);
+                cal.add(Calendar.MONTH, -1); // Go back 1 month
+                java.util.Date startOfLastMonth = cal.getTime();
+
+                cal.set(Calendar.DAY_OF_MONTH, cal.getActualMaximum(Calendar.DAY_OF_MONTH));
+                cal.set(Calendar.HOUR_OF_DAY, 23);
+                cal.set(Calendar.MINUTE, 59);
+                cal.set(Calendar.SECOND, 59);
+                cal.set(Calendar.MILLISECOND, 999);
+                java.util.Date endOfLastMonth = cal.getTime();
+
+                // Get this month spending
+                Long thisMonthSpendingLong = AppDatabase.getInstance(getContext())
+                        .transactionDao().getTotalExpenseByDateRange(startOfThisMonth, endOfThisMonth);
+                long thisMonthSpending = (thisMonthSpendingLong != null) ? Math.abs(thisMonthSpendingLong) : 0;
+
+                // Get last month spending
+                Long lastMonthSpendingLong = AppDatabase.getInstance(getContext())
+                        .transactionDao().getTotalExpenseByDateRange(startOfLastMonth, endOfLastMonth);
+                long lastMonthSpending = (lastMonthSpendingLong != null) ? Math.abs(lastMonthSpendingLong) : 0;
+
+                // Calculate difference
+                long difference = thisMonthSpending - lastMonthSpending;
+
+                android.util.Log.d("HomeFragment", "This month spending: " + thisMonthSpending);
+                android.util.Log.d("HomeFragment", "Last month spending: " + lastMonthSpending);
+                android.util.Log.d("HomeFragment", "Difference: " + difference);
+
+                // Update UI on main thread
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(() -> {
+                        updateMonthComparisonUI(lastMonthSpending, thisMonthSpending, difference);
+                    });
+                }
+
+            } catch (Exception e) {
+                android.util.Log.e("HomeFragment", "Error loading month comparison", e);
+            }
+        });
+    }
+
+    private void updateMonthComparisonUI(long lastMonthSpending, long thisMonthSpending, long difference) {
+        // Update last month spending
+        binding.lastMonthSpending.setText(CurrencyFormatter.formatCurrencyShort(getContext(), lastMonthSpending));
+
+        // Update this month spending
+        binding.thisMonthSpending.setText(CurrencyFormatter.formatCurrencyShort(getContext(), thisMonthSpending));
+
+        // Update difference with color
+        String differenceText;
+        int differenceColor;
+
+        if (difference > 0) {
+            // Spending increased (bad)
+            differenceText = "+" + CurrencyFormatter.formatCurrencyShort(getContext(), difference);
+            differenceColor = 0xFFF44336; // Red
+        } else if (difference < 0) {
+            // Spending decreased (good)
+            differenceText = "-" + CurrencyFormatter.formatCurrencyShort(getContext(), Math.abs(difference));
+            differenceColor = 0xFF4CAF50; // Green
+        } else {
+            // No change
+            differenceText = "0";
+            differenceColor = 0xFF757575; // Gray
+        }
+
+        binding.differenceSpending.setText(differenceText);
+        binding.differenceSpending.setTextColor(differenceColor);
+
+        android.util.Log.d("HomeFragment", "Month comparison UI updated");
+    }
+
     // Helper method to get appropriate icon for category
     private String getIconForCategory(String category, String type) {
         if ("income".equals(type)) {

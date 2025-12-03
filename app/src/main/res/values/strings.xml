@@ -184,6 +184,11 @@
     <string name="feedback_title">Gửi Feedback</string>
     <string name="feedback_hint">Mô tả vấn đề của bạn</string>
     <string name="send_button">Gửi</string>
+    <string name="feedback_sent_success">Phản hồi đã được gửi thành công, chờ admin xem</string>
+    
+    <!-- Budget Warning -->
+    <string name="budget_exceeded_warning">⚠️ Cảnh báo: Chi tiêu đã vượt ngân sách!</string>
+    <string name="category_budget_exceeded_warning">⚠️ Cảnh báo: Chi tiêu %s đã vượt ngân sách danh mục!</string>
 
     <!-- Budget Management Dialog -->
     <string name="budget_management_title">Quản lý ngân sách</string>
@@ -206,6 +211,7 @@
 
     <!-- Date Header -->
     <string name="today_date_header">Hôm nay</string>
+    <string name="yesterday_date_header">Hôm qua</string>
 
     <!-- Toast -->
     <string name="toast_message">Thông báo</string>

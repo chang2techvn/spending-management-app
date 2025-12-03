@@ -305,7 +305,10 @@ public class AccountFragment extends Fragment {
         darkModeSwitch.setChecked(darkModeEnabled);
         chatFeedbackSwitch.setChecked(chatFeedbackEnabled);
         languageDropdown.setText(currentLanguage.equals("vi") ? getString(R.string.vietnamese) : getString(R.string.english), false);
-        currencyDropdown.setText("VND", false); // Default VND
+    // Set current selected currency from settings (supports VND, USD, ...)
+    String selectedCurrency = SettingsHelper.getSelectedCurrency(getContext());
+    if (selectedCurrency == null || selectedCurrency.isEmpty()) selectedCurrency = "VND";
+    currencyDropdown.setText(selectedCurrency, false);
 
         // Cancel button
         dialogView.findViewById(R.id.btn_cancel).setOnClickListener(v -> dialog.dismiss());
@@ -313,7 +316,7 @@ public class AccountFragment extends Fragment {
         // Save button
         dialogView.findViewById(R.id.btn_save).setOnClickListener(v -> {
             String selectedLanguage = languageDropdown.getText().toString();
-            String selectedCurrency = currencyDropdown.getText().toString();
+            String newSelectedCurrency = currencyDropdown.getText().toString();
             boolean darkModeSelected = darkModeSwitch.isChecked();
             boolean chatFeedbackSelected = chatFeedbackSwitch.isChecked();
 
@@ -321,7 +324,7 @@ public class AccountFragment extends Fragment {
             String languageCode = selectedLanguage.equals(getString(R.string.vietnamese)) ? "vi" : "en";
 
             // Persist selected currency
-            SettingsHelper.setSelectedCurrency(getContext(), selectedCurrency);
+            SettingsHelper.setSelectedCurrency(getContext(), newSelectedCurrency);
 
             // Persist dark mode setting
             SettingsHelper.setDarkModeEnabled(getContext(), darkModeSelected);
@@ -333,7 +336,7 @@ public class AccountFragment extends Fragment {
             applyTheme(darkModeSelected);
 
             // If user changed currency, fetch latest exchange rate using AI (fallback)
-            CurrencyConversionUseCase.fetchAndStoreRate(getContext(), selectedCurrency, (success, rate, msg) -> {
+            CurrencyConversionUseCase.fetchAndStoreRate(getContext(), newSelectedCurrency, (success, rate, msg) -> {
                 if (success) {
                     // rate stored and currency updated in settings inside usecase
                     // notify user on UI thread

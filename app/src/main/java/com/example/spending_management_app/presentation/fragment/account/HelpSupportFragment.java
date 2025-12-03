@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
@@ -74,7 +75,7 @@ public class HelpSupportFragment extends Fragment {
         dialogView.findViewById(R.id.btn_cancel).setOnClickListener(v -> dialog.dismiss());
         dialogView.findViewById(R.id.btn_submit).setOnClickListener(v -> {
             // Handle feedback submission
-            // For now, just dismiss
+            Toast.makeText(getContext(), getString(R.string.feedback_sent_success), Toast.LENGTH_SHORT).show();
             dialog.dismiss();
         });
 

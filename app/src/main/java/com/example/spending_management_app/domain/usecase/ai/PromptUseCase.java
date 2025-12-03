@@ -91,7 +91,8 @@ public class PromptUseCase {
 
             // Get app language and currency
             String appLanguage = LocaleHelper.getLanguage(activity.getApplicationContext());
-            String appCurrency = "VND"; // Currently hardcoded, can be made configurable later
+            String appCurrency = SettingsHelper.getSelectedCurrency(activity.getApplicationContext());
+            if (appCurrency == null || appCurrency.isEmpty()) appCurrency = "VND";
 
             // Use helper class for system instruction
             String instruction = AiSystemInstructions.getExpenseTrackingInstruction(

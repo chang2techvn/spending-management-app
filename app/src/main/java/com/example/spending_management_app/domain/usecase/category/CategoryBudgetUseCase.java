@@ -117,17 +117,28 @@ public class CategoryBudgetUseCase {
                 // Check if this is a "delete all" operation
                 if (!operations.isEmpty() && operations.get(0).type.equals("delete_all")) {
                     try {
+                        android.util.Log.d("CategoryBudgetUseCase", "Delete all operation detected");
+                        
                         // Get all category budgets for current month
                         List<CategoryBudgetEntity> allBudgets =
                                 categoryBudgetRepository
                                         .getAllCategoryBudgetsForMonth(startOfMonth, endOfMonth);
 
+                        android.util.Log.d("CategoryBudgetUseCase", "Found " + (allBudgets != null ? allBudgets.size() : 0) + " category budgets to delete");
+
                         if (allBudgets != null && !allBudgets.isEmpty()) {
-                            // Delete all category budgets
-                            for (CategoryBudgetEntity budget : allBudgets) {
-                                categoryBudgetRepository.delete(budget);
-                                counts[0]++;
-                            }
+                            int budgetCount = allBudgets.size();
+                            
+                            // Delete all category budgets using efficient bulk delete
+                            categoryBudgetRepository.deleteAllForMonth(startOfMonth, endOfMonth);
+                            android.util.Log.d("CategoryBudgetUseCase", "Executed deleteAllForMonth for " + budgetCount + " budgets");
+                            
+                            counts[0] = budgetCount;
+
+                            // Verify deletion
+                            List<CategoryBudgetEntity> remainingBudgets = 
+                                categoryBudgetRepository.getAllCategoryBudgetsForMonth(startOfMonth, endOfMonth);
+                            android.util.Log.d("CategoryBudgetUseCase", "After deletion, remaining budgets: " + (remainingBudgets != null ? remainingBudgets.size() : 0));
 
                             // Log budget history for delete all
                             BudgetHistoryLogger.logAllCategoryBudgetsDeleted(context);
@@ -136,6 +147,7 @@ public class CategoryBudgetUseCase {
                                     .append(counts[0]).append(" danh mục)\n\n");
                             resultMessage.append("💡 Tất cả danh mục đã được đặt lại về trạng thái 'Chưa thiết lập'");
                         } else {
+                            android.util.Log.d("CategoryBudgetUseCase", "No category budgets found to delete");
                             resultMessage.append("⚠️ Không có ngân sách danh mục nào để xóa!");
                             counts[1]++;
                         }
@@ -177,13 +189,21 @@ public class CategoryBudgetUseCase {
                     try {
                         if (op.type.equals("delete")) {
                             // Delete operation
+                            android.util.Log.d("CategoryBudgetUseCase", "Delete operation for category: " + op.category);
+                            
                             CategoryBudgetEntity existing =
                                     categoryBudgetRepository
                                             .getCategoryBudgetForMonth(op.category, startOfMonth, endOfMonth);
 
                             if (existing != null) {
                                 long deletedAmount = existing.budgetAmount;
+                                android.util.Log.d("CategoryBudgetUseCase", "Found existing budget to delete: " + op.category + " - " + deletedAmount);
+                                
                                 categoryBudgetRepository.delete(existing);
+                                
+                                // Verify deletion
+                                CategoryBudgetEntity verifyDeleted = categoryBudgetRepository.getCategoryBudgetForMonth(op.category, startOfMonth, endOfMonth);
+                                android.util.Log.d("CategoryBudgetUseCase", "After delete, verify: " + (verifyDeleted == null ? "Deleted successfully" : "Still exists!"));
 
                                 // Log budget history
                                 BudgetHistoryLogger.logCategoryBudgetDeleted(
@@ -193,6 +213,7 @@ public class CategoryBudgetUseCase {
                                 resultMessage.append("✅ Xóa ").append(icon).append(" ").append(op.category).append("\n");
                                 counts[0]++;
                             } else {
+                                android.util.Log.d("CategoryBudgetUseCase", "Category budget not found: " + op.category);
                                 resultMessage.append("⚠️ ").append(op.category).append(": Không tìm thấy\n");
                                 counts[1]++;
                             }

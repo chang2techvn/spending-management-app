@@ -32,11 +32,12 @@ public class CategoryBudgetParserUseCase {
         List<CategoryBudgetOperation> operations = new ArrayList<>();
         String lowerText = text.toLowerCase();
 
-        // Check if user wants to delete ALL category budgets
+        // Check if user wants to delete ALL category budgets (must explicitly mention category budget)
         if ((lowerText.contains("xóa") || lowerText.contains("xoá") ||
              lowerText.contains("thiết lập lại") || lowerText.contains("đặt lại") ||
              lowerText.contains("reset")) &&
-            (lowerText.contains("tất cả") || lowerText.contains("hết"))) {
+            (lowerText.contains("tất cả") || lowerText.contains("hết")) &&
+            (lowerText.contains("ngân sách") && (lowerText.contains("danh mục") || lowerText.contains("category")))) {
 
             // Special operation: delete all categories
             operations.add(new CategoryBudgetOperation("delete_all", "ALL", 0));
@@ -48,7 +49,8 @@ public class CategoryBudgetParserUseCase {
              lowerText.contains("clear") || lowerText.contains("reset") ||
              lowerText.contains("erase")) &&
             (lowerText.contains("all") || lowerText.contains("everything") ||
-             lowerText.contains("entire"))) {
+             lowerText.contains("entire")) &&
+            (lowerText.contains("budget") && lowerText.contains("category"))) {
 
             // Special operation: delete all categories
             operations.add(new CategoryBudgetOperation("delete_all", "ALL", 0));

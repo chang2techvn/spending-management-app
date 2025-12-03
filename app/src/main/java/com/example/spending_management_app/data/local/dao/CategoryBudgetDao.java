@@ -30,4 +30,7 @@ public interface CategoryBudgetDao {
     
     @Query("SELECT DISTINCT category FROM category_budgets ORDER BY category ASC")
     List<String> getAllCategories();
+    
+    @Query("DELETE FROM category_budgets WHERE date >= :startDate AND date <= :endDate")
+    void deleteAllForMonth(Date startDate, Date endDate);
 }

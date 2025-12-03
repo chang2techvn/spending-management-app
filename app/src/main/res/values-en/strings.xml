@@ -208,6 +208,11 @@
     <string name="feedback_title">Send Feedback</string>
     <string name="feedback_hint">Describe your problem</string>
     <string name="send_button">Send</string>
+    <string name="feedback_sent_success">Feedback sent successfully, waiting for admin review</string>
+    
+    <!-- Budget Warning -->
+    <string name="budget_exceeded_warning">⚠️ Warning: Spending has exceeded budget!</string>
+    <string name="category_budget_exceeded_warning">⚠️ Warning: %s spending has exceeded category budget!</string>
 
     <!-- Budget Management Dialog -->
     <string name="budget_management_title">Budget Management</string>
@@ -230,6 +235,7 @@
 
     <!-- Date Header -->
     <string name="today_date_header">Today</string>
+    <string name="yesterday_date_header">Yesterday</string>
 
     <!-- Toast -->
     <string name="toast_message">Notification</string>

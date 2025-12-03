@@ -231,7 +231,7 @@ public class HistoryFragment extends Fragment implements DateRangePickerDialog.D
     }
 
     private void setupRecyclerView() {
-        transactionAdapter = new SectionedTransactionAdapter(new ArrayList<>()); // Start with empty list
+        transactionAdapter = new SectionedTransactionAdapter(requireContext(), new ArrayList<>()); // Start with empty list
         // Don't set loading here - loadTransactionsFromDatabase() will handle it
         binding.transactionsRecycler.setLayoutManager(new LinearLayoutManager(getContext()));
         binding.transactionsRecycler.setAdapter(transactionAdapter);

@@ -31,7 +31,8 @@ public class SectionedTransactionAdapter extends RecyclerView.Adapter<RecyclerVi
     private Context context;
     private boolean isLoading = false;
 
-    public SectionedTransactionAdapter(List<Transaction> transactions) {
+    public SectionedTransactionAdapter(Context context, List<Transaction> transactions) {
+        this.context = context;
         this.items = groupTransactionsByDate(transactions);
     }
 
@@ -47,7 +48,7 @@ public class SectionedTransactionAdapter extends RecyclerView.Adapter<RecyclerVi
             String transactionDate = dateFormat.format(transaction.getDate());
 
             if (!transactionDate.equals(currentDate)) {
-                // Add header for new date
+                // Add header for new date (context will be set later in constructor)
                 groupedItems.add(getDateHeader(transaction.getDate()));
                 currentDate = transactionDate;
             }
@@ -77,11 +78,12 @@ public class SectionedTransactionAdapter extends RecyclerView.Adapter<RecyclerVi
         transactionDate.set(Calendar.MILLISECOND, 0);
 
         if (transactionDate.equals(today)) {
-            return "Hôm nay";
+            return context.getString(R.string.today_date_header);
         } else if (transactionDate.equals(yesterday)) {
-            return "Hôm qua";
+            return context.getString(R.string.yesterday_date_header);
         } else {
-            SimpleDateFormat headerFormat = new SimpleDateFormat("EEEE, dd/MM/yyyy", new Locale("vi", "VN"));
+            // Use system locale for date formatting
+            SimpleDateFormat headerFormat = new SimpleDateFormat("EEEE, dd/MM/yyyy", Locale.getDefault());
             return headerFormat.format(date);
         }
     }
@@ -108,7 +110,6 @@ public class SectionedTransactionAdapter extends RecyclerView.Adapter<RecyclerVi
     @NonNull
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        context = parent.getContext();
         LayoutInflater inflater = LayoutInflater.from(context);
 
         if (viewType == VIEW_TYPE_HEADER) {

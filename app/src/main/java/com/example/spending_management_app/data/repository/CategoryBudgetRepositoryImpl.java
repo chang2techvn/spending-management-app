@@ -29,6 +29,11 @@ public class CategoryBudgetRepositoryImpl implements CategoryBudgetRepository {
     }
 
     @Override
+    public void deleteAllForMonth(Date startDate, Date endDate) {
+        appDatabase.categoryBudgetDao().deleteAllForMonth(startDate, endDate);
+    }
+
+    @Override
     public CategoryBudgetEntity getCategoryBudgetForMonth(String category, Date startDate, Date endDate) {
         return appDatabase.categoryBudgetDao().getCategoryBudgetForMonth(category, startDate, endDate);
     }

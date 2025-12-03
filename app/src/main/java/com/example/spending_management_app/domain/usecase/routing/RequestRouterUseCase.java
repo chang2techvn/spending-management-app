@@ -112,7 +112,27 @@ public class RequestRouterUseCase {
             }
         }
 
-        if (containsDigit && !hasTimeIndicator && !isQuery) {
+        // Check if explicitly mentioning category budget
+        boolean explicitCategoryBudget = (lowerText.contains("ngân sách") && lowerText.contains("danh mục")) ||
+                (lowerText.contains("budget") && lowerText.contains("category"));
+        
+        // Check if this is an expense delete request (should NOT go to category budget)
+        boolean isExpenseDeleteRequest = (lowerText.contains("xóa") || lowerText.contains("xoá")) &&
+                (lowerText.contains("chi tiêu") || lowerText.contains("expense") || lowerText.contains("giao dịch") || lowerText.contains("transaction"));
+        
+        // Check for "delete all category budgets" request (no digit required)
+        boolean isDeleteAllCategoryBudgets = explicitCategoryBudget && 
+                (lowerText.contains("xóa") || lowerText.contains("xoá") || lowerText.contains("delete")) &&
+                (lowerText.contains("tất cả") || lowerText.contains("hết") || lowerText.contains("all"));
+        
+        // Route to CategoryBudgetUseCase if:
+        // 1. Delete all category budgets (explicit), OR
+        // 2. Explicit category budget request with digit, OR
+        // 3. Has digit + NO time indicator + NOT a query + NOT expense delete (default category budget behavior)
+        if (!isExpenseDeleteRequest && 
+            (isDeleteAllCategoryBudgets || 
+             (explicitCategoryBudget && containsDigit && !isQuery) ||
+             (containsDigit && !hasTimeIndicator && !isQuery))) {
             android.util.Log.d("RequestRouterUseCase", "Routing to CategoryBudgetUseCase for text: " + text);
             categoryBudgetUseCase.handleCategoryBudgetRequest(text, context, activity, messages, chatAdapter, messagesRecycler,
                     () -> callback.refreshHomeFragment(), () -> callback.refreshCategoryBudgetWelcomeMessage());
