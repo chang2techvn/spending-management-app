@@ -376,4 +376,62 @@
     <string name="add_income_chat_message">Tôi muốn thêm thu nhập</string>
     <string name="set_budget_chat_message">Tôi muốn thiết lập ngân sách</string>
     <string name="add_expense_chat_message">Tôi muốn thêm chi tiêu</string>
-</resources>
+    <string name="budget_past_month_error">⚠️ Không thể thêm hoặc sửa ngân sách cho tháng trong quá khứ!\n\nBạn chỉ có thể quản lý ngân sách từ tháng %d/%d trở đi.</string>
+    <string name="budget_not_exists_for_operation">⚠️ Chưa có ngân sách cho tháng %s để %s!\n\nVui lòng đặt ngân sách trước. Ví dụ:\n   • \"Đặt ngân sách tháng %s là 15 triệu\"</string>
+    <string name="budget_increased_success">✅ Đã nâng ngân sách tháng %s thêm %s!\n\n💰 Ngân sách mới: %s\n\nChúc bạn quản lý tài chính tốt! 💪</string>
+    <string name="budget_increased_toast">✅ Đã nâng ngân sách tháng %s: +%s</string>
+    <string name="budget_decreased_success">✅ Đã giảm ngân sách tháng %s xuống %s!\n\n💰 Ngân sách mới: %s\n\nChúc bạn chi tiêu hợp lý! 💰</string>
+    <string name="budget_decreased_toast">✅ Đã giảm ngân sách tháng %s: -%s</string>
+    <string name="budget_updated_success">✅ Đã cập nhật ngân sách tháng %s thành %s!\n\nChúc bạn quản lý tài chính tốt! 💪</string>
+    <string name="budget_updated_toast">✅ Đã cập nhật ngân sách tháng %s: %s</string>
+    <string name="budget_set_success">✅ Đã thiết lập ngân sách tháng %s là %s!\n\nChúc bạn chi tiêu hợp lý! 💰</string>
+    <string name="budget_set_toast">✅ Đã thiết lập ngân sách tháng %s: %s</string>
+    <string name="budget_save_error_message">❌ Có lỗi xảy ra khi lưu ngân sách. Vui lòng thử lại!</string>
+    <string name="budget_amount_not_recognized">🤔 Tôi không thể xác định số tiền ngân sách từ yêu cầu của bạn.\n\nVui lòng nhập rõ số tiền và tháng (nếu cần), ví dụ:\n\n📝 Đặt ngân sách:\n   • \"Đặt ngân sách tháng này 15 triệu\"\n   • \"Đặt ngân sách tháng 12 là 20 triệu\"\n\n➕ Tăng thêm (cộng vào ngân sách hiện tại):\n   • \"Nâng ngân sách 2 triệu\"\n   • \"Tăng thêm 1.5 triệu\"\n\n➖ Giảm bớt (trừ khỏi ngân sách hiện tại):\n   • \"Giảm ngân sách 500k\"\n   • \"Trừ 1 triệu\"\n\n🎯 Đặt lại thành số cụ thể:\n   • \"Tăng ngân sách lên 10 triệu\"\n   • \"Giảm ngân sách xuống 8 triệu\"</string>
+    <string name="budget_deleted_success">✅ Đã xóa ngân sách tháng %s!\n\nBạn có thể thiết lập lại bất cứ lúc nào. 💰</string>
+    <string name="budget_not_found_for_delete">⚠️ Không tìm thấy ngân sách tháng %s để xóa!</string>
+    <string name="budget_delete_error_message">❌ Có lỗi xảy ra khi xóa ngân sách. Vui lòng thử lại!</string>
+    <string name="increase">nâng</string>
+    <string name="decrease">giảm</string>
+    <string name="offline_expense_added_success">✅ Đã thêm chi tiêu (Offline)\n\n📝 %s\n💰 %s\n📂 %s</string>
+    <string name="offline_expense_added_toast">Đã thêm: %s - %s</string>
+    <string name="offline_expense_add_error">❌ Lỗi khi thêm chi tiêu: %s</string>
+    <string name="offline_expense_deleted_success">✅ Đã xóa chi tiêu #%d (Offline)</string>
+    <string name="offline_expense_deleted_toast">Đã xóa chi tiêu #%d</string>
+    <string name="offline_budget_updated_success">✅ Đã cập nhật ngân sách tháng (Offline)\n\n💰 %s</string>
+    <string name="offline_budget_updated_toast">Ngân sách đã được cập nhật: %s</string>
+    <string name="offline_budget_deleted_success">✅ Đã xóa ngân sách tháng này (Offline)</string>
+    <string name="offline_budget_deleted_toast">✅ Đã xóa ngân sách tháng</string>
+    <string name="offline_category_budget_updated_success">✅ Đã cập nhật ngân sách danh mục (Offline)\n\n📂 %s\n💰 %s</string>
+    <string name="offline_category_budget_updated_toast">Ngân sách \'%s\' đã được cập nhật: %s</string>
+    <string name="offline_category_budget_deleted_success">✅ Đã xóa ngân sách danh mục \'%s\' (Offline)</string>
+    <string name="offline_category_budget_deleted_toast">Đã xóa ngân sách danh mục \'%s\'</string>
+    <string name="offline_expense_not_found">❌ Không tìm thấy chi tiêu #%d</string>
+    <string name="offline_budget_not_found">❌ Không tìm thấy ngân sách tháng này để xóa</string>
+    <string name="offline_category_budget_update_error">❌ Lỗi khi cập nhật ngân sách danh mục: %s</string>
+    <string name="offline_category_budget_not_found">❌ Không tìm thấy ngân sách danh mục \'%s\' để xóa</string>
+    
+    <!-- Expense Bulk UseCase strings -->
+    <string name="expense_bulk_unknown_command">⚠️ Không hiểu yêu cầu của bạn.\n\n💡 Hướng dẫn:\n• Thêm: \'Hôm qua ăn sáng 25k và cafe 30k\'\n• Xóa theo tên: \'Xóa cafe\' hoặc \'Xóa ăn sáng\'\n• Xóa theo ngày: \'Xóa hôm nay\', \'Xóa hôm qua\', \'Xóa hôm kia\', \'Xóa ngày 15/11\'\n• Xóa theo tháng: \'Xóa tháng này\', \'Xóa tháng trước\', \'Xóa tháng sau\', \'Xóa tháng 10/2024\'\n• Xóa theo năm: \'Xóa năm này\', \'Xóa năm trước\', \'Xóa năm sau\', \'Xóa năm 2024\'\n• Sửa số tiền: \'Sửa cafe hôm nay thành 50k\', \'Thay đổi ăn sáng ngày 11/2 thành 30k\'\n• Xóa tất cả ngày: \'Xóa tất cả hôm qua\'\n• Xóa theo ID: \'Xóa chi tiêu #123\'\n\n📅 Hỗ trợ đầy đủ ngày/tháng/năm ở quá khứ, hiện tại và tương lai!</string>
+    <string name="expense_bulk_error_prefix">❌ </string>
+    <string name="expense_bulk_delete_success">✅ Xóa: %s (%s)</string>
+    <string name="expense_bulk_not_found_by_id">⚠️ Không tìm thấy chi tiêu #%d</string>
+    <string name="expense_bulk_delete_date_success">✅ Xóa %d chi tiêu ngày %s</string>
+    <string name="expense_bulk_no_expenses_on_date">⚠️ Không có chi tiêu nào ngày %s</string>
+    <string name="expense_bulk_delete_month_success">✅ Xóa %d chi tiêu tháng %d/%d</string>
+    <string name="expense_bulk_no_expenses_in_month">⚠️ Không có chi tiêu nào tháng %d/%d</string>
+    <string name="expense_bulk_delete_year_success">✅ Xóa %d chi tiêu năm %d</string>
+    <string name="expense_bulk_no_expenses_in_year">⚠️ Không có chi tiêu nào năm %d</string>
+    <string name="expense_bulk_delete_by_desc_success">✅ Xóa: %s (%s)</string>
+    <string name="expense_bulk_not_found_by_desc">⚠️ Không tìm thấy chi tiêu: %s</string>
+    <string name="expense_bulk_cannot_determine_delete">⚠️ Không thể xác định chi tiêu cần xóa</string>
+    <string name="expense_bulk_add_success">✅ Thêm %s %s: %s (%s)</string>
+    <string name="expense_bulk_result_summary">📊 Kết quả: %d thành công</string>
+    <string name="expense_bulk_result_with_failures">📊 Kết quả: %d thành công, %d thất bại</string>
+    <string name="expense_bulk_processing_error">❌ Có lỗi xảy ra khi xử lý yêu cầu!</string>
+    <string name="expense_bulk_edit_not_found">⚠️ Không tìm thấy chi tiêu cần sửa</string>
+    <string name="expense_bulk_edit_success">✅ Sửa: %s từ %s thành %s</string>
+    <string name="expense_bulk_edit_error">❌ Lỗi khi sửa chi tiêu</string>
+    <string name="expense_bulk_processing_error_op">❌ Lỗi xử lý: %s</string>
+    <string name="expense_bulk_edit_not_implemented">⚠️ Chức năng sửa chi tiết chưa được hỗ trợ. Vui lòng xóa và thêm lại với thông tin mới.</string>
+</resources> 

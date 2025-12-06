@@ -99,11 +99,13 @@ public class RequestRouterUseCase {
                     lowerText.contains("bớt") || lowerText.contains("cắt") ||
                     lowerText.contains("set") || lowerText.contains("add") ||
                     lowerText.contains("edit") || lowerText.contains("change") ||
-                    lowerText.contains("establish") || lowerText.contains("establish") ||
+                    lowerText.contains("establish") ||
                     lowerText.contains("increase") || lowerText.contains("raise") ||
                     lowerText.contains("decrease") || lowerText.contains("reduce") ||
                     lowerText.contains("lower") || lowerText.contains("plus") ||
-                    lowerText.contains("minus") || lowerText.contains("cut");
+                    lowerText.contains("minus") || lowerText.contains("cut") ||
+                    lowerText.contains("put") || lowerText.contains("create") ||
+                    lowerText.contains("make") || lowerText.contains("assign");
 
             if (isBudgetSetAction) {
                 android.util.Log.d("RequestRouterUseCase", "Routing to BudgetUseCase for text: " + text);
@@ -145,8 +147,21 @@ public class RequestRouterUseCase {
             return;
         }
 
+        // Check for budget delete operations FIRST (before budget analysis)
+        boolean isBudgetDelete = (lowerText.contains("xóa") || lowerText.contains("xoá") || 
+                lowerText.contains("delete") || lowerText.contains("remove")) &&
+                (lowerText.contains("ngân sách") || lowerText.contains("budget"));
+        if (isBudgetDelete) {
+            android.util.Log.d("RequestRouterUseCase", "Routing to BudgetUseCase for delete operation: " + text);
+            budgetUseCase.handleBudgetQuery(text, context, activity, messages, chatAdapter, messagesRecycler, textToSpeech, updateNetworkStatusCallback, () -> callback.refreshHomeFragment());
+            return;
+        }
+
         // Check if user is asking for budget analysis or reports FIRST (before financial queries)
-        if (!isBudgetMode && !isCategoryBudgetMode && BudgetMessageHelper.isBudgetQuery(text)) {
+        // But exclude delete operations which should go to budget operations
+        boolean isDeleteOperation = lowerText.contains("xóa") || lowerText.contains("xoá") ||
+                lowerText.contains("delete") || lowerText.contains("remove");
+        if (!isBudgetMode && !isCategoryBudgetMode && !isDeleteOperation && BudgetMessageHelper.isBudgetQuery(text)) {
             // Get comprehensive budget data from database
             Executors.newSingleThreadExecutor().execute(() -> {
                 try {

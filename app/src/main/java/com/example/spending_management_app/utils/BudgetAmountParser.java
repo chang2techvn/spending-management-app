@@ -107,7 +107,7 @@ public class BudgetAmountParser {
         try {
             text = text.toLowerCase().trim();
             
-            // Pattern 1: "X triệu" or "X tr"
+            // Pattern 1: "X triệu" or "X tr" (Vietnamese)
             Pattern trPattern = Pattern.compile("(\\d+(?:[,.]\\d+)?)\\s*(?:triệu|tr)");
             Matcher trMatcher = trPattern.matcher(text);
             if (trMatcher.find()) {
@@ -116,7 +116,16 @@ public class BudgetAmountParser {
                 return (long)(millions * 1000000);
             }
             
-            // Pattern 2: "X nghìn" or "X k"
+            // Pattern 2: "X million" or "X m" or "X M" (English)
+            Pattern millionPattern = Pattern.compile("(\\d+(?:[,.]\\d+)?)\\s*(?:million|m|M)", Pattern.CASE_INSENSITIVE);
+            Matcher millionMatcher = millionPattern.matcher(text);
+            if (millionMatcher.find()) {
+                String numberStr = millionMatcher.group(1).replace(",", ".").replace(".", "");
+                double millions = Double.parseDouble(numberStr);
+                return (long)(millions * 1000000);
+            }
+            
+            // Pattern 3: "X nghìn" or "X k" (Vietnamese)
             Pattern kPattern = Pattern.compile("(\\d+(?:[,.]\\d+)?)\\s*(?:nghìn|k|ng)");
             Matcher kMatcher = kPattern.matcher(text);
             if (kMatcher.find()) {
@@ -125,7 +134,16 @@ public class BudgetAmountParser {
                 return (long)(thousands * 1000);
             }
             
-            // Pattern 3: Plain number (should be large enough to be a budget)
+            // Pattern 4: "X thousand" or "X k" or "X K" (English)
+            Pattern thousandPattern = Pattern.compile("(\\d+(?:[,.]\\d+)?)\\s*(?:thousand|k|K)", Pattern.CASE_INSENSITIVE);
+            Matcher thousandMatcher = thousandPattern.matcher(text);
+            if (thousandMatcher.find()) {
+                String numberStr = thousandMatcher.group(1).replace(",", ".").replace(".", "");
+                double thousands = Double.parseDouble(numberStr);
+                return (long)(thousands * 1000);
+            }
+            
+            // Pattern 5: Plain number (should be large enough to be a budget)
             Pattern numberPattern = Pattern.compile("(\\d{5,})"); // At least 5 digits
             Matcher numberMatcher = numberPattern.matcher(text);
             if (numberMatcher.find()) {

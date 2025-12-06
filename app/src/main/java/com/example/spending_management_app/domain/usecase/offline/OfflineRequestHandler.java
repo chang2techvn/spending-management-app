@@ -3,6 +3,7 @@ package com.example.spending_management_app.domain.usecase.offline;
 import android.content.Context;
 import android.util.Log;
 
+import com.example.spending_management_app.R;
 import com.example.spending_management_app.data.local.database.AppDatabase;
 import com.example.spending_management_app.data.local.entity.BudgetEntity;
 import com.example.spending_management_app.data.local.entity.TransactionEntity;
@@ -199,21 +200,18 @@ public class OfflineRequestHandler {
                             .insert(transaction);
                     
                     String formattedAmount = CurrencyFormatter.formatCurrency(context, finalAmount);
-                    String successMsg = "✅ Đã thêm chi tiêu (Offline)\n\n" +
-                            "📝 " + finalDesc + "\n" +
-                            "💰 " + formattedAmount + "\n" +
-                            "📂 " + finalCategory;
+                    String successMsg = String.format(context.getString(R.string.offline_expense_added_success), finalDesc, formattedAmount, finalCategory);
                     
                     if (callback != null) {
                         callback.onSuccess(successMsg);
-                        callback.onToast("Đã thêm: " + finalDesc + " - " + formattedAmount, false);
+                        callback.onToast(String.format(context.getString(R.string.offline_expense_added_toast), finalDesc, formattedAmount), false);
                         callback.refreshHomeFragment();
                         callback.refreshExpenseWelcomeMessage();
                     }
                 } catch (Exception e) {
                     Log.e(TAG, "Error saving expense", e);
                     if (callback != null) {
-                        callback.onError("❌ Lỗi khi thêm chi tiêu: " + e.getMessage());
+                        callback.onError(String.format(context.getString(R.string.offline_expense_add_error), e.getMessage()));
                     }
                 }
             });
@@ -253,14 +251,14 @@ public class OfflineRequestHandler {
                                 .delete(transaction);
                         
                         if (callback != null) {
-                            callback.onSuccess("✅ Đã xóa chi tiêu #" + id + " (Offline)");
-                            callback.onToast("Đã xóa chi tiêu #" + id, false);
+                            callback.onSuccess(String.format(context.getString(R.string.offline_expense_deleted_success), id));
+                            callback.onToast(String.format(context.getString(R.string.offline_expense_deleted_toast), id), false);
                             callback.refreshHomeFragment();
                             callback.refreshExpenseWelcomeMessage();
                         }
                     } else {
                         if (callback != null) {
-                            callback.onError("❌ Không tìm thấy chi tiêu #" + id);
+                            callback.onError(String.format(context.getString(R.string.offline_expense_not_found), id));
                         }
                     }
                 } catch (Exception e) {
@@ -369,8 +367,8 @@ public class OfflineRequestHandler {
                     String formattedAmount = CurrencyFormatter.formatCurrency(context, newAmount);
                     
                     if (callback != null) {
-                        callback.onSuccess("✅ Đã cập nhật ngân sách tháng (Offline)\n\n💰 " + formattedAmount);
-                        callback.onToast("Ngân sách đã được cập nhật: " + formattedAmount, false);
+                        callback.onSuccess(String.format(context.getString(R.string.offline_budget_updated_success), formattedAmount));
+                        callback.onToast(String.format(context.getString(R.string.offline_budget_updated_toast), formattedAmount), false);
                         callback.refreshHomeFragment();
                     }
                 } catch (Exception e) {
@@ -424,13 +422,13 @@ public class OfflineRequestHandler {
                                 context, oldAmount, startDate);
                         
                         if (callback != null) {
-                            callback.onSuccess("✅ Đã xóa ngân sách tháng này (Offline)");
-                            callback.onToast("✅ Đã xóa ngân sách tháng", false);
+                            callback.onSuccess(context.getString(R.string.offline_budget_deleted_success));
+                            callback.onToast(context.getString(R.string.offline_budget_deleted_toast), false);
                             callback.refreshHomeFragment();
                         }
                     } else {
                         if (callback != null) {
-                            callback.onError("❌ Không tìm thấy ngân sách tháng này để xóa");
+                            callback.onError(context.getString(R.string.offline_budget_not_found));
                         }
                     }
                 } catch (Exception e) {
@@ -534,16 +532,15 @@ public class OfflineRequestHandler {
                     String formattedAmount = CurrencyFormatter.formatCurrency(context, finalAmount);
                     
                     if (callback != null) {
-                        callback.onSuccess("✅ Đã cập nhật ngân sách danh mục (Offline)\n\n" +
-                                "📂 " + finalCategory + "\n💰 " + formattedAmount);
-                        callback.onToast("Ngân sách '" + finalCategory + "' đã được cập nhật: " + formattedAmount, false);
+                        callback.onSuccess(String.format(context.getString(R.string.offline_category_budget_updated_success), finalCategory, formattedAmount));
+                        callback.onToast(String.format(context.getString(R.string.offline_category_budget_updated_toast), finalCategory, formattedAmount), false);
                         callback.refreshCategoryBudgetWelcomeMessage();
                         callback.refreshHomeFragment();
                     }
                 } catch (Exception e) {
                     Log.e(TAG, "Error updating category budget", e);
                     if (callback != null) {
-                        callback.onError("❌ Lỗi khi cập nhật ngân sách danh mục: " + e.getMessage());
+                        callback.onError(String.format(context.getString(R.string.offline_category_budget_update_error), e.getMessage()));
                     }
                 }
             });
@@ -612,14 +609,14 @@ public class OfflineRequestHandler {
                                 context, finalCategory, oldAmount);
                         
                         if (callback != null) {
-                            callback.onSuccess("✅ Đã xóa ngân sách danh mục '" + finalCategory + "' (Offline)");
-                            callback.onToast("Đã xóa ngân sách danh mục '" + finalCategory + "'", false);
+                            callback.onSuccess(String.format(context.getString(R.string.offline_category_budget_deleted_success), finalCategory));
+                            callback.onToast(String.format(context.getString(R.string.offline_category_budget_deleted_toast), finalCategory), false);
                             callback.refreshCategoryBudgetWelcomeMessage();
                             callback.refreshHomeFragment();
                         }
                     } else {
                         if (callback != null) {
-                            callback.onError("❌ Không tìm thấy ngân sách danh mục '" + finalCategory + "' để xóa");
+                            callback.onError(String.format(context.getString(R.string.offline_category_budget_not_found), finalCategory));
                         }
                     }
                 } catch (Exception e) {

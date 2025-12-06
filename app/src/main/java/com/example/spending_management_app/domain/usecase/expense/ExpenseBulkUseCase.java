@@ -66,18 +66,8 @@ public class ExpenseBulkUseCase {
             // Unknown command
             activity.runOnUiThread(() -> {
                 messages.set(analyzingIndex, new AiChatBottomSheet.ChatMessage(
-                        "⚠️ Không hiểu yêu cầu của bạn.\n\n" +
-                        "💡 Hướng dẫn:\n" +
-                        "• Thêm: 'Hôm qua ăn sáng 25k và cafe 30k'\n" +
-                        "• Xóa theo tên: 'Xóa cafe' hoặc 'Xóa ăn sáng'\n" +
-                        "• Xóa theo ngày: 'Xóa hôm nay', 'Xóa hôm qua', 'Xóa hôm kia', 'Xóa ngày 15/11'\n" +
-                        "• Xóa theo tháng: 'Xóa tháng này', 'Xóa tháng trước', 'Xóa tháng sau', 'Xóa tháng 10/2024'\n" +
-                        "• Xóa theo năm: 'Xóa năm này', 'Xóa năm trước', 'Xóa năm sau', 'Xóa năm 2024'\n" +
-                        "• Sửa số tiền: 'Sửa cafe hôm nay thành 50k', 'Thay đổi ăn sáng ngày 11/2 thành 30k'\n" +
-                        "• Xóa tất cả ngày: 'Xóa tất cả hôm qua'\n" +
-                        "• Xóa theo ID: 'Xóa chi tiêu #123'\n\n" +
-                        "📅 Hỗ trợ đầy đủ ngày/tháng/năm ở quá khứ, hiện tại và tương lai!",
-                        false, "Bây giờ"));
+                        context.getString(R.string.expense_bulk_unknown_command),
+                        false, context.getString(R.string.now_label)));
                 chatAdapter.notifyItemChanged(analyzingIndex);
             });
             return;
@@ -468,7 +458,7 @@ public class ExpenseBulkUseCase {
                     try {
                         if (op.type.equals("error")) {
                             // Handle error messages
-                            resultMessage.append("❌ ").append(op.identifier).append("\n");
+                            resultMessage.append(context.getString(R.string.expense_bulk_error_prefix)).append(op.identifier).append("\n");
                             counts[1]++;
                             android.util.Log.d("ExpenseBulkService", "Error operation processed: " + op.identifier);
 
@@ -483,13 +473,13 @@ public class ExpenseBulkUseCase {
                                 if (transaction != null) {
                                     android.util.Log.d("ExpenseBulkService", "Found transaction to delete: " + transaction.description);
                                     expenseRepository.delete(transaction);
-                                    resultMessage.append("✅ Xóa: ").append(transaction.description)
-                                            .append(" (").append(CurrencyFormatter.formatCurrency(context, Math.abs(transaction.amount)))
-                                            .append(")\n");
+                                    resultMessage.append(String.format(context.getString(R.string.expense_bulk_delete_success), 
+                                            transaction.description, CurrencyFormatter.formatCurrency(context, Math.abs(transaction.amount))))
+                                            .append("\n");
                                     counts[0]++;
                                     android.util.Log.d("ExpenseBulkService", "Successfully deleted transaction by ID");
                                 } else {
-                                    resultMessage.append("⚠️ Không tìm thấy chi tiêu #").append(op.transactionId).append("\n");
+                                    resultMessage.append(String.format(context.getString(R.string.expense_bulk_not_found_by_id), op.transactionId)).append("\n");
                                     counts[1]++;
                                     android.util.Log.d("ExpenseBulkService", "Transaction not found by ID: " + op.transactionId);
                                 }
@@ -509,14 +499,14 @@ public class ExpenseBulkUseCase {
                                         expenseRepository.delete(transaction);
                                         deletedCount++;
                                     }
-                                    resultMessage.append("✅ Xóa ").append(deletedCount).append(" chi tiêu ngày ")
-                                            .append(new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(targetDate))
+                                    resultMessage.append(String.format(context.getString(R.string.expense_bulk_delete_date_success), 
+                                            deletedCount, new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(targetDate)))
                                             .append("\n");
                                     counts[0] += deletedCount;
                                     android.util.Log.d("ExpenseBulkService", "Successfully deleted " + deletedCount + " transactions on date");
                                 } else {
-                                    resultMessage.append("⚠️ Không có chi tiêu nào ngày ")
-                                            .append(new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(targetDate))
+                                    resultMessage.append(String.format(context.getString(R.string.expense_bulk_no_expenses_on_date), 
+                                            new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(targetDate)))
                                             .append("\n");
                                     counts[1]++;
                                     android.util.Log.d("ExpenseBulkService", "No transactions found on date");
@@ -551,14 +541,14 @@ public class ExpenseBulkUseCase {
                                         expenseRepository.delete(transaction);
                                         deletedCount++;
                                     }
-                                    resultMessage.append("✅ Xóa ").append(deletedCount).append(" chi tiêu tháng ")
-                                            .append(month).append("/").append(year)
+                                    resultMessage.append(String.format(context.getString(R.string.expense_bulk_delete_month_success), 
+                                            deletedCount, month, year))
                                             .append("\n");
                                     counts[0] += deletedCount;
                                     android.util.Log.d("ExpenseBulkService", "Successfully deleted " + deletedCount + " transactions in month");
                                 } else {
-                                    resultMessage.append("⚠️ Không có chi tiêu nào tháng ")
-                                            .append(month).append("/").append(year)
+                                    resultMessage.append(String.format(context.getString(R.string.expense_bulk_no_expenses_in_month), 
+                                            month, year))
                                             .append("\n");
                                     counts[1]++;
                                     android.util.Log.d("ExpenseBulkService", "No transactions found in month");
@@ -590,14 +580,14 @@ public class ExpenseBulkUseCase {
                                         expenseRepository.delete(transaction);
                                         deletedCount++;
                                     }
-                                    resultMessage.append("✅ Xóa ").append(deletedCount).append(" chi tiêu năm ")
-                                            .append(year)
+                                    resultMessage.append(String.format(context.getString(R.string.expense_bulk_delete_year_success), 
+                                            deletedCount, year))
                                             .append("\n");
                                     counts[0] += deletedCount;
                                     android.util.Log.d("ExpenseBulkService", "Successfully deleted " + deletedCount + " transactions in year");
                                 } else {
-                                    resultMessage.append("⚠️ Không có chi tiêu nào năm ")
-                                            .append(year)
+                                    resultMessage.append(String.format(context.getString(R.string.expense_bulk_no_expenses_in_year), 
+                                            year))
                                             .append("\n");
                                     counts[1]++;
                                     android.util.Log.d("ExpenseBulkService", "No transactions found in year");
@@ -622,18 +612,18 @@ public class ExpenseBulkUseCase {
                                 if (foundTransaction != null) {
                                     android.util.Log.d("ExpenseBulkService", "Deleting found transaction: " + foundTransaction.description);
                                     expenseRepository.delete(foundTransaction);
-                                    resultMessage.append("✅ Xóa: ").append(foundTransaction.description)
-                                            .append(" (").append(CurrencyFormatter.formatCurrency(context, Math.abs(foundTransaction.amount)))
-                                            .append(")\n");
+                                    resultMessage.append(String.format(context.getString(R.string.expense_bulk_delete_by_desc_success), 
+                                            foundTransaction.description, CurrencyFormatter.formatCurrency(context, Math.abs(foundTransaction.amount))))
+                                            .append("\n");
                                     counts[0]++;
                                     android.util.Log.d("ExpenseBulkService", "Successfully deleted transaction by description");
                                 } else {
-                                    resultMessage.append("⚠️ Không tìm thấy chi tiêu: ").append(searchDesc).append("\n");
+                                    resultMessage.append(String.format(context.getString(R.string.expense_bulk_not_found_by_desc), searchDesc)).append("\n");
                                     counts[1]++;
                                     android.util.Log.d("ExpenseBulkService", "No transaction found by description: " + searchDesc);
                                 }
                             } else {
-                                resultMessage.append("⚠️ Không thể xác định chi tiêu cần xóa\n");
+                                resultMessage.append(context.getString(R.string.expense_bulk_cannot_determine_delete)).append("\n");
                                 counts[1]++;
                                 android.util.Log.d("ExpenseBulkService", "Unable to determine what to delete");
                             }
@@ -657,24 +647,24 @@ public class ExpenseBulkUseCase {
                             android.util.Log.d("ExpenseBulkService", "Successfully added transaction: " + op.description + " for userId: " + newTransaction.getUserId());
 
                             String icon = CategoryIconHelper.getIconEmoji(op.category);
-                            resultMessage.append("✅ Thêm ").append(icon).append(" ")
-                                    .append(op.description).append(": ")
-                                    .append(CurrencyFormatter.formatCurrency(context, op.amount))
-                                    .append(" (").append(op.category).append(")\n");
+                            resultMessage.append(String.format(context.getString(R.string.expense_bulk_add_success), 
+                                    icon, op.description, CurrencyFormatter.formatCurrency(context, op.amount), op.category))
+                                    .append("\n");
                             counts[0]++;
                         }
                     } catch (Exception e) {
                         android.util.Log.e("ExpenseBulkService", "Error processing expense operation", e);
-                        resultMessage.append("❌ Lỗi xử lý: ").append(op.description != null ? op.description : op.identifier).append("\n");
+                        resultMessage.append(String.format(context.getString(R.string.expense_bulk_processing_error_op), 
+                                op.description != null ? op.description : op.identifier)).append("\n");
                         counts[1]++;
                     }
                 }
 
                 // Add summary
-                resultMessage.append("\n📊 Kết quả: ")
-                        .append(counts[0]).append(" thành công");
                 if (counts[1] > 0) {
-                    resultMessage.append(", ").append(counts[1]).append(" thất bại");
+                    resultMessage.append(String.format(context.getString(R.string.expense_bulk_result_with_failures), counts[0], counts[1]));
+                } else {
+                    resultMessage.append(String.format(context.getString(R.string.expense_bulk_result_summary), counts[0]));
                 }
 
                 String finalMessage = resultMessage.toString();
@@ -683,7 +673,7 @@ public class ExpenseBulkUseCase {
                 if (activity != null) {
                     activity.runOnUiThread(() -> {
                         android.util.Log.d("ExpenseBulkService", "Updating UI with result");
-                        messages.set(analyzingIndex, new AiChatBottomSheet.ChatMessage(finalMessage, false, "Bây giờ"));
+                        messages.set(analyzingIndex, new AiChatBottomSheet.ChatMessage(finalMessage, false, context.getString(R.string.now_label)));
                         chatAdapter.notifyItemChanged(analyzingIndex);
 
                         // Show toast based on result
@@ -720,8 +710,8 @@ public class ExpenseBulkUseCase {
                 if (activity != null) {
                     activity.runOnUiThread(() -> {
                         messages.set(analyzingIndex, new AiChatBottomSheet.ChatMessage(
-                                "❌ Có lỗi xảy ra khi xử lý yêu cầu!",
-                                false, "Bây giờ"));
+                                context.getString(R.string.expense_bulk_processing_error),
+                                false, context.getString(R.string.now_label)));
                         chatAdapter.notifyItemChanged(analyzingIndex);
                     });
                 }
@@ -857,7 +847,7 @@ public class ExpenseBulkUseCase {
             }
 
             if (transactionToEdit == null) {
-                resultMessage.append("⚠️ Không tìm thấy chi tiêu cần sửa\n");
+                resultMessage.append(context.getString(R.string.expense_bulk_edit_not_found)).append("\n");
                 counts[1]++;
                 android.util.Log.d("ExpenseBulkService", "No transaction found to edit");
                 return;
@@ -882,21 +872,22 @@ public class ExpenseBulkUseCase {
                 expenseRepository.update(updatedTransaction);
                 android.util.Log.d("ExpenseBulkService", "Successfully updated transaction amount");
 
-                resultMessage.append("✅ Sửa: ").append(transactionToEdit.description)
-                        .append(" từ ").append(CurrencyFormatter.formatCurrency(context, Math.abs(transactionToEdit.amount)))
-                        .append(" thành ").append(CurrencyFormatter.formatCurrency(context, op.amount))
+                resultMessage.append(String.format(context.getString(R.string.expense_bulk_edit_success), 
+                        transactionToEdit.description, 
+                        CurrencyFormatter.formatCurrency(context, Math.abs(transactionToEdit.amount)),
+                        CurrencyFormatter.formatCurrency(context, op.amount)))
                         .append("\n");
                 counts[0]++;
             } else {
                 // No new amount provided - show placeholder message
-                resultMessage.append("⚠️ Chức năng sửa chi tiết chưa được hỗ trợ. Vui lòng xóa và thêm lại với thông tin mới.\n");
+                resultMessage.append(context.getString(R.string.expense_bulk_edit_not_implemented)).append("\n");
                 counts[1]++;
                 android.util.Log.d("ExpenseBulkService", "Edit operation not fully implemented - no amount provided");
             }
 
         } catch (Exception e) {
             android.util.Log.e("ExpenseBulkService", "Error in processEditOperation", e);
-            resultMessage.append("❌ Lỗi khi sửa chi tiêu\n");
+            resultMessage.append(context.getString(R.string.expense_bulk_edit_error)).append("\n");
             counts[1]++;
         }
 

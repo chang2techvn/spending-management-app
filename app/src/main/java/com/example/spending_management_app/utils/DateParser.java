@@ -80,28 +80,53 @@ public final class DateParser {
                 }
             }
 
-            // Pattern 3: "tháng này" - current month
+            // Pattern 3: "tháng này" - current month (Vietnamese)
             if (text.contains("tháng này") || text.contains("thang nay")) {
                 return new int[]{currentMonth, currentYear};
             }
 
-            // Pattern 4: "tháng trước" - previous month
+            // Pattern 4: "this month" - current month (English)
+            if (text.contains("this month")) {
+                return new int[]{currentMonth, currentYear};
+            }
+
+            // Pattern 5: "tháng trước" - previous month (Vietnamese)
             if (text.contains("tháng trước") || text.contains("thang truoc")) {
                 currentCal.add(Calendar.MONTH, -1);
                 return new int[]{currentCal.get(Calendar.MONTH) + 1, currentCal.get(Calendar.YEAR)};
             }
 
-            // Pattern 5: "tháng sau" or "tháng tới" - next month
+            // Pattern 6: "last month" - previous month (English)
+            if (text.contains("last month")) {
+                currentCal.add(Calendar.MONTH, -1);
+                return new int[]{currentCal.get(Calendar.MONTH) + 1, currentCal.get(Calendar.YEAR)};
+            }
+
+            // Pattern 7: "tháng sau" or "tháng tới" - next month (Vietnamese)
             if (text.contains("tháng sau") || text.contains("tháng tới") ||
                 text.contains("thang sau") || text.contains("thang toi")) {
                 currentCal.add(Calendar.MONTH, 1);
                 return new int[]{currentCal.get(Calendar.MONTH) + 1, currentCal.get(Calendar.YEAR)};
             }
 
-            // Pattern 6: "tháng kia" - month before previous (2 months ago)
-            if (text.contains("tháng kia") || text.contains("thang kia")) {
-                currentCal.add(Calendar.MONTH, -2);
+            // Pattern 8: "next month" - next month (English)
+            if (text.contains("next month")) {
+                currentCal.add(Calendar.MONTH, 1);
                 return new int[]{currentCal.get(Calendar.MONTH) + 1, currentCal.get(Calendar.YEAR)};
+            }
+
+            // Pattern 9: "month X" or "month X/YYYY" (English)
+            Pattern englishMonthPattern = Pattern.compile("month\\s+(\\d{1,2})(?:/(\\d{4}))?");
+            Matcher englishMonthMatcher = englishMonthPattern.matcher(text);
+            if (englishMonthMatcher.find()) {
+                int month = Integer.parseInt(englishMonthMatcher.group(1));
+                int year = englishMonthMatcher.group(2) != null ?
+                          Integer.parseInt(englishMonthMatcher.group(2)) : currentYear;
+
+                // If month is valid (1-12)
+                if (month >= 1 && month <= 12) {
+                    return new int[]{month, year};
+                }
             }
 
             // Default: current month

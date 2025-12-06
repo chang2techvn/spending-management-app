@@ -72,8 +72,9 @@ public class BudgetUseCase {
         // Check for ABSOLUTE set commands (English)
         // "Set to 10 million", "Increase to 10 million", "Decrease to 10 million", "Raise to 10 million", "Lower to 10 million"
         boolean hasToKeyword = textLower.contains(" to ");
-        boolean isAbsoluteSetEnglish = ((textLower.contains("set") || textLower.contains("increase") ||
-                                        textLower.contains("raise") || textLower.contains("change")) && hasToKeyword) ||
+        boolean isAbsoluteSetEnglish = ((textLower.contains("set") || textLower.contains("put") ||
+                                        textLower.contains("increase") || textLower.contains("raise") ||
+                                        textLower.contains("change")) && hasToKeyword) ||
                                       ((textLower.contains("decrease") || textLower.contains("lower") ||
                                         textLower.contains("reduce")) && hasToKeyword);
 
@@ -142,8 +143,7 @@ public class BudgetUseCase {
         if (targetYear < currentYear || (targetYear == currentYear && targetMonth < currentMonth)) {
             activity.runOnUiThread(() -> {
                 messages.set(analyzingIndex, new AiChatBottomSheet.ChatMessage(
-                        "⚠️ Không thể thêm hoặc sửa ngân sách cho tháng trong quá khứ!\n\n" +
-                        "Bạn chỉ có thể quản lý ngân sách từ tháng " + currentMonth + "/" + currentYear + " trở đi.",
+                        String.format(context.getString(R.string.budget_past_month_error), currentMonth, currentYear),
                         false, context.getString(R.string.now_label)));
                 chatAdapter.notifyItemChanged(analyzingIndex);
             });
@@ -238,13 +238,11 @@ public class BudgetUseCase {
                             // No existing budget to increase/decrease
                             if (activity != null) {
                                 activity.runOnUiThread(() -> {
-                                    SimpleDateFormat monthYearFormat = new SimpleDateFormat("MM/yyyy", new Locale("vi", "VN"));
+                                    SimpleDateFormat monthYearFormat = new SimpleDateFormat("MM/yyyy", Locale.getDefault());
                                     String monthYearStr = monthYearFormat.format(budgetDate);
                                     messages.set(analyzingIndex, new AiChatBottomSheet.ChatMessage(
-                                            "⚠️ Chưa có ngân sách cho tháng " + monthYearStr + " để " +
-                                            (isIncrease ? "nâng" : "giảm") + "!\n\n" +
-                                            "Vui lòng đặt ngân sách trước. Ví dụ:\n" +
-                                            "   • \"Đặt ngân sách tháng " + monthYearStr + " là 15 triệu\"",
+                                            String.format(context.getString(R.string.budget_not_exists_for_operation), 
+                                                    monthYearStr, (isIncrease ? context.getString(R.string.increase) : context.getString(R.string.decrease)), monthYearStr),
                                             false, context.getString(R.string.now_label)));
                                     chatAdapter.notifyItemChanged(analyzingIndex);
                                 });
@@ -271,7 +269,7 @@ public class BudgetUseCase {
 
                     String formattedFinalAmount = CurrencyFormatter.formatCurrency(context, finalAmount);
                     String formattedChangeAmount = CurrencyFormatter.formatCurrency(context, amount);
-                    SimpleDateFormat monthYearFormat = new SimpleDateFormat("MM/yyyy", new Locale("vi", "VN"));
+                    SimpleDateFormat monthYearFormat = new SimpleDateFormat("MM/yyyy", Locale.getDefault());
                     String monthYearStr = monthYearFormat.format(budgetDate);
 
                     // Update UI
@@ -282,24 +280,18 @@ public class BudgetUseCase {
 
                             if (isUpdate) {
                                 if (actionType.equals("increase")) {
-                                    responseMessage = "✅ Đã nâng ngân sách tháng " + monthYearStr + " thêm " + formattedChangeAmount + "!\n\n" +
-                                            "💰 Ngân sách mới: " + formattedFinalAmount + "\n\n" +
-                                            "Chúc bạn quản lý tài chính tốt! 💪";
-                                    toastMessage = "✅ Đã nâng ngân sách tháng " + monthYearStr + ": +" + formattedChangeAmount;
+                                    responseMessage = String.format(context.getString(R.string.budget_increased_success), monthYearStr, formattedChangeAmount, formattedFinalAmount);
+                                    toastMessage = String.format(context.getString(R.string.budget_increased_toast), monthYearStr, formattedChangeAmount);
                                 } else if (actionType.equals("decrease")) {
-                                    responseMessage = "✅ Đã giảm ngân sách tháng " + monthYearStr + " xuống " + formattedChangeAmount + "!\n\n" +
-                                            "💰 Ngân sách mới: " + formattedFinalAmount + "\n\n" +
-                                            "Chúc bạn chi tiêu hợp lý! 💰";
-                                    toastMessage = "✅ Đã giảm ngân sách tháng " + monthYearStr + ": -" + formattedChangeAmount;
+                                    responseMessage = String.format(context.getString(R.string.budget_decreased_success), monthYearStr, formattedChangeAmount, formattedFinalAmount);
+                                    toastMessage = String.format(context.getString(R.string.budget_decreased_toast), monthYearStr, formattedChangeAmount);
                                 } else {
-                                    responseMessage = "✅ Đã cập nhật ngân sách tháng " + monthYearStr + " thành " + formattedFinalAmount + "!\n\n" +
-                                            "Chúc bạn quản lý tài chính tốt! 💪";
-                                    toastMessage = "✅ Đã cập nhật ngân sách tháng " + monthYearStr + ": " + formattedFinalAmount;
+                                    responseMessage = String.format(context.getString(R.string.budget_updated_success), monthYearStr, formattedFinalAmount);
+                                    toastMessage = String.format(context.getString(R.string.budget_updated_toast), monthYearStr, formattedFinalAmount);
                                 }
                             } else {
-                                responseMessage = "✅ Đã thiết lập ngân sách tháng " + monthYearStr + " là " + formattedFinalAmount + "!\n\n" +
-                                        "Chúc bạn chi tiêu hợp lý! 💰";
-                                toastMessage = "✅ Đã thiết lập ngân sách tháng " + monthYearStr + ": " + formattedFinalAmount;
+                                responseMessage = String.format(context.getString(R.string.budget_set_success), monthYearStr, formattedFinalAmount);
+                                toastMessage = String.format(context.getString(R.string.budget_set_toast), monthYearStr, formattedFinalAmount);
                             }
 
                             messages.set(analyzingIndex, new AiChatBottomSheet.ChatMessage(responseMessage, false, context.getString(R.string.now_label)));
@@ -319,7 +311,7 @@ public class BudgetUseCase {
                     if (activity != null) {
                         activity.runOnUiThread(() -> {
                             messages.set(analyzingIndex, new AiChatBottomSheet.ChatMessage(
-                                    "❌ Có lỗi xảy ra khi lưu ngân sách. Vui lòng thử lại!",
+                                    context.getString(R.string.budget_save_error_message),
                                     false, context.getString(R.string.now_label)));
                             chatAdapter.notifyItemChanged(analyzingIndex);
                             ToastHelper.showErrorToast(activity, activity.getString(R.string.budget_save_error));
@@ -331,20 +323,7 @@ public class BudgetUseCase {
             // Could not extract amount, ask AI to help
             activity.runOnUiThread(() -> {
                 messages.set(analyzingIndex, new AiChatBottomSheet.ChatMessage(
-                        "🤔 Tôi không thể xác định số tiền ngân sách từ yêu cầu của bạn.\n\n" +
-                        "Vui lòng nhập rõ số tiền và tháng (nếu cần), ví dụ:\n\n" +
-                        "📝 Đặt ngân sách:\n" +
-                        "   • \"Đặt ngân sách tháng này 15 triệu\"\n" +
-                        "   • \"Đặt ngân sách tháng 12 là 20 triệu\"\n\n" +
-                        "➕ Tăng thêm (cộng vào ngân sách hiện tại):\n" +
-                        "   • \"Nâng ngân sách 2 triệu\"\n" +
-                        "   • \"Tăng thêm 1.5 triệu\"\n\n" +
-                        "➖ Giảm bớt (trừ khỏi ngân sách hiện tại):\n" +
-                        "   • \"Giảm ngân sách 500k\"\n" +
-                        "   • \"Trừ 1 triệu\"\n\n" +
-                        "🎯 Đặt lại thành số cụ thể:\n" +
-                        "   • \"Tăng ngân sách lên 10 triệu\"\n" +
-                        "   • \"Giảm ngân sách xuống 8 triệu\"",
+                        context.getString(R.string.budget_amount_not_recognized),
                         false, context.getString(R.string.now_label)));
                 chatAdapter.notifyItemChanged(analyzingIndex);
             });
@@ -406,13 +385,12 @@ public class BudgetUseCase {
                     BudgetHistoryLogger.logMonthlyBudgetDeleted(
                             context, budgetAmount, startOfMonth);
 
-                    SimpleDateFormat monthYearFormat = new SimpleDateFormat("MM/yyyy", new Locale("vi", "VN"));
+                    SimpleDateFormat monthYearFormat = new SimpleDateFormat("MM/yyyy", Locale.getDefault());
                     String monthYearStr = monthYearFormat.format(startOfMonth);
 
                     if (activity != null) {
                         activity.runOnUiThread(() -> {
-                            String responseMessage = "✅ Đã xóa ngân sách tháng " + monthYearStr + "!\n\n" +
-                                    "Bạn có thể thiết lập lại bất cứ lúc nào. 💰";
+                            String responseMessage = String.format(context.getString(R.string.budget_deleted_success), monthYearStr);
 
                             messages.set(analyzingIndex, new AiChatBottomSheet.ChatMessage(responseMessage, false, context.getString(R.string.now_label)));
                             chatAdapter.notifyItemChanged(analyzingIndex);
@@ -423,12 +401,12 @@ public class BudgetUseCase {
                         });
                     }
                 } else {
-                    SimpleDateFormat monthYearFormat = new SimpleDateFormat("MM/yyyy", new Locale("vi", "VN"));
+                    SimpleDateFormat monthYearFormat = new SimpleDateFormat("MM/yyyy", Locale.getDefault());
                     String monthYearStr = monthYearFormat.format(startOfMonth);
 
                     if (activity != null) {
                         activity.runOnUiThread(() -> {
-                            String responseMessage = "⚠️ Không tìm thấy ngân sách tháng " + monthYearStr + " để xóa!";
+                            String responseMessage = String.format(context.getString(R.string.budget_not_found_for_delete), monthYearStr);
 
                             messages.set(analyzingIndex, new AiChatBottomSheet.ChatMessage(responseMessage, false, context.getString(R.string.now_label)));
                             chatAdapter.notifyItemChanged(analyzingIndex);
@@ -442,7 +420,7 @@ public class BudgetUseCase {
                 if (activity != null) {
                     activity.runOnUiThread(() -> {
                         messages.set(analyzingIndex, new AiChatBottomSheet.ChatMessage(
-                                "❌ Có lỗi xảy ra khi xóa ngân sách. Vui lòng thử lại!",
+                                context.getString(R.string.budget_delete_error_message),
                                 false, context.getString(R.string.now_label)));
                         chatAdapter.notifyItemChanged(analyzingIndex);
                         ToastHelper.showErrorToast(activity, activity.getString(R.string.budget_delete_error));
@@ -533,7 +511,9 @@ public class BudgetUseCase {
             lowerText.contains("increase") || lowerText.contains("raise") ||
             lowerText.contains("decrease") || lowerText.contains("reduce") ||
             lowerText.contains("lower") || lowerText.contains("plus") ||
-            lowerText.contains("minus") || lowerText.contains("cut")) {
+            lowerText.contains("minus") || lowerText.contains("cut") ||
+            lowerText.contains("put") || lowerText.contains("create") ||
+            lowerText.contains("make") || lowerText.contains("assign")) {
             handleBudgetRequest(text, context, activity, messages, chatAdapter, messagesRecycler, refreshHomeFragmentCallback);
             return;
         }

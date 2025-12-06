@@ -132,12 +132,12 @@ public class FragmentRefreshHelper {
 
                 // Build updated welcome message
                 StringBuilder welcomeMessage = new StringBuilder();
-                welcomeMessage.append("📋 Quản lý chi tiêu hàng loạt\n\n");
+                welcomeMessage.append(activity.getString(R.string.expense_bulk_title)).append("\n\n");
 
                 if (!recentTransactions.isEmpty()) {
-                    welcomeMessage.append("💳 Chi tiêu gần đây:\n\n");
+                    welcomeMessage.append(activity.getString(R.string.expense_bulk_details)).append("\n\n");
 
-                    SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM", new Locale("vi", "VN"));
+                    SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM", Locale.getDefault());
 
                     for (TransactionEntity transaction : recentTransactions) {
                         String emoji = CategoryIconHelper.getIconEmoji(transaction.category);
@@ -153,9 +153,7 @@ public class FragmentRefreshHelper {
                     welcomeMessage.append("\n");
                 }
 
-                welcomeMessage.append("💡 Hướng dẫn:\n");
-                welcomeMessage.append("• Thêm: 'Hôm qua ăn sáng 25k và cafe 30k'\n");
-                welcomeMessage.append("• Xóa: 'Xóa chi tiêu #123' (tìm ID ở trang Lịch sử)");
+                welcomeMessage.append(activity.getString(R.string.expense_bulk_guidance));
 
                 String finalMessage = welcomeMessage.toString();
 

@@ -278,9 +278,19 @@ public class AiChatBottomSheet extends DialogFragment {
     private void startVoiceRecognition() {
         Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
         intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "vi-VN");
+        
+        // Set language based on current locale
+        Locale currentLocale = Locale.getDefault();
+        String languageCode;
+        if (currentLocale.getLanguage().equals("vi")) {
+            languageCode = "vi-VN";
+        } else {
+            languageCode = "en-US";
+        }
+        
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, languageCode);
         intent.putExtra(RecognizerIntent.EXTRA_SUPPORTED_LANGUAGES, new String[]{"en-US", "vi-VN"});
-        intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "Nói gì đó...");
+        intent.putExtra(RecognizerIntent.EXTRA_PROMPT, getString(R.string.ai_input_hint));
         try {
             startActivityForResult(intent, VOICE_REQUEST_CODE);
         } catch (Exception e) {

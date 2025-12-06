@@ -31,6 +31,7 @@ import com.example.spending_management_app.presentation.dialog.AiChatBottomSheet
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -209,11 +210,21 @@ public class MainActivity extends AppCompatActivity {
                 ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.RECORD_AUDIO}, 1);
                 return true;
             }
+            
+            // Set language based on current locale
+            Locale currentLocale = Locale.getDefault();
+            String languageCode;
+            if (currentLocale.getLanguage().equals("vi")) {
+                languageCode = "vi-VN";
+            } else {
+                languageCode = "en-US";
+            }
+            
             Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
             intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-            intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "vi-VN");
+            intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, languageCode);
             intent.putExtra(RecognizerIntent.EXTRA_SUPPORTED_LANGUAGES, new String[]{"en-US", "vi-VN"});
-            intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "Nói gì đó...");
+            intent.putExtra(RecognizerIntent.EXTRA_PROMPT, getString(R.string.ai_input_hint));
             try {
                 startActivityForResult(intent, VOICE_REQUEST_CODE);
             } catch (Exception e) {
@@ -282,11 +293,20 @@ public class MainActivity extends AppCompatActivity {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == 1) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Set language based on current locale
+                Locale currentLocale = Locale.getDefault();
+                String languageCode;
+                if (currentLocale.getLanguage().equals("vi")) {
+                    languageCode = "vi-VN";
+                } else {
+                    languageCode = "en-US";
+                }
+                
                 Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
                 intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-                intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "vi-VN");
+                intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, languageCode);
                 intent.putExtra(RecognizerIntent.EXTRA_SUPPORTED_LANGUAGES, new String[]{"en-US", "vi-VN"});
-                intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "Nói gì đó...");
+                intent.putExtra(RecognizerIntent.EXTRA_PROMPT, getString(R.string.ai_input_hint));
                 try {
                     startActivityForResult(intent, VOICE_REQUEST_CODE);
                 } catch (Exception e) {
