@@ -14,6 +14,7 @@ public class BudgetHistoryEntity {
     @PrimaryKey(autoGenerate = true)
     public int id;
     
+    public int userId; // ID của user sở hữu budget history này
     public String action; // "create", "update", "delete"
     public String budgetType; // "monthly" or "category"
     public String category; // For category budget, null for monthly budget
@@ -28,10 +29,13 @@ public class BudgetHistoryEntity {
         this.amount = amount;
         this.date = date;
         this.description = description;
+        this.userId = 1; // Default user ID
     }
     
     // Getters
     public int getId() { return id; }
+    public int getUserId() { return userId; }
+    public void setUserId(int userId) { this.userId = userId; }
     public String getAction() { return action; }
     public String getBudgetType() { return budgetType; }
     public String getCategory() { return category; }

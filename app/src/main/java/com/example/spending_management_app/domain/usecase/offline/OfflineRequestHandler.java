@@ -7,12 +7,13 @@ import com.example.spending_management_app.data.local.database.AppDatabase;
 import com.example.spending_management_app.data.local.entity.BudgetEntity;
 import com.example.spending_management_app.data.local.entity.TransactionEntity;
 import com.example.spending_management_app.data.local.entity.CategoryBudgetEntity;
-import com.example.spending_management_app.utils.BudgetAmountParser;
 import com.example.spending_management_app.domain.usecase.budget.BudgetHistoryLogger;
+import com.example.spending_management_app.utils.BudgetAmountParser;
 import com.example.spending_management_app.utils.CategoryHelper;
 import com.example.spending_management_app.utils.CurrencyFormatter;
 import com.example.spending_management_app.utils.DateParser;
 import com.example.spending_management_app.utils.ExpenseDescriptionParser;
+import com.example.spending_management_app.utils.UserSession;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -32,6 +33,7 @@ public class OfflineRequestHandler {
     
     private final Context context;
     private final OfflineRequestCallback callback;
+    private final UserSession userSession;
     
     /**
      * Callback interface for handling offline request results
@@ -48,6 +50,7 @@ public class OfflineRequestHandler {
     public OfflineRequestHandler(Context context, OfflineRequestCallback callback) {
         this.context = context;
         this.callback = callback;
+        this.userSession = UserSession.getInstance(context);
     }
     
     /**
@@ -239,9 +242,10 @@ public class OfflineRequestHandler {
             
             Executors.newSingleThreadExecutor().execute(() -> {
                 try {
+                    int userId = userSession.getCurrentUserId();
                     TransactionEntity transaction = AppDatabase.getInstance(context)
                             .transactionDao()
-                            .getTransactionById(id);
+                            .getTransactionById(userId, id);
                     
                     if (transaction != null) {
                         AppDatabase.getInstance(context)
@@ -318,7 +322,7 @@ public class OfflineRequestHandler {
                     
                     List<BudgetEntity> existingBudgets = AppDatabase.getInstance(context)
                             .budgetDao()
-                            .getBudgetsByDateRange(startDate, endDate);
+                            .getBudgetsByDateRange(userSession.getCurrentUserId(), startDate, endDate);
                     
                     long newAmount;
                     if (existingBudgets != null && !existingBudgets.isEmpty()) {
@@ -405,7 +409,7 @@ public class OfflineRequestHandler {
                     
                     List<BudgetEntity> budgets = AppDatabase.getInstance(context)
                             .budgetDao()
-                            .getBudgetsByDateRange(startDate, endDate);
+                            .getBudgetsByDateRange(userSession.getCurrentUserId(), startDate, endDate);
                     
                     if (budgets != null && !budgets.isEmpty()) {
                         BudgetEntity budget = budgets.get(0);
@@ -496,10 +500,11 @@ public class OfflineRequestHandler {
                     Date endDate = cal.getTime();
                     
                     // Check if category budget exists
+                    int userId = userSession.getCurrentUserId();
                     CategoryBudgetEntity existingBudget =
                             AppDatabase.getInstance(context)
                                     .categoryBudgetDao()
-                                    .getCategoryBudgetForMonth(finalCategory, startDate, endDate);
+                                    .getCategoryBudgetForMonth(userId, finalCategory, startDate, endDate);
                     
                     if (existingBudget != null) {
                         // Update existing
@@ -589,10 +594,11 @@ public class OfflineRequestHandler {
                     cal.set(Calendar.SECOND, 59);
                     Date endDate = cal.getTime();
                     
+                    int userId = userSession.getCurrentUserId();
                     CategoryBudgetEntity budget =
                             AppDatabase.getInstance(context)
                                     .categoryBudgetDao()
-                                    .getCategoryBudgetForMonth(finalCategory, startDate, endDate);
+                                    .getCategoryBudgetForMonth(userId, finalCategory, startDate, endDate);
                     
                     if (budget != null) {
                         long oldAmount = budget.getBudgetAmount();

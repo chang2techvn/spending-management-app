@@ -19,8 +19,8 @@ public class CategoryBudgetRepositoryImpl implements CategoryBudgetRepository {
     }
 
     @Override
-    public List<CategoryBudgetEntity> getAllCategoryBudgetsForMonth(Date startDate, Date endDate) {
-        return appDatabase.categoryBudgetDao().getAllCategoryBudgetsForMonth(startDate, endDate);
+    public List<CategoryBudgetEntity> getAllCategoryBudgetsForMonth(int userId, Date startDate, Date endDate) {
+        return appDatabase.categoryBudgetDao().getAllCategoryBudgetsForMonth(userId, startDate, endDate);
     }
 
     @Override
@@ -29,13 +29,13 @@ public class CategoryBudgetRepositoryImpl implements CategoryBudgetRepository {
     }
 
     @Override
-    public void deleteAllForMonth(Date startDate, Date endDate) {
-        appDatabase.categoryBudgetDao().deleteAllForMonth(startDate, endDate);
+    public void deleteAllForMonth(int userId, Date startDate, Date endDate) {
+        appDatabase.categoryBudgetDao().deleteAllForMonth(userId, startDate, endDate);
     }
 
     @Override
-    public CategoryBudgetEntity getCategoryBudgetForMonth(String category, Date startDate, Date endDate) {
-        return appDatabase.categoryBudgetDao().getCategoryBudgetForMonth(category, startDate, endDate);
+    public CategoryBudgetEntity getCategoryBudgetForMonth(int userId, String category, Date startDate, Date endDate) {
+        return appDatabase.categoryBudgetDao().getCategoryBudgetForMonth(userId, category, startDate, endDate);
     }
 
     @Override

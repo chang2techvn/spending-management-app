@@ -13,6 +13,6 @@ public interface RecurringExpenseDao {
     @Insert
     void insert(RecurringExpenseEntity recurringExpense);
 
-    @Query("SELECT * FROM recurring_expenses")
-    List<RecurringExpenseEntity> getAllRecurringExpenses();
+    @Query("SELECT * FROM recurring_expenses WHERE userId = :userId")
+    List<RecurringExpenseEntity> getAllRecurringExpenses(int userId);
 }

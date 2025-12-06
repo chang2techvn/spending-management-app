@@ -12,6 +12,7 @@ import com.example.spending_management_app.utils.DateParser;
 import com.example.spending_management_app.utils.ExtractorHelper;
 import com.example.spending_management_app.utils.ToastHelper;
 import com.example.spending_management_app.utils.CurrencyFormatter;
+import com.example.spending_management_app.utils.UserSession;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -26,9 +27,11 @@ import java.text.SimpleDateFormat;
 public class ExpenseBulkUseCase {
 
     private final ExpenseRepository expenseRepository;
+    private final UserSession userSession;
 
-    public ExpenseBulkUseCase(ExpenseRepository expenseRepository) {
+    public ExpenseBulkUseCase(ExpenseRepository expenseRepository, Context context) {
         this.expenseRepository = expenseRepository;
+        this.userSession = UserSession.getInstance(context);
     }
 
     // ==================== EXPENSE BULK MANAGEMENT ====================
@@ -460,6 +463,7 @@ public class ExpenseBulkUseCase {
                 int[] counts = {0, 0}; // success, failure
 
                 for (ExpenseOperation op : operations) {
+                    int userId = userSession.getCurrentUserId();
                     android.util.Log.d("ExpenseBulkService", "Processing operation: type=" + op.type + ", identifier=" + op.identifier);
                     try {
                         if (op.type.equals("error")) {
@@ -474,7 +478,8 @@ public class ExpenseBulkUseCase {
                             if (op.transactionId > 0) {
                                 // Delete by ID (legacy)
                                 android.util.Log.d("ExpenseBulkService", "Deleting by ID: " + op.transactionId);
-                                TransactionEntity transaction = expenseRepository.getTransactionById(op.transactionId);
+                                /* userId declared at top of loop */
+                                TransactionEntity transaction = expenseRepository.getTransactionById(userId, op.transactionId);
                                 if (transaction != null) {
                                     android.util.Log.d("ExpenseBulkService", "Found transaction to delete: " + transaction.description);
                                     expenseRepository.delete(transaction);
@@ -494,7 +499,8 @@ public class ExpenseBulkUseCase {
                                 Date targetDate = new Date(timestamp);
                                 android.util.Log.d("ExpenseBulkService", "Deleting all transactions on date: " + targetDate);
 
-                                List<TransactionEntity> transactionsOnDate = expenseRepository.getTransactionsByDate(targetDate);
+                                /* userId declared at top of loop */
+                                List<TransactionEntity> transactionsOnDate = expenseRepository.getTransactionsByDate(userId, targetDate);
                                 android.util.Log.d("ExpenseBulkService", "Found " + transactionsOnDate.size() + " transactions on date");
                                 if (!transactionsOnDate.isEmpty()) {
                                     int deletedCount = 0;
@@ -535,7 +541,8 @@ public class ExpenseBulkUseCase {
 
                                 android.util.Log.d("ExpenseBulkService", "Month range: " + startOfMonth + " to " + endOfMonth);
 
-                                List<TransactionEntity> transactionsInMonth = expenseRepository.getTransactionsByDateRange(startOfMonth, endOfMonth);
+                                /* userId declared at top of loop */
+                                List<TransactionEntity> transactionsInMonth = expenseRepository.getTransactionsByDateRange(userId, startOfMonth, endOfMonth);
                                 android.util.Log.d("ExpenseBulkService", "Found " + transactionsInMonth.size() + " transactions in month");
                                 if (!transactionsInMonth.isEmpty()) {
                                     int deletedCount = 0;
@@ -573,7 +580,8 @@ public class ExpenseBulkUseCase {
 
                                 android.util.Log.d("ExpenseBulkService", "Year range: " + startOfYear + " to " + endOfYear);
 
-                                List<TransactionEntity> transactionsInYear = expenseRepository.getTransactionsByDateRange(startOfYear, endOfYear);
+                                /* userId declared at top of loop */
+                                List<TransactionEntity> transactionsInYear = expenseRepository.getTransactionsByDateRange(userId, startOfYear, endOfYear);
                                 android.util.Log.d("ExpenseBulkService", "Found " + transactionsInYear.size() + " transactions in year");
                                 if (!transactionsInYear.isEmpty()) {
                                     int deletedCount = 0;
@@ -598,7 +606,8 @@ public class ExpenseBulkUseCase {
                                 // Delete by description (find most recent matching transaction)
                                 String searchDesc = op.identifier.substring(5).toLowerCase();
                                 android.util.Log.d("ExpenseBulkService", "Deleting by description: " + searchDesc);
-                                List<TransactionEntity> allTransactions = expenseRepository.getAllTransactions();
+                                /* userId declared at top of loop */
+                                List<TransactionEntity> allTransactions = expenseRepository.getAllTransactions(userId);
                                 android.util.Log.d("ExpenseBulkService", "Total transactions in DB: " + allTransactions.size());
 
                                 TransactionEntity foundTransaction = null;
@@ -642,9 +651,10 @@ public class ExpenseBulkUseCase {
                                     op.date,
                                     "expense"
                             );
+                            newTransaction.setUserId(userSession.getCurrentUserId());
 
                             expenseRepository.insert(newTransaction);
-                            android.util.Log.d("ExpenseBulkService", "Successfully added transaction: " + op.description);
+                            android.util.Log.d("ExpenseBulkService", "Successfully added transaction: " + op.description + " for userId: " + newTransaction.getUserId());
 
                             String icon = CategoryIconHelper.getIconEmoji(op.category);
                             resultMessage.append("✅ Thêm ").append(icon).append(" ")
@@ -727,18 +737,19 @@ public class ExpenseBulkUseCase {
 
         try {
             TransactionEntity transactionToEdit = null;
+            int userId = userSession.getCurrentUserId();
 
             // Find transaction to edit
             if (op.transactionId > 0) {
                 // Edit by ID
                 android.util.Log.d("ExpenseBulkService", "Editing by ID: " + op.transactionId);
-                transactionToEdit = expenseRepository.getTransactionById(op.transactionId);
+                transactionToEdit = expenseRepository.getTransactionById(userId, op.transactionId);
             } else if (op.identifier.startsWith("date:")) {
                 // Edit most recent transaction on date
                 long timestamp = Long.parseLong(op.identifier.substring(5));
                 Date targetDate = new Date(timestamp);
                 android.util.Log.d("ExpenseBulkService", "Editing most recent transaction on date: " + targetDate);
-                List<TransactionEntity> transactionsOnDate = expenseRepository.getTransactionsByDate(targetDate);
+                List<TransactionEntity> transactionsOnDate = expenseRepository.getTransactionsByDate(userId, targetDate);
                 if (!transactionsOnDate.isEmpty()) {
                     // Get most recent transaction
                     transactionToEdit = transactionsOnDate.get(0);
@@ -766,7 +777,7 @@ public class ExpenseBulkUseCase {
                 cal.set(Calendar.MILLISECOND, 999);
                 Date endOfMonth = cal.getTime();
 
-                List<TransactionEntity> transactionsInMonth = expenseRepository.getTransactionsByDateRange(startOfMonth, endOfMonth);
+                List<TransactionEntity> transactionsInMonth = expenseRepository.getTransactionsByDateRange(userId, startOfMonth, endOfMonth);
                 if (!transactionsInMonth.isEmpty()) {
                     // Get most recent transaction
                     transactionToEdit = transactionsInMonth.get(0);
@@ -791,7 +802,7 @@ public class ExpenseBulkUseCase {
                 cal.set(Calendar.MILLISECOND, 999);
                 Date endOfYear = cal.getTime();
 
-                List<TransactionEntity> transactionsInYear = expenseRepository.getTransactionsByDateRange(startOfYear, endOfYear);
+                List<TransactionEntity> transactionsInYear = expenseRepository.getTransactionsByDateRange(userId, startOfYear, endOfYear);
                 if (!transactionsInYear.isEmpty()) {
                     // Get most recent transaction
                     transactionToEdit = transactionsInYear.get(0);
@@ -805,7 +816,7 @@ public class ExpenseBulkUseCase {
                 // Edit by description (find most recent matching transaction)
                 String searchDesc = op.identifier.substring(5).toLowerCase();
                 android.util.Log.d("ExpenseBulkService", "Editing by description: " + searchDesc);
-                List<TransactionEntity> allTransactions = expenseRepository.getAllTransactions();
+                List<TransactionEntity> allTransactions = expenseRepository.getAllTransactions(userId);
                 for (TransactionEntity transaction : allTransactions) {
                     if (transaction.description.toLowerCase().contains(searchDesc)) {
                         transactionToEdit = transaction;
@@ -832,7 +843,7 @@ public class ExpenseBulkUseCase {
 
                 if (!description.isEmpty() && targetDate != null) {
                     // Find transactions on the target date that match the description
-                    List<TransactionEntity> transactionsOnDate = expenseRepository.getTransactionsByDate(targetDate);
+                    List<TransactionEntity> transactionsOnDate = expenseRepository.getTransactionsByDate(userId, targetDate);
                     android.util.Log.d("ExpenseBulkService", "Found " + transactionsOnDate.size() + " transactions on date");
 
                     for (TransactionEntity transaction : transactionsOnDate) {

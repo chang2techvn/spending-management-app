@@ -20,6 +20,7 @@ import com.example.spending_management_app.databinding.FragmentStatisticsBinding
 import com.example.spending_management_app.presentation.viewmodel.statistics.StatisticsViewModel;
 import com.example.spending_management_app.utils.CategoryUtils;
 import com.example.spending_management_app.utils.CurrencyFormatter;
+import com.example.spending_management_app.utils.UserSession;
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.components.YAxis;
@@ -37,6 +38,10 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.concurrent.Executors;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
 
 public class StatisticsFragment extends Fragment {
 
@@ -45,6 +50,7 @@ public class StatisticsFragment extends Fragment {
     private BudgetDao budgetDao;
     private String selectedYear;
     private Observer<List<MonthlySpending>> currentObserver;
+    private UserSession userSession;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
@@ -58,12 +64,18 @@ public class StatisticsFragment extends Fragment {
         AppDatabase database = AppDatabase.getInstance(requireContext());
         transactionDao = database.transactionDao();
         budgetDao = database.budgetDao();
+        
+        // Initialize UserSession
+        userSession = UserSession.getInstance(requireContext());
 
         // Setup year spinner
         setupYearSpinner();
 
         // Setup statistics data
         setupStatisticsData();
+        
+        // Setup download report button
+        setupDownloadReportButton();
         
         // Setup monthly spending chart (will be called after year is selected)
         // setupMonthlySpendingChart() is now called from year spinner
@@ -86,7 +98,8 @@ public class StatisticsFragment extends Fragment {
         
         // Load available years from database in background
         Executors.newSingleThreadExecutor().execute(() -> {
-            List<String> years = transactionDao.getDistinctYears();
+            int userId = userSession.getCurrentUserId();
+            List<String> years = transactionDao.getDistinctYears(userId);
             
             // If no data, add current year
             if (years == null || years.isEmpty()) {
@@ -173,11 +186,12 @@ public class StatisticsFragment extends Fragment {
                 java.util.Date endOfYear = cal.getTime();
                 
                 // Get total budget for the year
-                Long totalBudgetLong = budgetDao.getTotalBudgetByDateRange(startOfYear, endOfYear);
+                int userId = userSession.getCurrentUserId();
+                Long totalBudgetLong = budgetDao.getTotalBudgetByDateRange(userId, startOfYear, endOfYear);
                 long totalBudget = (totalBudgetLong != null) ? totalBudgetLong : 0;
                 
                 // Get total expense for the year
-                Long totalExpenseLong = transactionDao.getTotalExpenseByDateRange(startOfYear, endOfYear);
+                Long totalExpenseLong = transactionDao.getTotalExpenseByDateRange(userId, startOfYear, endOfYear);
                 long totalExpense = (totalExpenseLong != null) ? Math.abs(totalExpenseLong) : 0;
                 
                 android.util.Log.d("StatisticsFragment", "Year " + year + " - Budget: " + totalBudget + ", Expense: " + totalExpense);
@@ -199,8 +213,9 @@ public class StatisticsFragment extends Fragment {
     private void setupMonthlySpendingChart(String year) {
         // Remove previous observer if exists
         if (currentObserver != null) {
+            int userId = userSession.getCurrentUserId();
             LiveData<List<MonthlySpending>> previousLiveData = 
-                    transactionDao.getMonthlySpendingByYearLive(selectedYear);
+                    transactionDao.getMonthlySpendingByYearLive(userId, selectedYear);
             previousLiveData.removeObserver(currentObserver);
         }
         
@@ -319,7 +334,8 @@ public class StatisticsFragment extends Fragment {
         };
         
         // Observe monthly spending LiveData for selected year
-        transactionDao.getMonthlySpendingByYearLive(year).observe(getViewLifecycleOwner(), currentObserver);
+        int userId = userSession.getCurrentUserId();
+        transactionDao.getMonthlySpendingByYearLive(userId, year).observe(getViewLifecycleOwner(), currentObserver);
     }
 
     private String formatCurrency(long amount) {
@@ -353,8 +369,9 @@ public class StatisticsFragment extends Fragment {
                 java.util.Date endOfYear = cal.getTime();
                 
                 // Get all transactions for this year by category
+                int userId = userSession.getCurrentUserId();
                 List<TransactionEntity> allTransactions =
-                        transactionDao.getTransactionsByDateRange(startOfYear, endOfYear);
+                        transactionDao.getTransactionsByDateRange(userId, startOfYear, endOfYear);
                 
                 // Calculate spending by category
                 java.util.Map<String, Long> categorySpending = new java.util.HashMap<>();
@@ -567,6 +584,138 @@ public class StatisticsFragment extends Fragment {
         // Get the localized category name first, then get the icon
         String localizedCategory = CategoryUtils.getLocalizedCategoryName(getContext(), category);
         return CategoryUtils.getIconForCategory(localizedCategory);
+    }
+    
+    private void setupDownloadReportButton() {
+        binding.downloadReportButton.setOnClickListener(v -> {
+            generateAndDownloadReport();
+        });
+    }
+    
+    private void generateAndDownloadReport() {
+        Executors.newSingleThreadExecutor().execute(() -> {
+            try {
+                int userId = userSession.getCurrentUserId();
+                String reportContent = generateReportContent(userId, selectedYear);
+                
+                // Save to Downloads folder
+                File downloadsDir = new File(requireContext().getExternalFilesDir(null), "Downloads");
+                if (!downloadsDir.exists()) {
+                    downloadsDir.mkdirs();
+                }
+                
+                String fileName = "BaoCaoThongKe_" + selectedYear + "_" + 
+                    new SimpleDateFormat("yyyyMMdd_HHmmss", java.util.Locale.getDefault()).format(new java.util.Date()) + ".txt";
+                File reportFile = new File(downloadsDir, fileName);
+                
+                try (FileWriter writer = new FileWriter(reportFile)) {
+                    writer.write(reportContent);
+                }
+                
+                // Show success message on UI thread
+                requireActivity().runOnUiThread(() -> {
+                    android.widget.Toast.makeText(requireContext(), 
+                        "✅ Báo cáo đã được tải về: " + reportFile.getAbsolutePath(), 
+                        android.widget.Toast.LENGTH_LONG).show();
+                });
+                
+            } catch (Exception e) {
+                android.util.Log.e("StatisticsFragment", "Error generating report", e);
+                requireActivity().runOnUiThread(() -> {
+                    android.widget.Toast.makeText(requireContext(), 
+                        "❌ Lỗi khi tạo báo cáo: " + e.getMessage(), 
+                        android.widget.Toast.LENGTH_LONG).show();
+                });
+            }
+        });
+    }
+    
+    private String generateReportContent(int userId, String year) {
+        StringBuilder report = new StringBuilder();
+        report.append("📊 BÁO CÁO THỐNG KÊ CHI TIÊU\n");
+        report.append("================================\n\n");
+        report.append("Năm: ").append(year).append("\n");
+        report.append("Ngày tạo: ").append(new SimpleDateFormat("dd/MM/yyyy HH:mm:ss", java.util.Locale.getDefault()).format(new java.util.Date())).append("\n\n");
+        
+        try {
+            // Get year date range
+            Calendar cal = Calendar.getInstance();
+            cal.set(Integer.parseInt(year), 0, 1, 0, 0, 0);
+            cal.set(Calendar.MILLISECOND, 0);
+            java.util.Date startOfYear = cal.getTime();
+            
+            cal.set(Integer.parseInt(year), 11, 31, 23, 59, 59);
+            cal.set(Calendar.MILLISECOND, 999);
+            java.util.Date endOfYear = cal.getTime();
+            
+            // Total expense for the year
+            Long totalExpense = transactionDao.getTotalExpenseByDateRange(userId, startOfYear, endOfYear);
+            report.append("💰 TỔNG CHI TIÊU NĂM: ").append(formatCurrency(totalExpense != null ? totalExpense : 0)).append("\n\n");
+            
+            // Monthly spending breakdown
+            report.append("📅 CHI TIÊU THEO THÁNG:\n");
+            report.append("--------------------\n");
+            
+            // Calculate monthly spending manually
+            for (int month = 1; month <= 12; month++) {
+                cal.set(Integer.parseInt(year), month - 1, 1, 0, 0, 0);
+                cal.set(Calendar.MILLISECOND, 0);
+                java.util.Date monthStart = cal.getTime();
+                
+                cal.set(Integer.parseInt(year), month - 1, cal.getActualMaximum(Calendar.DAY_OF_MONTH), 23, 59, 59);
+                cal.set(Calendar.MILLISECOND, 999);
+                java.util.Date monthEnd = cal.getTime();
+                
+                Long monthExpense = transactionDao.getTotalExpenseByDateRange(userId, monthStart, monthEnd);
+                if (monthExpense != null && monthExpense > 0) {
+                    report.append(String.format("Tháng %02d: %s\n", month, formatCurrency(monthExpense)));
+                }
+            }
+            report.append("\n");
+            
+            // Category spending breakdown
+            report.append("📂 CHI TIÊU THEO DANH MỤC:\n");
+            report.append("------------------------\n");
+            
+            List<TransactionEntity> allTransactions = transactionDao.getTransactionsByDateRange(userId, startOfYear, endOfYear);
+            java.util.Map<String, Long> categorySpending = new java.util.HashMap<>();
+            long totalYearSpending = 0;
+            
+            for (TransactionEntity transaction : allTransactions) {
+                if ("expense".equals(transaction.type)) {
+                    long amount = Math.abs(transaction.amount);
+                    categorySpending.put(transaction.category, 
+                        categorySpending.getOrDefault(transaction.category, 0L) + amount);
+                    totalYearSpending += amount;
+                }
+            }
+            
+            // Sort categories by spending amount
+            List<java.util.Map.Entry<String, Long>> sortedCategories = new ArrayList<>(categorySpending.entrySet());
+            sortedCategories.sort((a, b) -> Long.compare(b.getValue(), a.getValue()));
+            
+            for (java.util.Map.Entry<String, Long> entry : sortedCategories) {
+                double percentage = totalYearSpending > 0 ? (entry.getValue() * 100.0 / totalYearSpending) : 0;
+                report.append(String.format("%s %s: %s (%.1f%%)\n", 
+                    getIconEmojiForCategory(entry.getKey()),
+                    entry.getKey(), 
+                    formatCurrency(entry.getValue()),
+                    percentage));
+            }
+            
+            if (categorySpending.isEmpty()) {
+                report.append("Không có dữ liệu chi tiêu theo danh mục\n");
+            }
+            
+            report.append("\n");
+            report.append("================================\n");
+            report.append("Báo cáo được tạo bởi ứng dụng Quản lý Chi tiêu\n");
+            
+        } catch (Exception e) {
+            report.append("Lỗi khi tạo báo cáo: ").append(e.getMessage()).append("\n");
+        }
+        
+        return report.toString();
     }
     
     @Override

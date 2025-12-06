@@ -113,12 +113,12 @@ public class AiChatBottomSheet extends DialogFragment {
         expenseRepository = new ExpenseRepositoryImpl(appDatabase);
         budgetRepository = new BudgetRepositoryImpl(appDatabase);
         categoryBudgetRepository = new CategoryBudgetRepositoryImpl(appDatabase);
-        welcomeMessageUseCase = new WelcomeMessageUseCase(budgetRepository, expenseRepository);
-        expenseUseCase = new ExpenseUseCase(expenseRepository);
+        welcomeMessageUseCase = new WelcomeMessageUseCase(budgetRepository, expenseRepository, getContext());
+        expenseUseCase = new ExpenseUseCase(expenseRepository, getContext());
         promptUseCase = new PromptUseCase(expenseUseCase);
-        aiContextUseCase = new AiContextUseCase(expenseRepository, budgetRepository, categoryBudgetRepository);
-        budgetUseCase = new BudgetUseCase(budgetRepository, promptUseCase, aiContextUseCase);
-        expenseBulkUseCase = new ExpenseBulkUseCase(expenseRepository);
+        aiContextUseCase = new AiContextUseCase(expenseRepository, budgetRepository, categoryBudgetRepository, getContext());
+        budgetUseCase = new BudgetUseCase(budgetRepository, promptUseCase, aiContextUseCase, getContext());
+        expenseBulkUseCase = new ExpenseBulkUseCase(expenseRepository, getContext());
         
         // Check and update network status
         updateNetworkStatus();

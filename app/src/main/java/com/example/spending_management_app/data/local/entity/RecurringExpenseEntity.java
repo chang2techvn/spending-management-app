@@ -10,6 +10,7 @@ public class RecurringExpenseEntity {
     @PrimaryKey(autoGenerate = true)
     public int id;
 
+    public int userId; // ID của user sở hữu recurring expense này
     public String description;
     public String category;
     public long amount;
@@ -24,5 +25,14 @@ public class RecurringExpenseEntity {
         this.startDate = startDate;
         this.endDate = endDate;
         this.frequency = frequency;
+        this.userId = 1; // Default user ID
+    }
+
+    public int getUserId() {
+        return userId;
+    }
+
+    public void setUserId(int userId) {
+        this.userId = userId;
     }
 }

@@ -22,27 +22,27 @@ public interface BudgetDao {
     @Delete
     void delete(BudgetEntity budget);
 
-    @Query("SELECT * FROM budgets")
-    List<BudgetEntity> getAllBudgets();
+    @Query("SELECT * FROM budgets WHERE userId = :userId")
+    List<BudgetEntity> getAllBudgets(int userId);
 
-    @Query("SELECT * FROM budgets WHERE date BETWEEN :startDate AND :endDate")
-    List<BudgetEntity> getBudgetsByDateRange(java.util.Date startDate, java.util.Date endDate);
+    @Query("SELECT * FROM budgets WHERE userId = :userId AND date BETWEEN :startDate AND :endDate")
+    List<BudgetEntity> getBudgetsByDateRange(int userId, java.util.Date startDate, java.util.Date endDate);
     
-    @Query("SELECT * FROM budgets WHERE date >= :startDate AND date <= :endDate ORDER BY date DESC")
-    List<BudgetEntity> getBudgetsByDateRangeOrdered(java.util.Date startDate, java.util.Date endDate);
+    @Query("SELECT * FROM budgets WHERE userId = :userId AND date >= :startDate AND date <= :endDate ORDER BY date DESC")
+    List<BudgetEntity> getBudgetsByDateRangeOrdered(int userId, java.util.Date startDate, java.util.Date endDate);
     
-    @Query("DELETE FROM budgets WHERE date >= :startDate AND date <= :endDate")
-    void deleteBudgetsByDateRange(java.util.Date startDate, java.util.Date endDate);
+    @Query("DELETE FROM budgets WHERE userId = :userId AND date >= :startDate AND date <= :endDate")
+    void deleteBudgetsByDateRange(int userId, java.util.Date startDate, java.util.Date endDate);
 
     // Get total budget of all months
-    @Query("SELECT SUM(monthlyLimit) FROM budgets")
-    Long getTotalBudget();
+    @Query("SELECT SUM(monthlyLimit) FROM budgets WHERE userId = :userId")
+    Long getTotalBudget(int userId);
 
     // Get total budget of all months (LiveData for real-time updates)
-    @Query("SELECT SUM(monthlyLimit) FROM budgets")
-    LiveData<Long> getTotalBudgetLive();
+    @Query("SELECT SUM(monthlyLimit) FROM budgets WHERE userId = :userId")
+    LiveData<Long> getTotalBudgetLive(int userId);
     
     // Get total budget by date range
-    @Query("SELECT SUM(monthlyLimit) FROM budgets WHERE date >= :startDate AND date <= :endDate")
-    Long getTotalBudgetByDateRange(java.util.Date startDate, java.util.Date endDate);
+    @Query("SELECT SUM(monthlyLimit) FROM budgets WHERE userId = :userId AND date >= :startDate AND date <= :endDate")
+    Long getTotalBudgetByDateRange(int userId, java.util.Date startDate, java.util.Date endDate);
 }

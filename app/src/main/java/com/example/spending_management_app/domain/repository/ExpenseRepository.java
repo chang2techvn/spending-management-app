@@ -12,9 +12,9 @@ public interface ExpenseRepository {
     void insert(TransactionEntity transaction);
     void update(TransactionEntity transaction);
     void delete(TransactionEntity transaction);
-    TransactionEntity getTransactionById(int id);
-    List<TransactionEntity> getTransactionsByDateRange(Date startDate, Date endDate);
-    List<TransactionEntity> getTransactionsByDate(Date date);
-    List<TransactionEntity> getRecentTransactions(int limit);
-    List<TransactionEntity> getAllTransactions();
+    TransactionEntity getTransactionById(int userId, int id);
+    List<TransactionEntity> getTransactionsByDateRange(int userId, Date startDate, Date endDate);
+    List<TransactionEntity> getTransactionsByDate(int userId, Date date);
+    List<TransactionEntity> getRecentTransactions(int userId, int limit);
+    List<TransactionEntity> getAllTransactions(int userId);
 }

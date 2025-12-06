@@ -26,6 +26,7 @@ import com.example.spending_management_app.data.local.entity.BudgetEntity;
 import com.example.spending_management_app.data.local.entity.TransactionEntity;
 import com.example.spending_management_app.presentation.viewmodel.home.HomeViewModel;
 import com.example.spending_management_app.utils.CurrencyFormatter;
+import com.example.spending_management_app.utils.UserSession;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -39,6 +40,7 @@ public class HomeFragment extends Fragment {
     private FragmentHomeBinding binding;
     private TransactionAdapter transactionAdapter;
     private List<Transaction> transactions;
+    private UserSession userSession;
     private static final String PREFS_NAME = "BudgetWarnings";
     private static final String KEY_WARNED_CATEGORIES = "warned_categories_";
 
@@ -49,6 +51,9 @@ public class HomeFragment extends Fragment {
 
         binding = FragmentHomeBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
+
+        // Initialize UserSession
+        userSession = UserSession.getInstance(requireContext());
 
         // Setup balance data
         setupBalanceData();
@@ -94,11 +99,13 @@ public class HomeFragment extends Fragment {
 
                 android.util.Log.d("HomeFragment", "Loading budget for range: " + startOfMonth + " to " + endOfMonth);
 
+                int userId = userSession.getCurrentUserId();
+                
                 // Get monthly budget using improved query
                 List<BudgetEntity> monthlyBudgets = AppDatabase.getInstance(getContext())
-                        .budgetDao().getBudgetsByDateRangeOrdered(startOfMonth, endOfMonth);
+                        .budgetDao().getBudgetsByDateRangeOrdered(userId, startOfMonth, endOfMonth);
                 
-                android.util.Log.d("HomeFragment", "Found " + (monthlyBudgets != null ? monthlyBudgets.size() : 0) + " budgets");
+                android.util.Log.d("HomeFragment", "Found " + (monthlyBudgets != null ? monthlyBudgets.size() : 0) + " budgets for userId: " + userId);
                 if (monthlyBudgets != null) {
                     for (int i = 0; i < monthlyBudgets.size(); i++) {
                         BudgetEntity b = monthlyBudgets.get(i);
@@ -109,7 +116,7 @@ public class HomeFragment extends Fragment {
                 // Get total expense for THIS MONTH ONLY (not all time)
                 Long totalExpense = AppDatabase.getInstance(getContext())
                         .transactionDao()
-                        .getTotalExpenseByDateRange(startOfMonth, endOfMonth);
+                        .getTotalExpenseByDateRange(userId, startOfMonth, endOfMonth);
                 
                 android.util.Log.d("HomeFragment", "Monthly expense from " + startOfMonth + " to " + endOfMonth + ": " + totalExpense);
                 
@@ -221,10 +228,12 @@ public class HomeFragment extends Fragment {
         // Load data from database in background thread
         Executors.newSingleThreadExecutor().execute(() -> {
             try {
+                int userId = userSession.getCurrentUserId();
+                
                 // Get recent transactions from database (limit to 5)
                 List<TransactionEntity> transactionEntities = AppDatabase.getInstance(getContext())
                         .transactionDao()
-                        .getRecentTransactions(5);
+                        .getRecentTransactions(userId, 5);
                 
                 // Convert TransactionEntity to Transaction objects
                 List<Transaction> recentTransactions = new ArrayList<>();
@@ -321,12 +330,14 @@ public class HomeFragment extends Fragment {
                 
                 android.util.Log.d("HomeFragment", "Loading category spending for month: " + startOfMonth + " to " + endOfMonth);
                 
+                int userId = userSession.getCurrentUserId();
+                
                 // Get all transactions for this month by category
                 List<TransactionEntity> allTransactions = AppDatabase.getInstance(getContext())
                         .transactionDao()
-                        .getTransactionsByDateRange(startOfMonth, endOfMonth);
+                        .getTransactionsByDateRange(userId, startOfMonth, endOfMonth);
                 
-                android.util.Log.d("HomeFragment", "Found " + allTransactions.size() + " transactions in current month");
+                android.util.Log.d("HomeFragment", "Found " + allTransactions.size() + " transactions in current month for userId: " + userId);
                 for (TransactionEntity transaction : allTransactions) {
                     android.util.Log.d("HomeFragment", "Transaction: " + transaction.description + 
                             " - " + transaction.category + " - " + transaction.amount + " - " + transaction.date);
@@ -335,7 +346,7 @@ public class HomeFragment extends Fragment {
                 // Get all category budgets for this month
                 List<CategoryBudgetEntity> categoryBudgets =
                         AppDatabase.getInstance(getContext()).categoryBudgetDao()
-                                .getAllCategoryBudgetsForMonth(startOfMonth, endOfMonth);
+                                .getAllCategoryBudgetsForMonth(userId, startOfMonth, endOfMonth);
                 
                 // Calculate spending by category
                 java.util.Map<String, Long> categorySpending = new java.util.HashMap<>();
@@ -719,14 +730,16 @@ public class HomeFragment extends Fragment {
                 cal.set(Calendar.MILLISECOND, 999);
                 java.util.Date endOfLastMonth = cal.getTime();
 
+                int userId = userSession.getCurrentUserId();
+
                 // Get this month spending
                 Long thisMonthSpendingLong = AppDatabase.getInstance(getContext())
-                        .transactionDao().getTotalExpenseByDateRange(startOfThisMonth, endOfThisMonth);
+                        .transactionDao().getTotalExpenseByDateRange(userId, startOfThisMonth, endOfThisMonth);
                 long thisMonthSpending = (thisMonthSpendingLong != null) ? Math.abs(thisMonthSpendingLong) : 0;
 
                 // Get last month spending
                 Long lastMonthSpendingLong = AppDatabase.getInstance(getContext())
-                        .transactionDao().getTotalExpenseByDateRange(startOfLastMonth, endOfLastMonth);
+                        .transactionDao().getTotalExpenseByDateRange(userId, startOfLastMonth, endOfLastMonth);
                 long lastMonthSpending = (lastMonthSpendingLong != null) ? Math.abs(lastMonthSpendingLong) : 0;
 
                 // Calculate difference

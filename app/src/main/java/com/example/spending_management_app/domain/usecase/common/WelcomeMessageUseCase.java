@@ -14,6 +14,7 @@ import com.example.spending_management_app.utils.CategoryHelper;
 import com.example.spending_management_app.utils.CategoryIconHelper;
 import com.example.spending_management_app.utils.CategoryUtils;
 import com.example.spending_management_app.utils.CurrencyFormatter;
+import com.example.spending_management_app.utils.UserSession;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -30,10 +31,12 @@ public class WelcomeMessageUseCase {
 
     private final BudgetRepository budgetRepository;
     private final ExpenseRepository expenseRepository;
+    private final UserSession userSession;
 
-    public WelcomeMessageUseCase(BudgetRepository budgetRepository, ExpenseRepository expenseRepository) {
+    public WelcomeMessageUseCase(BudgetRepository budgetRepository, ExpenseRepository expenseRepository, Context context) {
         this.budgetRepository = budgetRepository;
         this.expenseRepository = expenseRepository;
+        this.userSession = UserSession.getInstance(context);
     }
 
     /**
@@ -66,10 +69,12 @@ public class WelcomeMessageUseCase {
 
                 Log.d("WelcomeMessageService", "Loading budget for range: " + currentMonthStart + " to " + currentMonthEnd);
 
-                List<BudgetEntity> currentMonthBudgets = budgetRepository
-                        .getBudgetsByDateRangeOrdered(currentMonthStart, currentMonthEnd);
+                int userId = userSession.getCurrentUserId();
 
-                Log.d("WelcomeMessageService", "Found " + (currentMonthBudgets != null ? currentMonthBudgets.size() : 0) + " budgets for current month");
+                List<BudgetEntity> currentMonthBudgets = budgetRepository
+                        .getBudgetsByDateRangeOrdered(userId, currentMonthStart, currentMonthEnd);
+
+                Log.d("WelcomeMessageService", "Found " + (currentMonthBudgets != null ? currentMonthBudgets.size() : 0) + " budgets for current month for userId: " + userId);
 
                 // Get budgets from 6 months ago
                 Calendar pastCal = Calendar.getInstance();
@@ -78,7 +83,7 @@ public class WelcomeMessageUseCase {
                 Date sixMonthsAgoStart = pastCal.getTime();
 
                 List<BudgetEntity> pastBudgets = budgetRepository
-                        .getBudgetsByDateRangeOrdered(sixMonthsAgoStart, currentMonthEnd);
+                        .getBudgetsByDateRangeOrdered(userId, sixMonthsAgoStart, currentMonthEnd);
 
                 // Use device/default locale for month formatting so message localizes properly
                 SimpleDateFormat monthFormat = new SimpleDateFormat("MM/yyyy", Locale.getDefault());
@@ -200,8 +205,9 @@ public class WelcomeMessageUseCase {
         // Load recent transactions from database in background
         Executors.newSingleThreadExecutor().execute(() -> {
             try {
+                int userId = userSession.getCurrentUserId();
                 List<TransactionEntity> recentTransactions = expenseRepository
-                        .getRecentTransactions(3);
+                        .getRecentTransactions(userId, 3);
 
                 // Build welcome message with recent transactions
                 StringBuilder welcomeMessage = new StringBuilder();
@@ -285,8 +291,9 @@ public class WelcomeMessageUseCase {
         // Load recent transactions from database in background
         Executors.newSingleThreadExecutor().execute(() -> {
             try {
+                int userId = userSession.getCurrentUserId();
                 List<TransactionEntity> recentTransactions = expenseRepository
-                        .getRecentTransactions(5); // Show 5 recent transactions
+                        .getRecentTransactions(userId, 5); // Show 5 recent transactions
 
                 // Build welcome message with recent transactions
                 StringBuilder welcomeMessage = new StringBuilder();

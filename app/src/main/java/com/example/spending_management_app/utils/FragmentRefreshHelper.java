@@ -1,6 +1,7 @@
 package com.example.spending_management_app.utils;
 
 import android.app.Activity;
+import android.content.Context;
 import android.util.Log;
 
 import androidx.fragment.app.Fragment;
@@ -121,9 +122,13 @@ public class FragmentRefreshHelper {
         // Reload recent transactions and update the first message (welcome message)
         Executors.newSingleThreadExecutor().execute(() -> {
             try {
-                List<TransactionEntity> recentTransactions = AppDatabase.getInstance(activity.getApplicationContext())
+                Context context = activity.getApplicationContext();
+                UserSession userSession = UserSession.getInstance(context);
+                int userId = userSession.getCurrentUserId();
+                
+                List<TransactionEntity> recentTransactions = AppDatabase.getInstance(context)
                         .transactionDao()
-                        .getRecentTransactions(5); // Show 5 recent transactions
+                        .getRecentTransactions(userId, 5); // Show 5 recent transactions
 
                 // Build updated welcome message
                 StringBuilder welcomeMessage = new StringBuilder();
@@ -192,10 +197,13 @@ public class FragmentRefreshHelper {
                 cal.set(java.util.Calendar.MILLISECOND, 999);
                 java.util.Date endOfMonth = cal.getTime();
                 
+                UserSession userSession = UserSession.getInstance(context);
+                int userId = userSession.getCurrentUserId();
+                
                 // Get monthly budget for current month
                 List<BudgetEntity> monthlyBudgets =
                         AppDatabase.getInstance(activity.getApplicationContext()).budgetDao()
-                                .getBudgetsByDateRange(startOfMonth, endOfMonth);
+                                .getBudgetsByDateRange(userId, startOfMonth, endOfMonth);
                 long monthlyBudget = (monthlyBudgets != null && !monthlyBudgets.isEmpty()) 
                         ? monthlyBudgets.get(0).getMonthlyLimit() : 0;
                 
@@ -203,7 +211,7 @@ public class FragmentRefreshHelper {
                 List<CategoryBudgetEntity> categoryBudgets =
                         AppDatabase.getInstance(activity.getApplicationContext())
                                 .categoryBudgetDao()
-                                .getAllCategoryBudgetsForMonth(startOfMonth, endOfMonth);
+                                .getAllCategoryBudgetsForMonth(userId, startOfMonth, endOfMonth);
                 
                 // Define all categories in order
                 String[] allCategories = {

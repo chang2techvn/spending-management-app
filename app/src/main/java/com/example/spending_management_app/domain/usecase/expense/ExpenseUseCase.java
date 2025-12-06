@@ -1,6 +1,7 @@
 package com.example.spending_management_app.domain.usecase.expense;
 
 import android.app.Activity;
+import android.content.Context;
 
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -10,6 +11,7 @@ import com.example.spending_management_app.domain.repository.ExpenseRepository;
 import com.example.spending_management_app.presentation.dialog.AiChatBottomSheet;
 import com.example.spending_management_app.utils.FragmentRefreshHelper;
 import com.example.spending_management_app.utils.ToastHelper;
+import com.example.spending_management_app.utils.UserSession;
 
 import org.json.JSONObject;
 
@@ -22,9 +24,11 @@ import java.util.List;
 public class ExpenseUseCase {
 
     private final ExpenseRepository expenseRepository;
+    private final UserSession userSession;
 
-    public ExpenseUseCase(ExpenseRepository expenseRepository) {
+    public ExpenseUseCase(ExpenseRepository expenseRepository, Context context) {
         this.expenseRepository = expenseRepository;
+        this.userSession = UserSession.getInstance(context);
     }
 
     /**
@@ -71,9 +75,12 @@ public class ExpenseUseCase {
 
                 android.util.Log.d("ExpenseService", "Transaction entity created, starting save process");
 
+                // Set userId cho transaction
+                transaction.setUserId(userSession.getCurrentUserId());
+                
                 // Lưu vào database trong background thread
                 new Thread(() -> {
-                    android.util.Log.d("ExpenseService", "Background thread started for database save");
+                    android.util.Log.d("ExpenseService", "Background thread started for database save, userId: " + transaction.getUserId());
                     try {
                         expenseRepository.insert(transaction);
                         android.util.Log.d("ExpenseService", "Database save successful");

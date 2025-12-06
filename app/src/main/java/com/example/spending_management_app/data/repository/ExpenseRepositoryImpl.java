@@ -35,22 +35,22 @@ public class ExpenseRepositoryImpl implements ExpenseRepository {
     }
 
     @Override
-    public TransactionEntity getTransactionById(int id) {
-        return appDatabase.transactionDao().getTransactionById(id);
+    public TransactionEntity getTransactionById(int userId, int id) {
+        return appDatabase.transactionDao().getTransactionById(userId, id);
     }
 
     @Override
-    public List<TransactionEntity> getTransactionsByDateRange(Date startDate, Date endDate) {
-        return appDatabase.transactionDao().getTransactionsByDateRange(startDate, endDate);
+    public List<TransactionEntity> getTransactionsByDateRange(int userId, Date startDate, Date endDate) {
+        return appDatabase.transactionDao().getTransactionsByDateRange(userId, startDate, endDate);
     }
 
     @Override
-    public List<TransactionEntity> getRecentTransactions(int limit) {
-        return appDatabase.transactionDao().getRecentTransactions(limit);
+    public List<TransactionEntity> getRecentTransactions(int userId, int limit) {
+        return appDatabase.transactionDao().getRecentTransactions(userId, limit);
     }
 
     @Override
-    public List<TransactionEntity> getTransactionsByDate(Date date) {
+    public List<TransactionEntity> getTransactionsByDate(int userId, Date date) {
         // Create date range for the same day (from start of day to end of day)
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(date);
@@ -66,11 +66,11 @@ public class ExpenseRepositoryImpl implements ExpenseRepository {
         calendar.set(Calendar.MILLISECOND, 999);
         Date endOfDay = calendar.getTime();
 
-        return appDatabase.transactionDao().getTransactionsByDateRange(startOfDay, endOfDay);
+        return appDatabase.transactionDao().getTransactionsByDateRange(userId, startOfDay, endOfDay);
     }
 
     @Override
-    public List<TransactionEntity> getAllTransactions() {
-        return appDatabase.transactionDao().getAllTransactions();
+    public List<TransactionEntity> getAllTransactions(int userId) {
+        return appDatabase.transactionDao().getAllTransactions(userId);
     }
 }

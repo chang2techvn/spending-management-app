@@ -21,6 +21,7 @@ import com.example.spending_management_app.data.local.entity.TransactionEntity;
 import com.example.spending_management_app.presentation.viewmodel.history.HistoryViewModel;
 import com.google.android.material.tabs.TabLayout;
 import com.example.spending_management_app.utils.CategoryUtils;
+import com.example.spending_management_app.utils.UserSession;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -37,11 +38,14 @@ public class HistoryFragment extends Fragment implements DateRangePickerDialog.D
     private String currentQuery = "";
     private Date startDateFilter;
     private Date endDateFilter;
+    private UserSession userSession;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
         HistoryViewModel historyViewModel =
                 new ViewModelProvider(this).get(HistoryViewModel.class);
+
+        userSession = UserSession.getInstance(getContext());
 
         binding = FragmentHistoryBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
@@ -78,15 +82,16 @@ public class HistoryFragment extends Fragment implements DateRangePickerDialog.D
         Executors.newSingleThreadExecutor().execute(() -> {
             try {
                 // Get all transactions from database
+                int userId = userSession.getCurrentUserId();
                 List<TransactionEntity> transactionEntities = AppDatabase.getInstance(getContext())
                         .transactionDao()
-                        .getAllTransactions();
+                        .getAllTransactions(userId);
                 
                 // Get all budget history from database
                 List<BudgetHistoryEntity> budgetHistoryEntities =
                         AppDatabase.getInstance(getContext())
                                 .budgetHistoryDao()
-                                .getAllBudgetHistory();
+                                .getAllBudgetHistory(userId);
                 
                 // Convert TransactionEntity to Transaction objects
                 List<Transaction> transactions = new ArrayList<>();

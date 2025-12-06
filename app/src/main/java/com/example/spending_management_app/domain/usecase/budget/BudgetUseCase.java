@@ -15,6 +15,7 @@ import com.example.spending_management_app.utils.BudgetAmountParser;
 import com.example.spending_management_app.utils.DateParser;
 import com.example.spending_management_app.utils.ToastHelper;
 import com.example.spending_management_app.utils.CurrencyFormatter;
+import com.example.spending_management_app.utils.UserSession;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -31,11 +32,13 @@ public class BudgetUseCase {
     private final BudgetRepository budgetRepository;
     private final PromptUseCase promptUseCase;
     private final AiContextUseCase aiContextUseCase;
+    private final UserSession userSession;
 
-    public BudgetUseCase(BudgetRepository budgetRepository, PromptUseCase promptUseCase, AiContextUseCase aiContextUseCase) {
+    public BudgetUseCase(BudgetRepository budgetRepository, PromptUseCase promptUseCase, AiContextUseCase aiContextUseCase, Context context) {
         this.budgetRepository = budgetRepository;
         this.promptUseCase = promptUseCase;
         this.aiContextUseCase = aiContextUseCase;
+        this.userSession = UserSession.getInstance(context);
     }
 
     /**
@@ -170,10 +173,11 @@ public class BudgetUseCase {
 
                     android.util.Log.d("BudgetService", "Saving budget for range: " + startOfMonth + " to " + endOfMonth);
 
+                    int userId = userSession.getCurrentUserId();
                     List<BudgetEntity> existingBudgets = budgetRepository
-                            .getBudgetsByDateRangeOrdered(startOfMonth, endOfMonth);
+                            .getBudgetsByDateRangeOrdered(userId, startOfMonth, endOfMonth);
 
-                    android.util.Log.d("BudgetService", "Found " + (existingBudgets != null ? existingBudgets.size() : 0) + " existing budgets");
+                    android.util.Log.d("BudgetService", "Found " + (existingBudgets != null ? existingBudgets.size() : 0) + " existing budgets for userId: " + userId);
 
                     boolean isUpdate = !existingBudgets.isEmpty();
 
@@ -252,7 +256,8 @@ public class BudgetUseCase {
                         determinedActionType = "set";
 
                         BudgetEntity budget = new BudgetEntity("Ngân sách tháng", calculatedFinalAmount, 0L, budgetDate);
-                        android.util.Log.d("BudgetService", "Inserting new budget: " + budget.date);
+                        budget.setUserId(userSession.getCurrentUserId());
+                        android.util.Log.d("BudgetService", "Inserting new budget: " + budget.date + " for userId: " + budget.getUserId());
                         budgetRepository.insert(budget);
 
                         // Log budget history
@@ -385,8 +390,9 @@ public class BudgetUseCase {
                 Date endOfMonth = targetCal.getTime();
 
                 // Check if budget exists
+                int userId = userSession.getCurrentUserId();
                 List<BudgetEntity> existingBudgets = budgetRepository
-                        .getBudgetsByDateRange(startOfMonth, endOfMonth);
+                        .getBudgetsByDateRange(userId, startOfMonth, endOfMonth);
 
                 if (existingBudgets != null && !existingBudgets.isEmpty()) {
                     // Get the budget amount before deleting
@@ -394,7 +400,7 @@ public class BudgetUseCase {
 
                     // Delete budget
                     budgetRepository
-                            .deleteBudgetsByDateRange(startOfMonth, endOfMonth);
+                            .deleteBudgetsByDateRange(userId, startOfMonth, endOfMonth);
 
                     // Log budget history
                     BudgetHistoryLogger.logMonthlyBudgetDeleted(

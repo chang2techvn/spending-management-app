@@ -15,6 +15,7 @@ import com.example.spending_management_app.domain.usecase.budget.BudgetHistoryLo
 import com.example.spending_management_app.utils.CategoryIconHelper;
 import com.example.spending_management_app.utils.ToastHelper;
 import com.example.spending_management_app.utils.CurrencyFormatter;
+import com.example.spending_management_app.utils.UserSession;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -28,10 +29,12 @@ public class CategoryBudgetUseCase {
 
     private final BudgetRepository budgetRepository;
     private final CategoryBudgetRepository categoryBudgetRepository;
+    private final UserSession userSession;
 
-    public CategoryBudgetUseCase(BudgetRepository budgetRepository, CategoryBudgetRepository categoryBudgetRepository) {
+    public CategoryBudgetUseCase(BudgetRepository budgetRepository, CategoryBudgetRepository categoryBudgetRepository, Context context) {
         this.budgetRepository = budgetRepository;
         this.categoryBudgetRepository = categoryBudgetRepository;
+        this.userSession = UserSession.getInstance(context);
     }
 
     /**
@@ -105,9 +108,10 @@ public class CategoryBudgetUseCase {
                 Date endOfMonth = cal.getTime();
 
                 // Get monthly budget to check limit
+                int userId = userSession.getCurrentUserId();
                 List<BudgetEntity> monthlyBudgets =
                         budgetRepository
-                                .getBudgetsByDateRange(startOfMonth, endOfMonth);
+                                .getBudgetsByDateRange(userId, startOfMonth, endOfMonth);
                 long monthlyBudgetLimit = (monthlyBudgets != null && !monthlyBudgets.isEmpty())
                         ? monthlyBudgets.get(0).getMonthlyLimit() : 0;
 
@@ -122,22 +126,22 @@ public class CategoryBudgetUseCase {
                         // Get all category budgets for current month
                         List<CategoryBudgetEntity> allBudgets =
                                 categoryBudgetRepository
-                                        .getAllCategoryBudgetsForMonth(startOfMonth, endOfMonth);
+                                        .getAllCategoryBudgetsForMonth(userId, startOfMonth, endOfMonth);
 
-                        android.util.Log.d("CategoryBudgetUseCase", "Found " + (allBudgets != null ? allBudgets.size() : 0) + " category budgets to delete");
+                        android.util.Log.d("CategoryBudgetUseCase", "Found " + (allBudgets != null ? allBudgets.size() : 0) + " category budgets to delete for userId: " + userId);
 
                         if (allBudgets != null && !allBudgets.isEmpty()) {
                             int budgetCount = allBudgets.size();
                             
                             // Delete all category budgets using efficient bulk delete
-                            categoryBudgetRepository.deleteAllForMonth(startOfMonth, endOfMonth);
+                            categoryBudgetRepository.deleteAllForMonth(userId, startOfMonth, endOfMonth);
                             android.util.Log.d("CategoryBudgetUseCase", "Executed deleteAllForMonth for " + budgetCount + " budgets");
                             
                             counts[0] = budgetCount;
 
                             // Verify deletion
                             List<CategoryBudgetEntity> remainingBudgets = 
-                                categoryBudgetRepository.getAllCategoryBudgetsForMonth(startOfMonth, endOfMonth);
+                                categoryBudgetRepository.getAllCategoryBudgetsForMonth(userId, startOfMonth, endOfMonth);
                             android.util.Log.d("CategoryBudgetUseCase", "After deletion, remaining budgets: " + (remainingBudgets != null ? remainingBudgets.size() : 0));
 
                             // Log budget history for delete all
@@ -193,7 +197,7 @@ public class CategoryBudgetUseCase {
                             
                             CategoryBudgetEntity existing =
                                     categoryBudgetRepository
-                                            .getCategoryBudgetForMonth(op.category, startOfMonth, endOfMonth);
+                                            .getCategoryBudgetForMonth(userId, op.category, startOfMonth, endOfMonth);
 
                             if (existing != null) {
                                 long deletedAmount = existing.budgetAmount;
@@ -202,7 +206,7 @@ public class CategoryBudgetUseCase {
                                 categoryBudgetRepository.delete(existing);
                                 
                                 // Verify deletion
-                                CategoryBudgetEntity verifyDeleted = categoryBudgetRepository.getCategoryBudgetForMonth(op.category, startOfMonth, endOfMonth);
+                                CategoryBudgetEntity verifyDeleted = categoryBudgetRepository.getCategoryBudgetForMonth(userId, op.category, startOfMonth, endOfMonth);
                                 android.util.Log.d("CategoryBudgetUseCase", "After delete, verify: " + (verifyDeleted == null ? "Deleted successfully" : "Still exists!"));
 
                                 // Log budget history
@@ -221,7 +225,7 @@ public class CategoryBudgetUseCase {
                             // Add or Edit operation
                             CategoryBudgetEntity existing =
                                     categoryBudgetRepository
-                                            .getCategoryBudgetForMonth(op.category, startOfMonth, endOfMonth);
+                                            .getCategoryBudgetForMonth(userId, op.category, startOfMonth, endOfMonth);
 
                             boolean isUpdate = (existing != null);
 
@@ -229,7 +233,7 @@ public class CategoryBudgetUseCase {
                             if (monthlyBudgetLimit > 0) {
                                 List<CategoryBudgetEntity> allCategoryBudgets =
                                         categoryBudgetRepository
-                                                .getAllCategoryBudgetsForMonth(startOfMonth, endOfMonth);
+                                                .getAllCategoryBudgetsForMonth(userId, startOfMonth, endOfMonth);
 
                                 long currentTotal = 0;
                                 for (CategoryBudgetEntity cb : allCategoryBudgets) {
@@ -262,6 +266,7 @@ public class CategoryBudgetUseCase {
                                 CategoryBudgetEntity newBudget =
                                         new CategoryBudgetEntity(
                                                 op.category, op.amount, startOfMonth);
+                                newBudget.setUserId(userId);
                                 categoryBudgetRepository.insert(newBudget);
 
                                 // Log budget history
@@ -295,7 +300,7 @@ public class CategoryBudgetUseCase {
                     // Recalculate total after all operations
                     List<CategoryBudgetEntity> updatedBudgets =
                             categoryBudgetRepository
-                                    .getAllCategoryBudgetsForMonth(startOfMonth, endOfMonth);
+                                    .getAllCategoryBudgetsForMonth(userId, startOfMonth, endOfMonth);
 
                     long totalUsed = 0;
                     for (CategoryBudgetEntity cb : updatedBudgets) {

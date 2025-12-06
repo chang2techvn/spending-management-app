@@ -9,9 +9,9 @@ import java.util.List;
  * Repository interface for budget operations
  */
 public interface BudgetRepository {
-    List<BudgetEntity> getBudgetsByDateRange(Date startDate, Date endDate);
-    List<BudgetEntity> getBudgetsByDateRangeOrdered(Date startDate, Date endDate);
+    List<BudgetEntity> getBudgetsByDateRange(int userId, Date startDate, Date endDate);
+    List<BudgetEntity> getBudgetsByDateRangeOrdered(int userId, Date startDate, Date endDate);
     void update(BudgetEntity budget);
     void insert(BudgetEntity budget);
-    void deleteBudgetsByDateRange(Date startDate, Date endDate);
+    void deleteBudgetsByDateRange(int userId, Date startDate, Date endDate);
 }

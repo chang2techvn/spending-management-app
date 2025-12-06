@@ -261,7 +261,7 @@ public class PromptUseCase {
         // Initialize ExpenseBulkUseCase with proper context
         AppDatabase appDatabase = AppDatabase.getInstance(activity.getApplicationContext());
         ExpenseRepository expenseRepository = new ExpenseRepositoryImpl(appDatabase);
-        ExpenseBulkUseCase bulkUseCase = new ExpenseBulkUseCase(expenseRepository);
+    ExpenseBulkUseCase bulkUseCase = new ExpenseBulkUseCase(expenseRepository, activity.getApplicationContext());
 
         // Create refresh callbacks
         Runnable refreshHomeFragment = () -> {

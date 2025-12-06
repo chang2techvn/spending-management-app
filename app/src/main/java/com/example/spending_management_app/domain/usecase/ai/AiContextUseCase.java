@@ -20,6 +20,7 @@ import com.example.spending_management_app.utils.LocaleHelper;
 import com.example.spending_management_app.utils.TextFormatHelper;
 import com.example.spending_management_app.utils.CurrencyFormatter;
 import com.example.spending_management_app.utils.SettingsHelper;
+import com.example.spending_management_app.utils.UserSession;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -44,11 +45,13 @@ public class AiContextUseCase {
     private final ExpenseRepository expenseRepository;
     private final BudgetRepository budgetRepository;
     private final CategoryBudgetRepository categoryBudgetRepository;
+    private final UserSession userSession;
 
-    public AiContextUseCase(ExpenseRepository expenseRepository, BudgetRepository budgetRepository, CategoryBudgetRepository categoryBudgetRepository) {
+    public AiContextUseCase(ExpenseRepository expenseRepository, BudgetRepository budgetRepository, CategoryBudgetRepository categoryBudgetRepository, Context context) {
         this.expenseRepository = expenseRepository;
         this.budgetRepository = budgetRepository;
         this.categoryBudgetRepository = categoryBudgetRepository;
+        this.userSession = UserSession.getInstance(context);
     }
 
         // Get comprehensive financial context from database
@@ -71,8 +74,10 @@ public class AiContextUseCase {
             cal.set(Calendar.SECOND, 59);
             Date endOfMonth = cal.getTime();
 
+            int userId = userSession.getCurrentUserId();
+
             // Get all transactions this month
-            List<TransactionEntity> monthlyTransactions = expenseRepository.getTransactionsByDateRange(startOfMonth, endOfMonth);
+            List<TransactionEntity> monthlyTransactions = expenseRepository.getTransactionsByDateRange(userId, startOfMonth, endOfMonth);
 
             // Calculate totals
             long totalExpense = 0;
@@ -97,7 +102,7 @@ public class AiContextUseCase {
             }
 
             // Get budget info
-            List<BudgetEntity> monthlyBudgets = budgetRepository.getBudgetsByDateRange(startOfMonth, endOfMonth);
+            List<BudgetEntity> monthlyBudgets = budgetRepository.getBudgetsByDateRange(userId, startOfMonth, endOfMonth);
 
             // Build context string
             contextBuilder.append(context.getString(R.string.financial_info_this_month)).append("\n");
@@ -308,8 +313,9 @@ public class AiContextUseCase {
             cal.set(Calendar.SECOND, 59);
             Date sixMonthsLater = cal.getTime();
             
+            int userId = userSession.getCurrentUserId();
             List<BudgetEntity> allBudgets = budgetRepository
-                    .getBudgetsByDateRangeOrdered(twelveMonthsAgo, sixMonthsLater);
+                    .getBudgetsByDateRangeOrdered(userId, twelveMonthsAgo, sixMonthsLater);
             
             SimpleDateFormat monthYearFormat = new SimpleDateFormat("MM/yyyy", new Locale("vi", "VN"));
             
@@ -414,7 +420,7 @@ public class AiContextUseCase {
                 // Get all category budgets for current month
                 List<CategoryBudgetEntity> categoryBudgets =
                         categoryBudgetRepository
-                                .getAllCategoryBudgetsForMonth(startOfMonth, endOfMonth);
+                                .getAllCategoryBudgetsForMonth(userId, startOfMonth, endOfMonth);
                 
                 if (categoryBudgets != null && !categoryBudgets.isEmpty()) {
                     // Calculate total

@@ -21,7 +21,7 @@ import com.example.spending_management_app.data.local.entity.CategoryBudgetEntit
 import com.example.spending_management_app.data.local.entity.RecurringExpenseEntity;
 import com.example.spending_management_app.data.local.entity.TransactionEntity;
 
-@Database(entities = {TransactionEntity.class, BudgetEntity.class, RecurringExpenseEntity.class, CategoryBudgetEntity.class, BudgetHistoryEntity.class, UserEntity.class}, version = 5)
+@Database(entities = {TransactionEntity.class, BudgetEntity.class, RecurringExpenseEntity.class, CategoryBudgetEntity.class, BudgetHistoryEntity.class, UserEntity.class}, version = 6)
 @TypeConverters(DateConverter.class)
 public abstract class AppDatabase extends RoomDatabase {
     private static AppDatabase instance;
@@ -30,7 +30,7 @@ public abstract class AppDatabase extends RoomDatabase {
         if (instance == null) {
             instance = Room.databaseBuilder(context.getApplicationContext(),
                     AppDatabase.class, "spending_management_db")
-                    .fallbackToDestructiveMigration()
+                    .fallbackToDestructiveMigration() // Sẽ xóa và tạo lại DB khi schema thay đổi
                     .build();
         }
         return instance;

@@ -50,11 +50,11 @@ public class RequestRouterUseCase {
         ExpenseRepository expenseRepository = new ExpenseRepositoryImpl(appDatabase);
         BudgetRepository budgetRepository = new BudgetRepositoryImpl(appDatabase);
         CategoryBudgetRepository categoryBudgetRepository = new CategoryBudgetRepositoryImpl(appDatabase);
-        AiContextUseCase aiContextUseCase = new AiContextUseCase(expenseRepository, budgetRepository, categoryBudgetRepository);
-        CategoryBudgetUseCase categoryBudgetUseCase = new CategoryBudgetUseCase(budgetRepository, categoryBudgetRepository);
-        ExpenseUseCase expenseUseCase = new ExpenseUseCase(expenseRepository);
+        AiContextUseCase aiContextUseCase = new AiContextUseCase(expenseRepository, budgetRepository, categoryBudgetRepository, context);
+        CategoryBudgetUseCase categoryBudgetUseCase = new CategoryBudgetUseCase(budgetRepository, categoryBudgetRepository, context);
+        ExpenseUseCase expenseUseCase = new ExpenseUseCase(expenseRepository, context);
         PromptUseCase promptUseCase = new PromptUseCase(expenseUseCase);
-        BudgetUseCase budgetUseCase = new BudgetUseCase(budgetRepository, promptUseCase, aiContextUseCase);
+        BudgetUseCase budgetUseCase = new BudgetUseCase(budgetRepository, promptUseCase, aiContextUseCase, context);
 
         // Check network connectivity first
         boolean isOnline = callback.isNetworkAvailable();

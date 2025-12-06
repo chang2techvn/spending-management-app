@@ -14,12 +14,12 @@ public interface BudgetHistoryDao {
     @Insert
     void insert(BudgetHistoryEntity budgetHistory);
     
-    @Query("SELECT * FROM budget_history ORDER BY date DESC")
-    List<BudgetHistoryEntity> getAllBudgetHistory();
+    @Query("SELECT * FROM budget_history WHERE userId = :userId ORDER BY date DESC")
+    List<BudgetHistoryEntity> getAllBudgetHistory(int userId);
     
-    @Query("SELECT * FROM budget_history WHERE date >= :startDate AND date <= :endDate ORDER BY date DESC")
-    List<BudgetHistoryEntity> getBudgetHistoryByDateRange(Date startDate, Date endDate);
+    @Query("SELECT * FROM budget_history WHERE userId = :userId AND date >= :startDate AND date <= :endDate ORDER BY date DESC")
+    List<BudgetHistoryEntity> getBudgetHistoryByDateRange(int userId, Date startDate, Date endDate);
     
-    @Query("DELETE FROM budget_history")
-    void deleteAll();
+    @Query("DELETE FROM budget_history WHERE userId = :userId")
+    void deleteAll(int userId);
 }

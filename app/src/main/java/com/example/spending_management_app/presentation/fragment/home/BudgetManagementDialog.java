@@ -15,9 +15,10 @@ import com.example.spending_management_app.data.local.database.AppDatabase;
 import com.example.spending_management_app.data.local.entity.BudgetEntity;
 import com.example.spending_management_app.data.local.entity.CategoryBudgetEntity;
 import com.example.spending_management_app.presentation.dialog.AiChatBottomSheet;
-import com.example.spending_management_app.utils.CategoryUtils;
 import com.example.spending_management_app.utils.CategoryIconHelper;
+import com.example.spending_management_app.utils.CategoryUtils;
 import com.example.spending_management_app.utils.CurrencyFormatter;
+import com.example.spending_management_app.utils.UserSession;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -28,6 +29,7 @@ public class BudgetManagementDialog extends DialogFragment {
 
     private OnActionSelectedListener listener;
     private AppDatabase db;
+    private UserSession userSession;
 
     public interface OnActionSelectedListener {
         void onAddIncomeSelected();
@@ -42,6 +44,7 @@ public class BudgetManagementDialog extends DialogFragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         db = AppDatabase.getInstance(getContext());
+        userSession = UserSession.getInstance(getContext());
     }
 
     @NonNull
@@ -108,7 +111,7 @@ public class BudgetManagementDialog extends DialogFragment {
                 
                 // Get monthly budget for current month
                 List<BudgetEntity> monthlyBudgets = db.budgetDao()
-                        .getBudgetsByDateRange(startOfMonth, endOfMonth);
+                        .getBudgetsByDateRange(userSession.getCurrentUserId(), startOfMonth, endOfMonth);
                 long monthlyBudget = (monthlyBudgets != null && !monthlyBudgets.isEmpty()) 
                         ? monthlyBudgets.get(0).getMonthlyLimit() : 0;
                 
@@ -116,7 +119,7 @@ public class BudgetManagementDialog extends DialogFragment {
                 
                 // Get all category budgets for current month
                 List<CategoryBudgetEntity> categoryBudgets = db.categoryBudgetDao()
-                        .getAllCategoryBudgetsForMonth(startOfMonth, endOfMonth);
+                        .getAllCategoryBudgetsForMonth(userSession.getCurrentUserId(), startOfMonth, endOfMonth);
                 
                 android.util.Log.d("BudgetDialog", "Category budgets loaded: " + (categoryBudgets != null ? categoryBudgets.size() : "null"));
                 

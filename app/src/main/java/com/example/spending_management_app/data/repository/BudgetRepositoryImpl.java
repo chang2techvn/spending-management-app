@@ -19,13 +19,13 @@ public class BudgetRepositoryImpl implements BudgetRepository {
     }
 
     @Override
-    public List<BudgetEntity> getBudgetsByDateRange(Date startDate, Date endDate) {
-        return appDatabase.budgetDao().getBudgetsByDateRange(startDate, endDate);
+    public List<BudgetEntity> getBudgetsByDateRange(int userId, Date startDate, Date endDate) {
+        return appDatabase.budgetDao().getBudgetsByDateRange(userId, startDate, endDate);
     }
 
     @Override
-    public List<BudgetEntity> getBudgetsByDateRangeOrdered(Date startDate, Date endDate) {
-        return appDatabase.budgetDao().getBudgetsByDateRangeOrdered(startDate, endDate);
+    public List<BudgetEntity> getBudgetsByDateRangeOrdered(int userId, Date startDate, Date endDate) {
+        return appDatabase.budgetDao().getBudgetsByDateRangeOrdered(userId, startDate, endDate);
     }
 
     @Override
@@ -39,7 +39,7 @@ public class BudgetRepositoryImpl implements BudgetRepository {
     }
 
     @Override
-    public void deleteBudgetsByDateRange(Date startDate, Date endDate) {
-        appDatabase.budgetDao().deleteBudgetsByDateRange(startDate, endDate);
+    public void deleteBudgetsByDateRange(int userId, Date startDate, Date endDate) {
+        appDatabase.budgetDao().deleteBudgetsByDateRange(userId, startDate, endDate);
     }
 }
