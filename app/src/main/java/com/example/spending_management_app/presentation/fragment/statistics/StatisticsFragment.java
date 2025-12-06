@@ -20,6 +20,7 @@ import com.example.spending_management_app.databinding.FragmentStatisticsBinding
 import com.example.spending_management_app.presentation.viewmodel.statistics.StatisticsViewModel;
 import com.example.spending_management_app.utils.CategoryUtils;
 import com.example.spending_management_app.utils.CurrencyFormatter;
+import com.example.spending_management_app.utils.ToastHelper;
 import com.example.spending_management_app.utils.UserSession;
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.components.XAxis;
@@ -239,17 +240,17 @@ public class StatisticsFragment extends Fragment {
                 MonthlySpending data = monthlyData.get(i);
                 entries.add(new Entry(i, data.getTotal()));
                 
-                // Format month label (e.g., "2024-11" -> "T11")
+                // Format month label (e.g., "2024-11" -> "T11" or "M11")
                 String[] parts = data.getMonth().split("-");
                 if (parts.length == 2) {
-                    monthLabels.add("T" + parts[1]);
+                    monthLabels.add(getString(R.string.month_prefix) + parts[1]);
                 } else {
                     monthLabels.add(data.getMonth());
                 }
             }
             
             // Create dataset
-            LineDataSet dataSet = new LineDataSet(entries, "Chi tiêu");
+            LineDataSet dataSet = new LineDataSet(entries, getString(R.string.chart_expense_label));
             dataSet.setColor(Color.parseColor("#F44336"));
             dataSet.setCircleColor(Color.parseColor("#F44336"));
             dataSet.setLineWidth(2.5f);
@@ -604,7 +605,7 @@ public class StatisticsFragment extends Fragment {
                     downloadsDir.mkdirs();
                 }
                 
-                String fileName = "BaoCaoThongKe_" + selectedYear + "_" + 
+                String fileName = getString(R.string.report_filename_prefix) + selectedYear + "_" + 
                     new SimpleDateFormat("yyyyMMdd_HHmmss", java.util.Locale.getDefault()).format(new java.util.Date()) + ".txt";
                 File reportFile = new File(downloadsDir, fileName);
                 
@@ -614,17 +615,15 @@ public class StatisticsFragment extends Fragment {
                 
                 // Show success message on UI thread
                 requireActivity().runOnUiThread(() -> {
-                    android.widget.Toast.makeText(requireContext(), 
-                        "✅ Báo cáo đã được tải về: " + reportFile.getAbsolutePath(), 
-                        android.widget.Toast.LENGTH_LONG).show();
+                    ToastHelper.showToastOnTop(requireActivity(), 
+                        getString(R.string.report_download_success, reportFile.getAbsolutePath()));
                 });
                 
             } catch (Exception e) {
                 android.util.Log.e("StatisticsFragment", "Error generating report", e);
                 requireActivity().runOnUiThread(() -> {
-                    android.widget.Toast.makeText(requireContext(), 
-                        "❌ Lỗi khi tạo báo cáo: " + e.getMessage(), 
-                        android.widget.Toast.LENGTH_LONG).show();
+                    ToastHelper.showErrorToast(requireActivity(), 
+                        getString(R.string.report_generation_error, e.getMessage()));
                 });
             }
         });
@@ -632,10 +631,11 @@ public class StatisticsFragment extends Fragment {
     
     private String generateReportContent(int userId, String year) {
         StringBuilder report = new StringBuilder();
-        report.append("📊 BÁO CÁO THỐNG KÊ CHI TIÊU\n");
-        report.append("================================\n\n");
-        report.append("Năm: ").append(year).append("\n");
-        report.append("Ngày tạo: ").append(new SimpleDateFormat("dd/MM/yyyy HH:mm:ss", java.util.Locale.getDefault()).format(new java.util.Date())).append("\n\n");
+        report.append(getString(R.string.report_title));
+        report.append(getString(R.string.report_separator));
+        report.append(String.format(getString(R.string.report_year_label), year));
+        report.append(String.format(getString(R.string.report_date_label), 
+            new SimpleDateFormat("dd/MM/yyyy HH:mm:ss", java.util.Locale.getDefault()).format(new java.util.Date())));
         
         try {
             // Get year date range
@@ -650,11 +650,12 @@ public class StatisticsFragment extends Fragment {
             
             // Total expense for the year
             Long totalExpense = transactionDao.getTotalExpenseByDateRange(userId, startOfYear, endOfYear);
-            report.append("💰 TỔNG CHI TIÊU NĂM: ").append(formatCurrency(totalExpense != null ? totalExpense : 0)).append("\n\n");
+            report.append(String.format(getString(R.string.report_total_expense), 
+                formatCurrency(totalExpense != null ? totalExpense : 0)));
             
             // Monthly spending breakdown
-            report.append("📅 CHI TIÊU THEO THÁNG:\n");
-            report.append("--------------------\n");
+            report.append(getString(R.string.report_monthly_section));
+            report.append(getString(R.string.report_monthly_separator));
             
             // Calculate monthly spending manually
             for (int month = 1; month <= 12; month++) {
@@ -668,14 +669,15 @@ public class StatisticsFragment extends Fragment {
                 
                 Long monthExpense = transactionDao.getTotalExpenseByDateRange(userId, monthStart, monthEnd);
                 if (monthExpense != null && monthExpense > 0) {
-                    report.append(String.format("Tháng %02d: %s\n", month, formatCurrency(monthExpense)));
+                    report.append(String.format(getString(R.string.report_month_format), 
+                        month, formatCurrency(monthExpense)));
                 }
             }
             report.append("\n");
             
             // Category spending breakdown
-            report.append("📂 CHI TIÊU THEO DANH MỤC:\n");
-            report.append("------------------------\n");
+            report.append(getString(R.string.report_category_section));
+            report.append(getString(R.string.report_category_separator));
             
             List<TransactionEntity> allTransactions = transactionDao.getTransactionsByDateRange(userId, startOfYear, endOfYear);
             java.util.Map<String, Long> categorySpending = new java.util.HashMap<>();
@@ -704,15 +706,14 @@ public class StatisticsFragment extends Fragment {
             }
             
             if (categorySpending.isEmpty()) {
-                report.append("Không có dữ liệu chi tiêu theo danh mục\n");
+                report.append(getString(R.string.report_no_category_data));
             }
             
             report.append("\n");
-            report.append("================================\n");
-            report.append("Báo cáo được tạo bởi ứng dụng Quản lý Chi tiêu\n");
+            report.append(getString(R.string.report_footer));
             
         } catch (Exception e) {
-            report.append("Lỗi khi tạo báo cáo: ").append(e.getMessage()).append("\n");
+            report.append(String.format(getString(R.string.report_error_prefix), e.getMessage()));
         }
         
         return report.toString();

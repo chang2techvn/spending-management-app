@@ -434,4 +434,22 @@
     <string name="expense_bulk_edit_error">❌ Lỗi khi sửa chi tiêu</string>
     <string name="expense_bulk_processing_error_op">❌ Lỗi xử lý: %s</string>
     <string name="expense_bulk_edit_not_implemented">⚠️ Chức năng sửa chi tiết chưa được hỗ trợ. Vui lòng xóa và thêm lại với thông tin mới.</string>
+    <string name="report_download_success">✅ Báo cáo đã được tải về: %s</string>
+    <string name="report_generation_error">❌ Lỗi khi tạo báo cáo: %s</string>
+    <string name="report_title">📊 BÁO CÁO THỐNG KÊ CHI TIÊU\n</string>
+    <string name="report_separator">================================\n\n</string>
+    <string name="report_year_label">Năm: %s\n</string>
+    <string name="report_date_label">Ngày tạo: %s\n\n</string>
+    <string name="report_total_expense">💰 TỔNG CHI TIÊU NĂM: %s\n\n</string>
+    <string name="report_monthly_section">📅 CHI TIÊU THEO THÁNG:\n</string>
+    <string name="report_monthly_separator">--------------------\n</string>
+    <string name="report_month_format">Tháng %02d: %s\n</string>
+    <string name="report_category_section">📂 CHI TIÊU THEO DANH MỤC:\n</string>
+    <string name="report_category_separator">------------------------\n</string>
+    <string name="report_no_category_data">Không có dữ liệu chi tiêu theo danh mục\n</string>
+    <string name="report_footer">================================\nBáo cáo được tạo bởi ứng dụng Quản lý Chi tiêu\n</string>
+    <string name="report_error_prefix">Lỗi khi tạo báo cáo: %s\n</string>
+    <string name="chart_expense_label">Chi tiêu</string>
+    <string name="month_prefix">T</string>
+    <string name="report_filename_prefix">BaoCaoThongKe_</string>
 </resources> 
